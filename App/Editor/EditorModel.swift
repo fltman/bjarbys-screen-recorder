@@ -1,0 +1,286 @@
+import Foundation
+import AVFoundation
+import SwiftUI
+import RecorderKit
+
+/// Redigerarens tillstånd: projektet, förhandsvisningen och underlaget för tidslinjen.
+///
+/// Varje ändring av projektet ger en ny renderplan. Ändras bara utseendet byts
+/// videokompositionen på den spelare som redan finns; ändras klippen byggs kompositionen om.
+@MainActor
+final class EditorModel: ObservableObject {
+    let recording: LoadedRecording
+    let player = AVPlayer()
+    static let previewShortSide = 1080
+    static let previewFPS = 60
+
+    @Published private(set) var project: EditProject
+    @Published var currentTime: Double = 0
+    @Published private(set) var isPlaying = false
+    @Published var selectedZoomID: UUID?
+    @Published var selectedSegmentID: UUID?
+    @Published private(set) var plan: RenderPlan
+    @Published private(set) var thumbnails: [(t: Double, image: CGImage)] = []
+    @Published private(set) var micWave: [Float] = []
+    @Published private(set) var systemWave: [Float] = []
+    @Published var exportPresented = false
+    @Published private(set) var loadError: String?
+
+    private var built: CompositionBuilder.Result?
+    private var builtSegments: [EditProject.ClipSegment] = []
+    private var rebuildTask: Task<Void, Never>?
+    private var saveTask: Task<Void, Never>?
+    private var timeObserver: Any?
+    private var undoStack: [EditProject] = []
+    private var redoStack: [EditProject] = []
+    private var lastUndoPush = Date.distantPast
+
+    var duration: Double { plan.outputDuration }
+    var timeMap: TimeMap { plan.timeMap }
+    var canUndo: Bool { !undoStack.isEmpty }
+    var canRedo: Bool { !redoStack.isEmpty }
+
+    init(recording: LoadedRecording) {
+        self.recording = recording
+        let hadProject = FileManager.default.fileExists(atPath: recording.bundle.projectURL.path)
+        var project = recording.bundle.loadProject(duration: recording.meta.duration)
+        if !hadProject && project.autoZoom {
+            project.zooms = AutoZoom.generate(events: recording.events, mapping: recording.mapping,
+                                              duration: recording.meta.duration, scale: project.zoomScale)
+        }
+        self.project = project
+        plan = recording.makePlan(project: project, canvas: Self.canvas(for: project, recording: recording))
+        player.actionAtItemEnd = .pause
+        timeObserver = player.addPeriodicTimeObserver(forInterval: CMTime(value: 1, timescale: 30), queue: .main) {
+            [weak self] t in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.currentTime = t.seconds
+                self.isPlaying = self.player.rate != 0
+            }
+        }
+        Task { await rebuild(full: true) }
+        Task { await loadPreviews() }
+    }
+
+    static func canvas(for project: EditProject, recording: LoadedRecording) -> CGSize {
+        RenderPlan.canvasSize(aspect: project.aspect, source: recording.sourceSize, shortSide: previewShortSide)
+    }
+
+    // MARK: - Ändringar
+
+    /// Ändrar projektet. Ändringar tätare än 0,6 s slås ihop till ett ångra-steg, så att ett
+    /// reglage som dras blir ett steg och inte hundra.
+    func update(_ change: (inout EditProject) -> Void) {
+        var next = project
+        change(&next)
+        guard next != project else { return }
+        if Date().timeIntervalSince(lastUndoPush) > 0.6 {
+            undoStack.append(project)
+            if undoStack.count > 200 { undoStack.removeFirst() }
+            redoStack.removeAll()
+        }
+        lastUndoPush = Date()
+        project = next
+        projectChanged()
+    }
+
+    func undo() {
+        guard let previous = undoStack.popLast() else { return }
+        redoStack.append(project)
+        project = previous
+        lastUndoPush = .distantPast
+        projectChanged()
+    }
+
+    func redo() {
+        guard let next = redoStack.popLast() else { return }
+        undoStack.append(project)
+        project = next
+        lastUndoPush = .distantPast
+        projectChanged()
+    }
+
+    private func projectChanged() {
+        rebuildTask?.cancel()
+        let full = project.segments != builtSegments
+        rebuildTask = Task {
+            try? await Task.sleep(for: .milliseconds(full ? 120 : 30))
+            guard !Task.isCancelled else { return }
+            await rebuild(full: full)
+        }
+        saveTask?.cancel()
+        saveTask = Task {
+            try? await Task.sleep(for: .milliseconds(600))
+            guard !Task.isCancelled else { return }
+            try? recording.bundle.saveProject(project)
+        }
+    }
+
+    /// Sparar direkt (när fönstret stängs).
+    func saveNow() {
+        saveTask?.cancel()
+        try? recording.bundle.saveProject(project)
+    }
+
+    // MARK: - Förhandsvisning
+
+    private func rebuild(full: Bool) async {
+        let project = self.project
+        let canvas = Self.canvas(for: project, recording: recording)
+        let newPlan = recording.makePlan(project: project, canvas: canvas)
+        if full || built == nil {
+            let sourceTime = plan.timeMap.source(at: currentTime)
+            do {
+                let result = try await CompositionBuilder.build(recording, plan: newPlan, fps: Self.previewFPS)
+                built = result
+                builtSegments = project.segments
+                plan = newPlan
+                let item = AVPlayerItem(asset: result.composition)
+                item.videoComposition = result.videoComposition
+                item.audioMix = result.audioMix
+                item.audioTimePitchAlgorithm = .spectral
+                let wasPlaying = isPlaying
+                player.replaceCurrentItem(with: item)
+                let t = newPlan.timeMap.output(at: sourceTime) ?? min(currentTime, newPlan.outputDuration)
+                await seek(to: t)
+                if wasPlaying { player.play() }
+            } catch {
+                loadError = error.localizedDescription
+            }
+        } else if let built, let item = player.currentItem {
+            plan = newPlan
+            item.videoComposition = CompositionBuilder.videoComposition(
+                plan: newPlan, duration: built.duration, fps: Self.previewFPS, hasCamera: recording.hasCamera)
+            item.audioMix = CompositionBuilder.audioMix(for: built.composition, audio: project.audio)
+            if !isPlaying { await seek(to: currentTime) }
+        }
+    }
+
+    private func loadPreviews() async {
+        let d = recording.meta.duration
+        if let screen = recording.asset(.screen) {
+            let count = max(8, min(60, Int(d / 2)))
+            thumbnails = await MediaPreviews.thumbnails(screen, duration: d, count: count, height: 90)
+        }
+        if let mic = recording.asset(.microphone) {
+            micWave = await MediaPreviews.waveform(mic, duration: d, buckets: 1600)
+        }
+        if let sys = recording.asset(.system) {
+            systemWave = await MediaPreviews.waveform(sys, duration: d, buckets: 1600)
+        }
+    }
+
+    // MARK: - Uppspelning
+
+    func togglePlay() {
+        if player.rate != 0 {
+            player.pause()
+        } else {
+            if currentTime >= duration - 0.05 { Task { await seek(to: 0); player.play() } } else { player.play() }
+        }
+    }
+
+    func seek(to t: Double) async {
+        let clamped = max(0, min(t, duration))
+        currentTime = clamped
+        await player.seek(to: CMTime(seconds: clamped, preferredTimescale: 600),
+                          toleranceBefore: .zero, toleranceAfter: .zero)
+    }
+
+    func scrub(to t: Double) {
+        let clamped = max(0, min(t, duration))
+        currentTime = clamped
+        player.seek(to: CMTime(seconds: clamped, preferredTimescale: 600),
+                    toleranceBefore: .zero, toleranceAfter: .zero)
+    }
+
+    // MARK: - Klipp
+
+    var sourceTimeAtPlayhead: Double { plan.timeMap.source(at: currentTime) }
+
+    /// Delar delen under spelhuvudet i två.
+    func split() {
+        let s = sourceTimeAtPlayhead
+        update { p in
+            guard let i = p.segments.firstIndex(where: { s > $0.start + 0.05 && s < $0.end - 0.05 }) else { return }
+            let seg = p.segments[i]
+            p.segments[i].end = s
+            p.segments.insert(.init(start: s, end: seg.end, speed: seg.speed), at: i + 1)
+        }
+    }
+
+    func segment(atOutput t: Double) -> EditProject.ClipSegment? {
+        for (seg, piece) in zip(project.segments.filter { $0.duration > 0.001 }, plan.timeMap.pieces)
+        where t >= piece.outputStart && t < piece.outputEnd {
+            return seg
+        }
+        return nil
+    }
+
+    func deleteSegment(_ id: UUID) {
+        update { p in
+            guard p.segments.count > 1 else { return }
+            p.segments.removeAll { $0.id == id }
+        }
+        selectedSegmentID = nil
+    }
+
+    func setSpeed(_ speed: Double, for id: UUID) {
+        update { p in
+            if let i = p.segments.firstIndex(where: { $0.id == id }) { p.segments[i].speed = speed }
+        }
+    }
+
+    // MARK: - Zoom
+
+    func regenerateAutoZooms() {
+        update { p in
+            let manual = p.zooms.filter { !$0.isAuto }
+            let generated = p.autoZoom
+                ? AutoZoom.generate(events: recording.events, mapping: recording.mapping,
+                                    duration: recording.meta.duration, scale: p.zoomScale)
+                    .filter { g in !manual.contains { $0.start < g.end && g.start < $0.end } }
+                : []
+            p.zooms = (manual + generated).sorted { $0.start < $1.start }
+        }
+    }
+
+    func addZoomAtPlayhead() {
+        let s = sourceTimeAtPlayhead
+        let c = plan.cursorPath.hasData ? plan.cursorPath.position(at: s) : CGPoint(x: 0.5, y: 0.5)
+        let zoom = EditProject.ZoomSegment(start: s, end: min(s + 3, recording.meta.duration),
+                                           scale: project.zoomScale, centerX: c.x, centerY: c.y)
+        update { $0.zooms.append(zoom); $0.zooms.sort { $0.start < $1.start } }
+        selectedZoomID = zoom.id
+    }
+
+    func updateZoom(_ id: UUID, _ change: (inout EditProject.ZoomSegment) -> Void) {
+        update { p in
+            guard let i = p.zooms.firstIndex(where: { $0.id == id }) else { return }
+            change(&p.zooms[i])
+            // En ändrad zoom är användarens: den överlever när de automatiska skapas om.
+            p.zooms[i].isAuto = false
+            let z = p.zooms[i]
+            p.zooms[i].start = max(0, min(z.start, z.end - 0.3))
+            p.zooms[i].end = min(recording.meta.duration, max(z.end, p.zooms[i].start + 0.3))
+        }
+    }
+
+    func deleteZoom(_ id: UUID) {
+        update { $0.zooms.removeAll { $0.id == id } }
+        if selectedZoomID == id { selectedZoomID = nil }
+    }
+
+    func deleteSelection() {
+        if let z = selectedZoomID { deleteZoom(z) } else if let s = selectedSegmentID { deleteSegment(s) }
+    }
+
+    var selectedZoom: EditProject.ZoomSegment? {
+        selectedZoomID.flatMap { id in project.zooms.first { $0.id == id } }
+    }
+
+    var selectedSegment: EditProject.ClipSegment? {
+        selectedSegmentID.flatMap { id in project.segments.first { $0.id == id } }
+    }
+}

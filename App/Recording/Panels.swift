@@ -97,15 +97,15 @@ struct HUDView: View {
 
     private func warning(_ s: CaptureSession.Status) -> String? {
         if s.micSilent, let mic = controller.settings.selectedMicrophone {
-            return "Ingen signal från \(mic.name)"
+            return String(localized: "Ingen signal från \(mic.name)")
         }
         if !s.failedTracks.isEmpty {
-            return "Spår som slutat fungera: \(s.failedTracks.map(\.rawValue).joined(separator: ", "))"
+            return String(localized: "Spår som slutat fungera: \(s.failedTracks.map(\.rawValue).joined(separator: ", "))")
         }
         if s.diskLow, let free = s.freeBytes {
-            return String(format: "Disken håller på att ta slut: %.1f GB kvar", Double(free) / 1e9)
+            return String(localized: "Disken håller på att ta slut: \(String(format: "%.1f", Double(free) / 1e9)) GB kvar")
         }
-        if s.droppedFrames > 30 { return "\(s.droppedFrames) rutor tappade" }
+        if s.droppedFrames > 30 { return String(localized: "\(s.droppedFrames) rutor tappade") }
         return s.notice
     }
 }

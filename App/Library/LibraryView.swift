@@ -141,7 +141,9 @@ private struct RecordingCard: View {
                         .help("Inspelningen stoppades aldrig normalt och har räddats fram till sista sparade biten.")
                 }
             }
-            Text(item.meta?.source.title ?? "Oläslig meta.json")
+            Group {
+                if let title = item.meta?.source.title { Text(verbatim: title) } else { Text("Oläslig meta.json") }
+            }
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)

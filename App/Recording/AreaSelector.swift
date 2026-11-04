@@ -137,11 +137,11 @@ private final class AreaSelectionView: NSView {
             if current == nil { border.setLineDash([6, 4], count: 2, phase: 0) }
             border.stroke()
             let label = current == nil
-                ? "Förra området — ↩ för att använda det"
+                ? String(localized: "Förra området — ↩ för att använda det")
                 : "\(Int(r.width)) × \(Int(r.height))"
             draw(label: label, near: r)
         } else {
-            draw(label: "Dra upp området som ska spelas in  ·  ⎋ avbryter",
+            draw(label: String(localized: "Dra upp området som ska spelas in  ·  ⎋ avbryter"),
                  near: NSRect(x: bounds.midX, y: bounds.midY, width: 0, height: 0))
         }
     }

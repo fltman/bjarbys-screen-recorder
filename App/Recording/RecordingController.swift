@@ -58,7 +58,7 @@ final class RecordingController: ObservableObject {
                 }
                 await begin(CaptureTarget.display(display, in: content))
             } catch {
-                fail("Skärmen gick inte att läsa: \(error.localizedDescription)")
+                fail(String(localized: "Skärmen gick inte att läsa: \(error.localizedDescription)"))
             }
         }
     }
@@ -102,7 +102,7 @@ final class RecordingController: ObservableObject {
                             ?? content.displays.first else { self.phase = .idle; return }
                     await self.begin(CaptureTarget.area(rect, on: display, in: content))
                 } catch {
-                    self.fail("Skärmen gick inte att läsa: \(error.localizedDescription)")
+                    self.fail(String(localized: "Skärmen gick inte att läsa: \(error.localizedDescription)"))
                 }
             }
         }
@@ -154,7 +154,7 @@ final class RecordingController: ObservableObject {
                 try? FileManager.default.trashItem(at: bundle.url, resultingItemURL: nil)
             }
             session = nil
-            fail("Inspelningen kunde inte starta: \(error.localizedDescription)")
+            fail(String(localized: "Inspelningen kunde inte starta: \(error.localizedDescription)"))
         }
     }
 
@@ -181,11 +181,11 @@ final class RecordingController: ObservableObject {
         switch reason {
         case .diskFull:
             let gb = Double(DiskSpace.freeBytes(at: library.directory) ?? 0) / 1e9
-            alert("Inspelningen stoppades eftersom disken nästan är full",
-                  String(format: "%.1f GB ledigt. Allt fram till stoppet är sparat (%@).", gb,
-                         Self.duration(meta.duration)))
+            alert(String(localized: "Inspelningen stoppades eftersom disken nästan är full"),
+                  String(localized: "\(String(format: "%.1f", gb)) GB ledigt. Allt fram till stoppet är sparat (\(Self.duration(meta.duration)))."))
         case .streamFailed(let why):
-            alert("Inspelningen avbröts", "Skärmströmmen slutade svara (\(why)). Allt fram till avbrottet är sparat.")
+            alert(String(localized: "Inspelningen avbröts"),
+                  String(localized: "Skärmströmmen slutade svara (\(why)). Allt fram till avbrottet är sparat."))
         case .user, .sharingStopped:
             break
         }
@@ -230,7 +230,7 @@ final class RecordingController: ObservableObject {
     private func fail(_ message: String) {
         phase = .idle
         closePanels()
-        alert("Något gick fel", message)
+        alert(String(localized: "Något gick fel"), message)
     }
 
     private func alert(_ title: String, _ text: String) {

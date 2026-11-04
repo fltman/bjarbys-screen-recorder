@@ -47,7 +47,7 @@ struct PermissionsView: View {
         .onReceive(timer) { _ in tick += 1 }
     }
 
-    private func row(_ title: String, _ detail: String, granted: Bool, anchor: String,
+    private func row(_ title: LocalizedStringKey, _ detail: LocalizedStringKey, granted: Bool, anchor: String,
                      request: @escaping () -> Void) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: granted ? "checkmark.circle.fill" : "circle")

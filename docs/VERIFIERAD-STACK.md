@@ -37,3 +37,35 @@ Uppmätt 2026-11-04 med `--prov-inspelning`, `scripts/sync-check.sh` och kraschp
   ber om sin egen behörighet.
 - `ffmpeg -f null` klagar på "non monotonically increasing dts" för VFR-filen — det är
   null-muxerns avrundning; paketens egna tider ökar strikt (kontrollerat med ffprobe).
+
+## Redigeraren och exporten (fas 2)
+
+Uppmätt 2026-11-04 på en 21 s områdesinspelning (1874×1434) med `--prov-rendera`,
+`--prov-exportera` och `--prov-redigerare`.
+
+- **Samma kompositör i förhandsvisning och export** (`PolishCompositor`, `AVVideoCompositing` +
+  Core Image på Metal). `AVMutableVideoComposition` är föråldrad i macOS 26 — vi använder
+  `AVVideoComposition(configuration:)`.
+- **Export, alla förval:** MP4 H.264 1080p60 (1263 rutor, 21,05 s = redigerad längd + 1 ruta,
+  AAC), MP4 HEVC 3840×2160, ProRes 422 1080p med 24-bitars PCM (597 MB för 21 s — väntat),
+  GIF 800×450. Klipp + 2× hastighet + stående 9:16: 15,05 s mot väntade 15,04.
+- **Exportfart 1080p60:** 19,8 s → 17,3 s med parallell kompositörkö → **10,4 s** när de
+  förrenderade bilderna (bakgrund, skugga, ring, markörer) lades i IOSurface-backade
+  pixelbuffertar i stället för `CGImage`. En sampling visade `AGX…processCompressedRegion2D`:
+  varje `CGImage` laddades upp till GPU:n på nytt för varje ruta. CPU-tiden halverades.
+  Vid senare körningar 5–6 s (≈ 3,5× realtid). Det som återstår är CIContext-lås och AAC.
+- **GIF-fördröjning** anges i hundradelar: 1/15 s avrundades till 0,07 och filmen blev 5 %
+  för lång (22,12 s mot 21,05). Fördröjning per ruta följer nu den exakta klockan: 21,07 s.
+- **Markören vid klick:** utjämnad markör släpar ~0,1 s och stod 2–3 % från klickpunkten när
+  klicket skedde. Löst genom att tona över till den råa banan 0,25 s före klicket.
+- **Glapp i musdata = stillastående.** En rörlig mus skickar 60–240 händelser/s. Linjär
+  interpolation över ett 1,5 s-glapp (musen stod still, nästa händelse kom först vid nästa
+  rörelse) flyttade markören 40 punkter från klickpunkten. Glapp > 0,1 s hålls nu.
+- **Zoom i annat format än källan:** mittpunkten begränsas efter vad som täcker *bildytan*
+  axel för axel, inte bara innehållet; annars förskjuts liggande innehåll i 9:16 och lämnar
+  tom bakgrund på ena sidan.
+- **Kompositionsspår med senare start** (mikrofonen ~0,5 s in) läggs in där de finns via
+  `insertTimeRange` på skärningen med spårets `timeRange`.
+- `NSHostingView.cacheDisplay` ritar layouten utanför skärmen men inte `AVPlayerView`s
+  videolager — spelarytan blir svart i `--prov-redigerare`; rutorna granskas med
+  `--prov-rendera`.

@@ -20,12 +20,21 @@ open Skarminspelare.xcodeproj
   omgenerering. All logik ligger i det lokala Swift-paketet `RecorderKit/`.
 - Signeras med *Developer ID Application: Brattoo AB (V783A2L763)*. Stabil signatur = TCC-
   behörigheterna (skärminspelning, mik, kamera) överlever ombyggen.
-- Provlägen i appbinären: se `docs/VERIFIERAD-STACK.md`.
+- Provlägen i appbinären (`dist/Bjarbys skärminspelare.app/Contents/MacOS/Skarminspelare …`):
+  - `--prov-inspelning <s> [--mik] [--kamera] [--katalog <mapp>]` — spelar in huvudskärmen
+  - `--prov-aterstall <mapp>` — räddar avbrutna paket
+  - `--prov-rendera <paket> <t1,t2,…> <mapp>` — färdiga rutor som PNG (läs dem som bild!)
+  - `--prov-exportera <paket> mp4-1080|mp4-4k|prores|gif <fil>`
+  - `--prov-redigerare <paket> <png> [--markera-zoom]` — redigerarens layout utanför skärmen
+  Startad från terminalen lånar binären terminalens skärminspelningsbehörighet.
+- `./scripts/sync-check.sh` mäter A/V-synk mot en blixt+pip-referens i QuickTime.
+- `swift scripts/make-icon.swift <png>` ritar appikonen (skalas in i `App/Assets.xcassets`).
 
 ## Struktur
 
 - `App/` — gränssnittet (menyrad, HUD, områdesväljare, bibliotek, redigerare). Svenska i
-  `Localizable.xcstrings`, engelska som översättning.
+  `App/Localizable.xcstrings` (källspråk sv), engelska som översättning. Användarsynlig text
+  ska vara `LocalizedStringKey`/`String(localized:)`, annars hamnar den inte i katalogen.
 - `RecorderKit/Sources/RecorderKit/` — `Capture/` `Writing/` `Telemetry/` `Project/`
   `Motion/` `Render/` `Export/`. Identifierare på engelska, kommentarer på svenska.
 - `docs/FORMAT.md` — projektpaketet `.bsrec`. `docs/VERIFIERAD-STACK.md` — uppmätta fakta.
@@ -49,4 +58,8 @@ open Skarminspelare.xcodeproj
   till CPU. Här ska rutorna stanna i IOSurface/Metal. Mät, anta inte.
 - Döda aldrig en process utifrån en sökträff — bara en pid vi själva startat, eller
   `osascript -e 'tell application id "com.brattoo.skarminspelare" to quit'`.
+- Förrenderade bilder i renderingen ska ligga i IOSurface-backade pixelbuffertar
+  (`RenderPlan.prerender`), aldrig som `CGImage` — de laddas annars upp till GPU:n varje ruta.
+- Musdata: ett glapp > 0,1 s mellan händelser betyder att musen stod still. Interpolera aldrig
+  över det (`CursorPath.stillGap`).
 - ⚠️ Disken är nästan full (≈12 GB ledigt nov 2026). Provinspelningar hålls korta och raderas.

@@ -48,3 +48,23 @@ import Foundation
         #expect(String(data: data, encoding: .utf8) == "[1,2,3,4]")
     }
 }
+
+@Suite struct ProjectJSONTests {
+    @Test func editProjectFromEmpty() throws {
+        let p = try BundleJSON.decoder.decode(EditProject.self, from: Data("{}".utf8))
+        #expect(p.autoZoom && p.zoomScale == 2 && p.aspect == .wide)
+        for type in [EditProject.ClipSegment.self, EditProject.ZoomSegment.self] as [any Decodable.Type] {
+            _ = try BundleJSON.decoder.decode(type, from: Data("{}".utf8))
+        }
+        _ = try BundleJSON.decoder.decode(EditProject.Background.self, from: Data("{}".utf8))
+        _ = try BundleJSON.decoder.decode(EditProject.CursorStyle.self, from: Data("{}".utf8))
+        _ = try BundleJSON.decoder.decode(EditProject.CameraStyle.self, from: Data("{}".utf8))
+        _ = try BundleJSON.decoder.decode(EditProject.AudioMix.self, from: Data("{}".utf8))
+    }
+
+    @Test func unknownAspectFallsBack() throws {
+        let p = try BundleJSON.decoder.decode(EditProject.self, from: Data(#"{"aspect":"cinemascope","padding":0.2}"#.utf8))
+        #expect(p.aspect == .wide)
+        #expect(p.padding == 0.2)
+    }
+}
