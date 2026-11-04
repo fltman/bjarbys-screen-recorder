@@ -1,0 +1,20 @@
+# Obsidian-valvet är arbetsanteckningar och ska aldrig in i repot
+vault/
+.obsidian/
+
+# Bygge
+build/
+dist/
+.build/
+RecorderKit/.build/
+RecorderKit/.swiftpm/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+Skarminspelare.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Inspelningar och provmaterial
+*.bsrec
+prov/
+
+.DS_Store

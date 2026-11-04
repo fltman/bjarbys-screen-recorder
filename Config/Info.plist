@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>sv</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>sv</string>
+		<string>en</string>
+	</array>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Bjarbys skärminspelare</string>
+	<key>CFBundleDisplayName</key>
+	<string>Bjarbys skärminspelare</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.video</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>© 2026 Anders Bjarby</string>
+	<!-- Behörighetstexter. Ligger i den FYSISKA filen med flit: satt som
+	     INFOPLIST_KEY_* i byggnycklar tappar Xcode NSAudioCaptureUsageDescription,
+	     och då levererar Core Audio-tappar bara nollor utan felkod. -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Mikrofonen spelas in på ett eget spår så att din röst går att redigera för sig.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Kameran spelas in på ett eget spår och läggs som en bubbla i videon, som du kan flytta och dölja i efterhand.</string>
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>Datorljudet spelas in på ett eget spår, skilt från mikrofonen.</string>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>com.brattoo.skarminspelare.project</string>
+			<key>UTTypeDescription</key>
+			<string>Inspelning från Bjarbys skärminspelare</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>com.apple.package</string>
+				<string>public.composite-content</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>bsrec</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Inspelning från Bjarbys skärminspelare</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSTypeIsPackage</key>
+			<true/>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.brattoo.skarminspelare.project</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
