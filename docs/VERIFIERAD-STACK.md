@@ -306,6 +306,13 @@ växer fram. ⚠️ Först förstorades den råa skärmbilden — en mask hade s
 den maskade (provat med ifylld och pixlad mask: ingen läsbar text i luppen). ⚠️ En svart ruta
 som bakgrund i `CIBlendWithMask` gav svarta hörn runt cirkeln; bakgrunden ska vara `.empty()`.
 
+## Insticksprogram som hänger (2026-11-05)
+
+- En underprocess i bakgrunden (`sleep &; wait`) stoppades redan med `Process.terminate()`, men en
+  som struntar i SIGTERM (`(trap '' TERM; sleep 12.5) &`) höll utdataröret öppet: körningen tog
+  13 s i stället för tidsgränsen 0,5. Hela processträdet samlas nu in före stoppet
+  (`proc_listchildpids`), får SIGTERM och efter 1 s SIGKILL: 1,6 s.
+
 ## Översättning av undertexter (2026-11-05)
 
 - `LanguageAvailability().status(from: sv, to: en)` = `unsupported` på macOS 26.1: Apples

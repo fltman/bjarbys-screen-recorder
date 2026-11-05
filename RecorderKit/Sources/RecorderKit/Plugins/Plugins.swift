@@ -71,6 +71,24 @@ public enum Plugins {
         }
     }
 
+    /// Stoppar programmet och allt det startat (bara vår egen processträd). Underprocesserna samlas
+    /// in först — annars hinner de flytta till launchd när föräldern dör — får SIGTERM, och de
+    /// som lever efter en sekund SIGKILL. En underprocess som struntade i SIGTERM höll annars
+    /// utdataröret öppet tills den var klar (uppmätt: 13 s i stället för tidsgränsen).
+    static func stopTree(_ root: pid_t) async {
+        var all: [pid_t] = []
+        var queue = [root]
+        while let pid = queue.popLast() {
+            all.append(pid)
+            var buffer = [pid_t](repeating: 0, count: 256)
+            let n = proc_listchildpids(pid, &buffer, Int32(buffer.count * MemoryLayout<pid_t>.size))
+            if n > 0 { queue += buffer.prefix(Int(n)).filter { $0 > 0 } }
+        }
+        for pid in all { kill(pid, SIGTERM) }
+        try? await Task.sleep(for: .seconds(1))
+        for pid in all where kill(pid, 0) == 0 { kill(pid, SIGKILL) }
+    }
+
     /// Vad programmet svarade.
     public struct Reply: Sendable {
         public var status: Int32
@@ -108,7 +126,7 @@ public enum Plugins {
         async let err = Task.detached { stderr.fileHandleForReading.readDataToEndOfFile() }.value
         let watchdog = Task.detached {
             try await Task.sleep(for: .seconds(timeout))
-            if process.isRunning { process.terminate() }
+            if process.isRunning { await stopTree(process.processIdentifier) }
         }
         let (o, e) = await (out, err)
         process.waitUntilExit()

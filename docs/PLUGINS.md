@@ -42,7 +42,7 @@ Programmet får händelsen som JSON på **stdin** och miljövariabeln `SKARMINSP
 
 Det kan svara med JSON på **stdout**: `message` (visas), `url` (läggs i urklipp och visas) och
 `file`. Annan text på stdout visas som meddelande. En kod skild från 0 är ett fel; stderr visas.
-Programmet avbryts efter 10 minuter.
+Programmet avbryts efter 10 minuter, med allt det startat (SIGTERM, efter en sekund SIGKILL).
 
 ## Exempel
 

@@ -53,6 +53,17 @@ import Foundation
         #expect(reply.errorOutput.contains("det gick inte"))
     }
 
+    @Test func aHangingPluginWithAChildIsStoppedToo() async throws {
+        let r = root(); defer { try? FileManager.default.removeItem(at: r) }
+        // Underprocessen ärver utdataröret och struntar i SIGTERM: utan att den stoppas blir
+        // läsningen hängande tills den är klar (12,5 s).
+        try make(r, "barn", script: "#!/bin/sh\n(trap '' TERM; sleep 12.5) &\nwait\n")
+        let started = Date()
+        let reply = await Plugins.run(try #require(Plugins.discover(in: r).first), event: Plugins.action, payload: [:], timeout: 0.5)
+        #expect(!reply.ok)
+        #expect(Date().timeIntervalSince(started) < 5)
+    }
+
     @Test func aHangingPluginIsStopped() async throws {
         let r = root(); defer { try? FileManager.default.removeItem(at: r) }
         try make(r, "hanger", script: "#!/bin/sh\nsleep 30\n")
