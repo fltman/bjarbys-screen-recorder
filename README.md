@@ -142,7 +142,8 @@ Backblaze B2) and get the public link on the clipboard. No service in between; t
 lives in the keychain.
 
 **Export:** MP4 (H.264, 1080p), MP4 (HEVC, 4K), MP4 4K HDR (HEVC 10-bit, HLG; for HDR recordings), ProRes 422, ProRes 4444 with a transparent
-background (to put the polished screen on top of something else in your editor) and GIF (one
+background (to put the polished screen on top of something else in your editor), MKV (H.264 in
+Matroska, with chapters) and GIF (one
 palette for the whole clip with ordered dithering, so gradients don't band). Or only the audio:
 the mix as M4A or WAV, or one WAV per source (microphone, computer audio, each app, narration,
 music) for Logic or Resolve — all as long as the film, and they add up to the mix. Chapters go

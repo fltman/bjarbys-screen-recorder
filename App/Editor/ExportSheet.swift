@@ -309,7 +309,8 @@ struct ExportSheet: View {
     }
 
     static func icon(_ p: ExportPreset) -> String {
-        switch p.codec {
+        if p.matroska { return "shippingbox" }
+        return switch p.codec {
         case .h264: "play.rectangle"
         case .hevc: "4k.tv"
         case .hevcHDR: "sun.max"

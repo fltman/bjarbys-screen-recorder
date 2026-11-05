@@ -306,6 +306,14 @@ växer fram. ⚠️ Först förstorades den råa skärmbilden — en mask hade s
 den maskade (provat med ifylld och pixlad mask: ingen läsbar text i luppen). ⚠️ En svart ruta
 som bakgrund i `CIBlendWithMask` gav svarta hörn runt cirkeln; bakgrunden ska vara `.empty()`.
 
+## MKV (2026-11-05)
+
+- Egen Matroska-skrivare, omkodning bara av behållaren: 6 s 1080p60 → 360 rutor, ffmpeg avkodar
+  utan fel, kapitlen (med å ä ö) och AAC läses av ffprobe. ⚠️ `AVAssetReaderTrackOutput` utan
+  utdatainställningar ger bildtiderna utan MP4:ns redigeringslista: med B-bilder låg första
+  bilden på 0,033 s (två rutor) och ljudet på 0 — videon blev 33 ms sen. Videotiderna räknas nu
+  från första bilden; båda spåren börjar på 0.
+
 ## Quick Look och AV1 (2026-11-05)
 
 - macOS 26 läser fortfarande dokumentpaketens `QuickLook/`-mapp (`qlmanage -t` och `-p -o`):

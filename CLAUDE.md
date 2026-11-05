@@ -24,7 +24,7 @@ open Skarminspelare.xcodeproj
   - `--prov-inspelning <s> [--mik] [--kamera] [--katalog <mapp>]` — spelar in huvudskärmen
   - `--prov-aterstall <mapp>` — räddar avbrutna paket
   - `--prov-rendera <paket> <t1,t2,…> <mapp>` — färdiga rutor som PNG (läs dem som bild!)
-  - `--prov-exportera <paket> mp4-1080|mp4-4k|prores|gif|ljud-m4a|ljud-wav|ljud-spar <fil> [--utsnitt a,b] [--fps n] [--ljudniva -14] [--kvalitet small|normal|high]`
+  - `--prov-exportera <paket> mp4-1080|mp4-4k|mkv-1080|prores|gif|ljud-m4a|ljud-wav|ljud-spar <fil> [--utsnitt a,b] [--fps n] [--ljudniva -14] [--kvalitet small|normal|high]`
   - `--prov-redigerare <paket> <png> [--markera-zoom]` — redigerarens layout utanför skärmen
   - `--prov-transkribera <paket> [--modell <fil>] [--sprak sv]` — whisper.cpp, skriver orden
   - `--prov-maskera <paket> <t1,…> <mapp>` — söker känslig text och renderar rutor (sparar inte)

@@ -16,6 +16,8 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
     /// Bildytans kortaste sida i pixlar.
     public let shortSide: Int
     public let fps: Int
+    /// Filmen packas om till Matroska (.mkv) efter exporten (samma kodek, ingen omkodning).
+    public var matroska: Bool = false
 
     public static let all: [ExportPreset] = [
         .init(id: "mp4-1080", name: "MP4 1080p", detail: "H.264 — spelas överallt", codec: .h264, shortSide: 1080, fps: 60),
@@ -26,6 +28,8 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
         .init(id: "prores-alfa", name: "ProRes 4444 med alfa",
               detail: "Genomskinlig bakgrund — lägg skärmen ovanpå något eget i Final Cut, Resolve, Premiere",
               codec: .proresAlpha, shortSide: 1080, fps: 60),
+        .init(id: "mkv-1080", name: "MKV 1080p", detail: "H.264 i Matroska — för OBS-vana arbetsflöden, VLC, mpv",
+              codec: .h264, shortSide: 1080, fps: 60, matroska: true),
         .init(id: "gif", name: "GIF", detail: "För Slack och GitHub, högst 800 px", codec: .gif, shortSide: 450, fps: 15),
         .init(id: "ljud-m4a", name: "Ljud M4A", detail: "AAC 256 kbit/s — bara ljudet, för en podd", codec: .audioAAC, shortSide: 0, fps: 30),
         .init(id: "ljud-wav", name: "Ljud WAV", detail: "24 bit, 48 kHz, okomprimerat", codec: .audioWAV, shortSide: 0, fps: 30),
@@ -35,7 +39,8 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
     ]
 
     public var fileExtension: String {
-        switch codec {
+        if matroska { return "mkv" }
+        return switch codec {
         case .h264, .hevc, .hevcHDR: "mp4"
         case .prores, .proresAlpha: "mov"
         case .gif: "gif"
@@ -164,7 +169,18 @@ public final class Exporter: @unchecked Sendable {
                                       hdr: preset.isHDR)
         let built = try await CompositionBuilder.build(recording, plan: plan, fps: fps)
         try? FileManager.default.removeItem(at: url)
-        if preset.isAudioOnly {
+        if preset.matroska {
+            // Först en vanlig MP4 bredvid, sedan omkodning bara av behållaren.
+            let temp = url.deletingLastPathComponent().appendingPathComponent(".\(UUID().uuidString).mp4")
+            defer { try? FileManager.default.removeItem(at: temp) }
+            try await exportMovie(built, canvas: canvas, to: temp) { progress($0 * 0.95) }
+            if isCancelled { throw ExportError.cancelled }
+            let span = clampedRange(built)
+            let chapters = built.plan.overlayTrack.chapterList(in: span.seconds).map {
+                Matroska.Chapter(start: $0.start - span.seconds.lowerBound, end: $0.end - span.seconds.lowerBound, title: $0.title)
+            }
+            try await Matroska.remux(temp, to: url, chapters: chapters) { progress(0.95 + $0 * 0.05) }
+        } else if preset.isAudioOnly {
             try await exportAudio(built, to: url, progress: progress)
         } else if preset.codec == .gif {
             try await exportGIF(built, canvas: canvas, to: url, progress: progress)

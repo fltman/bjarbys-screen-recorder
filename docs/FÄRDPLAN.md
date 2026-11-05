@@ -84,6 +84,9 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- MKV (2026-11-05): förvalet MKV 1080p exporterar en MP4 och packar om den rakt över till
+  Matroska med en egen liten skrivare (`Export/Matroska.swift`): H.264/HEVC + AAC, kapitel,
+  kluster vid nyckelbilder och sökpunkter. Inget ffmpeg-beroende.
 - Quick Look (2026-11-05): varje paket får `QuickLook/Thumbnail.png` och `Preview.mov` (symbolisk
   länk till skärmspåret) — Finder visar bilden som ikon och spelar inspelningen med mellanslag,
   utan något tillägg. Äldre inspelningar får mappen när biblioteket läses.
