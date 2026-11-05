@@ -14,6 +14,9 @@ public struct LoadedRecording: @unchecked Sendable {
     public var isolatedMicrophone: AVURLAsset?
     /// Var ansiktet är i kamerabilden, om det är uträknat.
     public var faceTrack: FaceTrack?
+    /// Flera skärmar: de övriga skärmarnas filer (den första är skärmspåret). Lästa en gång och
+    /// hållna här: en tillgång som släpps medan kompositionen använder den ger −12780.
+    public var extraDisplays: [AVURLAsset] = []
     let assets: [RecordingMeta.TrackKind: AVURLAsset]
     /// Apparna med eget ljudspår, i inspelningens ordning.
     public let apps: [AppAudio]
@@ -39,13 +42,17 @@ public struct LoadedRecording: @unchecked Sendable {
                 assets[track.kind] = AVURLAsset(url: url, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
             }
         }
-        return LoadedRecording(bundle: bundle, meta: meta, events: events, cursors: bundle.readCursors(),
-                               mapping: ContentMapping(meta: meta, events: events),
-                               transcript: bundle.readTranscript(),
-                               isolatedMicrophone: FileManager.default.fileExists(atPath: bundle.isolatedMicrophoneURL.path)
-                                   ? AVURLAsset(url: bundle.isolatedMicrophoneURL) : nil,
-                               faceTrack: bundle.readFaceTrack(),
-                               assets: assets, apps: apps)
+        var rec = LoadedRecording(bundle: bundle, meta: meta, events: events, cursors: bundle.readCursors(),
+                                  mapping: ContentMapping(meta: meta, events: events),
+                                  transcript: bundle.readTranscript(),
+                                  isolatedMicrophone: FileManager.default.fileExists(atPath: bundle.isolatedMicrophoneURL.path)
+                                      ? AVURLAsset(url: bundle.isolatedMicrophoneURL) : nil,
+                                  faceTrack: bundle.readFaceTrack(),
+                                  assets: assets, apps: apps)
+        rec.extraDisplays = meta.displays.dropFirst().map {
+            AVURLAsset(url: bundle.recordingDir.appendingPathComponent($0.file), options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
+        }
+        return rec
     }
 
     public var hasCamera: Bool { assets[.camera] != nil }
@@ -102,6 +109,16 @@ public enum CompositionBuilder {
         }
         var pairs: [(AVAssetTrack, AVMutableCompositionTrack, CMTimeRange)] = []
         pairs.append((screenSource, screenTrack, try await screenSource.load(.timeRange)))
+
+        // Flera skärmar: de övriga skärmarna som egna spår, med samma delar som skärmspåret.
+        var displayIDs: [CMPersistentTrackID] = []
+        for (i, asset) in rec.extraDisplays.enumerated() {
+            guard let src = try? await asset.loadTracks(withMediaType: .video).first,
+                  let track = composition.addMutableTrack(withMediaType: .video, preferredTrackID: displayTrackBase + CMPersistentTrackID(i))
+            else { continue }
+            pairs.append((src, track, try await src.load(.timeRange)))
+            displayIDs.append(track.trackID)
+        }
 
         var hasCamera = false
         if let cam = await sourceTrack(.camera, .video),
@@ -308,13 +325,16 @@ public enum CompositionBuilder {
     static let alternateAppTrackBase: CMPersistentTrackID = 500
     /// Klickljuden.
     static let clickTrackID: CMPersistentTrackID = 600
+    /// Flera skärmar: skärm 2, 3 … (den första är skärmspåret, id 1).
+    static let displayTrackBase: CMPersistentTrackID = 700
 
     public static func videoComposition(plan: RenderPlan, duration: CMTime, fps: Int, hasCamera: Bool,
                                         hasAlternate: Bool = false) -> AVVideoComposition {
         let instruction = PolishInstruction(timeRange: CMTimeRange(start: .zero, duration: duration), plan: plan,
                                             screenTrackID: screenTrackID, cameraTrackID: hasCamera ? cameraTrackID : nil,
                                             mediaTrackIDs: plan.videoOverlayIDs.indices.map { videoOverlayTrackBase + CMPersistentTrackID($0) },
-                                            alternateTrackID: hasAlternate ? alternateScreenTrackID : nil)
+                                            alternateTrackID: hasAlternate ? alternateScreenTrackID : nil,
+                                            displayTrackIDs: plan.displayRects.dropFirst().indices.map { displayTrackBase + CMPersistentTrackID($0 - 1) })
         // HDR-inspelning: kompositören tar emot rutorna oförändrade (10 bit PQ) och ritar HLG eller
         // SDR. ⚠️ Kompositionen får då inga färgegenskaper: med dem gör AVFoundation om varje
         // källruta till den färgrymden först (uppmätt: x420 märkt HLG respektive BT.709 trots

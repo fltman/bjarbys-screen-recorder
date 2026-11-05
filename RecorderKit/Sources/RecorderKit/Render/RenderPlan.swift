@@ -84,6 +84,9 @@ public final class RenderPlan: @unchecked Sendable {
     public let inkTrack: InkTrack
     /// Ansiktet i kamerabilden (när bubblan ska följa det).
     let faceTrack: FaceTrack?
+    /// Flera skärmar: varje skärms plats på det virtuella skrivbordet (skärmspårets pixlar, Core
+    /// Image-koordinater). Tom för en skärm.
+    public let displayRects: [CGRect]
 
     /// ScreenCaptureKits HDR10-förval lägger SDR-vitt på 100 nits; Core Image har SDR-vitt
     /// (1,0 linjärt) på 203 nits, som BT.2408. Uppmätt: Y 509 (PQ 0,508) → 0,492 linjärt.
@@ -133,6 +136,7 @@ public final class RenderPlan: @unchecked Sendable {
                 cursorPath: CursorPath? = nil, cameraPath: CameraPath? = nil, outputHDR: Bool = false,
                 faceTrack: FaceTrack? = nil) {
         self.faceTrack = faceTrack
+        displayRects = Self.displayRects(meta)
         self.transparent = transparentBackground
         self.sourceHDR = meta.hdr
         self.cameraStart = meta.track(.camera)?.start ?? 0
@@ -273,8 +277,13 @@ public final class RenderPlan: @unchecked Sendable {
 
     /// Den färdiga rutan vid utdatatiden `t`.
     public func render(outputTime t: Double, screen: CIImage?, camera: CIImage?, media: [UUID: CIImage] = [:],
-                       alternate: CIImage? = nil) -> CIImage {
-        let screen = screen.map(prepareScreen), alternate = alternate.map(prepareScreen)
+                       alternate: CIImage? = nil, displays: [CIImage?] = []) -> CIImage {
+        // Flera skärmar: skärmarna läggs ihop till det virtuella skrivbordet; allt annat (markör,
+        // zoom, masker, pennan) räknar redan i globala punkter. Övertoningens B-spår har bara den
+        // första skärmen, så den hoppas över.
+        let multi = displayRects.count > 1
+        let screen = multi ? composeDisplays([screen] + displays) : screen.map(prepareScreen)
+        let alternate = multi ? nil : alternate.map(prepareScreen)
         let s = timeMap.source(at: t)
         let canvasRect = CGRect(origin: .zero, size: canvas)
         var layer = CIImage.empty()
@@ -906,6 +915,37 @@ public final class RenderPlan: @unchecked Sendable {
         }
         let image = overlayImage(o)
         return CGRect(origin: placement(of: o, size: image.extent.size), size: image.extent.size)
+    }
+
+    // MARK: - Flera skärmar
+
+    /// Skärmarnas platser i det virtuella skrivbordets pixlar (origo nere till vänster).
+    static func displayRects(_ meta: RecordingMeta) -> [CGRect] {
+        guard meta.displays.count > 1 else { return [] }
+        let union = meta.source.contentRect
+        let scale = meta.source.pixelScale
+        let height = Double(meta.source.pixelHeight)
+        return meta.displays.map { d in
+            let r = d.contentRect
+            let w = r.width * scale, h = r.height * scale
+            return CGRect(x: (r.x - union.x) * scale, y: height - (r.y - union.y) * scale - h, width: w, height: h)
+        }
+    }
+
+    /// Skärmarnas rutor på sina platser, över svart (där ingen skärm finns).
+    func composeDisplays(_ frames: [CIImage?]) -> CIImage {
+        let canvas = CGRect(origin: .zero, size: sourceSize)
+        var out = CIImage(color: .black).cropped(to: canvas)
+        for (i, frame) in frames.enumerated() where i < displayRects.count {
+            guard let frame = frame.map(prepareScreen) else { continue }
+            let e = frame.extent, r = displayRects[i]
+            guard e.width > 0, e.height > 0 else { continue }
+            let placed = frame.transformed(by: CGAffineTransform(translationX: -e.minX, y: -e.minY))
+                .transformed(by: CGAffineTransform(scaleX: r.width / e.width, y: r.height / e.height))
+                .transformed(by: CGAffineTransform(translationX: r.minX, y: r.minY))
+            out = placed.composited(over: out)
+        }
+        return out.cropped(to: canvas)
     }
 
     // MARK: - Fönsterram

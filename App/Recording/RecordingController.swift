@@ -134,6 +134,21 @@ final class RecordingController: ObservableObject {
 
     // MARK: - Starta
 
+    /// Alla skärmar samtidigt (när det finns fler än en).
+    func recordAllDisplays() {
+        guard ensurePermission() else { return }
+        Task {
+            phase = .choosing
+            do {
+                let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+                guard let target = CaptureTarget.allDisplays(in: content) else { phase = .idle; return }
+                await begin(target)
+            } catch {
+                fail(error.localizedDescription)
+            }
+        }
+    }
+
     /// En kamera eller en iPhone/iPad via kabel: bilden blir inspelningen.
     func recordDevice(_ device: DeviceSession.Device) {
         guard phase == .idle else { return }

@@ -124,6 +124,28 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
     public var hdr: Bool
     /// Namnet användaren gett inspelningen i biblioteket ("" = visa datumet).
     public var name: String
+    /// Flera skärmar samtidigt: varje skärms fil och ram (globala punkter). `source` beskriver då
+    /// det virtuella skrivbordet (alla skärmars sammanlagda ram, i `pixelScale`), och skärmarna
+    /// läggs ihop där i renderingen. Tom = en skärm som vanligt. Den första är `screen-0.mov`.
+    public var displays: [Display]
+
+    public struct Display: Codable, Equatable, Sendable {
+        public var file: String
+        public var title: String
+        public var displayID: UInt32
+        public var contentRect: Rect
+        public var pixelWidth: Int
+        public var pixelHeight: Int
+        public init(file: String, title: String, displayID: UInt32, contentRect: Rect, pixelWidth: Int, pixelHeight: Int) {
+            self.file = file; self.title = title; self.displayID = displayID; self.contentRect = contentRect
+            self.pixelWidth = pixelWidth; self.pixelHeight = pixelHeight
+        }
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            file = c.value(.file, ""); title = c.value(.title, ""); displayID = c.value(.displayID, 0)
+            contentRect = c.value(.contentRect, .zero); pixelWidth = c.value(.pixelWidth, 0); pixelHeight = c.value(.pixelHeight, 0)
+        }
+    }
 
     public init(source: Source, fps: Int, appVersion: String) {
         self.schemaVersion = RecorderKit.formatVersion
@@ -141,6 +163,7 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
         self.startHostTime = 0
         self.hdr = false
         self.name = ""
+        self.displays = []
     }
 
     public init(from decoder: Decoder) throws {
@@ -160,6 +183,7 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
         startHostTime = c.value(.startHostTime, 0)
         hdr = c.value(.hdr, false)
         name = c.value(.name, "")
+        displays = c.value(.displays, [])
     }
 
     public func track(_ kind: TrackKind) -> Track? {

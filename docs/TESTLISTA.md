@@ -28,6 +28,13 @@ Bygg först: `./scripts/build.sh`, öppna `dist/Bjarbys skärminspelare.app`.
   `./scripts/sync-check.sh` med valet på (röstbehandlingens fördröjning är inte mätt).
 - [ ] **Kamera / iPhone** — Spela in kamera eller iPhone. ⚠️ En iPhone via kabel är inte provad.
 
+- [ ] **Alla skärmar** — med en extern skärm: Spela in alla skärmar, flytta markören mellan
+  skärmarna. I redigeraren ska bilden följa med (16:9, fyll och följ). ⚠️ Inte provad live.
+- [ ] **YouTube / Dropbox** — under Delning …: eget klient-id/appnyckel, Anslut, exportera,
+  ladda upp. YouTube ska bli privat. ⚠️ Bara provat mot en lokal provserver.
+- [ ] **Insticksprogram** — kopiera `examples/plugins/kontrollsumma` till insticksmappen (Öppna
+  mappen), slå på den, exportera och välj Insticksprogram › Visa kontrollsumma.
+
 ## Redigeraren
 
 - [ ] **Ansiktet i mitten** — en inspelning med kamera där du sitter lite åt sidan: Stil › Kamera

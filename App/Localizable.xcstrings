@@ -6750,6 +6750,23 @@
         }
       }
     },
+    "Spela in alla skärmar": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record All Displays"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spela in alla skärmar"
+          }
+        }
+      }
+    },
     "Spela in fönster …": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -8123,6 +8140,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Utsnittet i bubblan följer ditt ansikte (Vision, på datorn), så att du inte hamnar i kanten. Räknas fram en gång."
+          }
+        }
+      }
+    },
+    "Varje skärm på ett eget spår; i redigeraren följer bilden markören mellan dem.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each display on its own track; in the editor the picture follows the cursor between them."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varje skärm på ett eget spår; i redigeraren följer bilden markören mellan dem."
           }
         }
       }

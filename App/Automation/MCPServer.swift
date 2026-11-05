@@ -132,6 +132,7 @@ enum MCPServer {
                                     "hdr": ["type": "boolean", "description": "Record in HDR (10-bit BT.2020 PQ; export with preset mp4-4k-hdr for HLG)."],
                                     "hide_desktop_icons": ["type": "boolean", "description": "Keep desktop icons out of the recording."],
                                     "hide_notifications": ["type": "boolean", "description": "Keep notifications and desktop widgets out of the recording."],
+                                    "all_displays": ["type": "boolean", "description": "Record every display at once (each on its own track); the editor follows the cursor between them."],
                                     "clean_microphone": ["type": "boolean", "description": "Remove speaker echo and noise from the microphone while recording (Apple voice processing, good with speakers instead of headphones). The unprocessed microphone is then not kept (macOS doesn't deliver both at once)."]],
                                    required: ["seconds"])],
             ["name": "start_recording", "description": "Start recording the main display. Stop with stop_recording.",
@@ -448,7 +449,9 @@ enum MCPServer {
         }
         let dir = RecordingLibrary.defaultDirectory
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let session = try CaptureSession(target: CaptureTarget.display(display, in: content), options: options, directory: dir)
+        let target = (a["all_displays"] as? Bool ?? false) ? (CaptureTarget.allDisplays(in: content) ?? CaptureTarget.display(display, in: content))
+            : CaptureTarget.display(display, in: content)
+        let session = try CaptureSession(target: target, options: options, directory: dir)
         try await session.start()
         log("spelar in till \(session.bundle.url.path)")
         return session

@@ -288,7 +288,8 @@ enum TestMode {
             guard let display = content.displays.first(where: { $0.displayID == CGMainDisplayID() }) ?? content.displays.first else {
                 print(#"{"fel":"ingen skärm"}"#); return 3
             }
-            let target = CaptureTarget.display(display, in: content)
+            let target = args.contains("--alla-skarmar") ? (CaptureTarget.allDisplays(in: content) ?? CaptureTarget.display(display, in: content))
+                : CaptureTarget.display(display, in: content)
             let session = try CaptureSession(target: target, options: options, directory: dir)
             var lastStatus = CaptureSession.Status()
             session.onStatus = { lastStatus = $0 }
@@ -365,7 +366,7 @@ enum TestMode {
             print("{\"bildyta\":\"\(Int(canvas.width))x\(Int(canvas.height))\",\"zoomar\":[\(zooms.joined(separator: ","))],\"rutor\":[\(written.joined(separator: ","))]}")
             return 0
         } catch {
-            print("{\"fel\":\"\(error.localizedDescription)\"}")
+            print("{\"fel\":\"\(error.localizedDescription)\"}"); FileHandle.standardError.write(Data("\(error)\n".utf8))
             return 1
         }
     }

@@ -47,6 +47,7 @@ de att spela upp till sista fragmentet; `meta.json` har då `finished: false` ti
 | `startHostTime` | tidslinjens nollpunkt i värdklockan (s); flashback syr ihop delar med den |
 | `hdr` | skärmspåret är HDR: 10 bit BT.2020 PQ med SDR-vitt på 100 nits (ScreenCaptureKits HDR10-förval) |
 | `name` | namnet användaren gett inspelningen i biblioteket ("" = datumet visas) |
+| `displays[]` | alla skärmar: `file` (`screen-0.mov`, `screen-1.mov` …), `title`, `displayID`, `contentRect` (globala punkter), `pixelWidth`, `pixelHeight`. `source` är då det virtuella skrivbordet (skärmarnas sammanlagda ram); skärmarna läggs ihop i renderingen. Bara den första finns i `tracks` |
 
 ## events.jsonl
 

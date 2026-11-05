@@ -10,6 +10,7 @@ public enum RecordingMerger {
         case unreadable(String)
         case sizeMismatch(String)
         case mixedHDR
+        case multipleDisplays
         case exportFailed(String)
         public var errorDescription: String? {
             switch self {
@@ -17,6 +18,7 @@ public enum RecordingMerger {
             case .unreadable(let n): String(localized: "\(n) går inte att läsa.")
             case .sizeMismatch(let s): String(localized: "Inspelningarna har olika upplösning (\(s)) och kan inte slås ihop utan omkodning.")
             case .mixedHDR: String(localized: "Inspelningar i HDR och SDR kan inte slås ihop.")
+            case .multipleDisplays: String(localized: "Inspelningar av flera skärmar kan inte slås ihop än.")
             case .exportFailed(let s): String(localized: "Ihopslagningen misslyckades: \(s)")
             }
         }
@@ -34,6 +36,7 @@ public enum RecordingMerger {
         let sizes = Set(metas.map { "\($0.1.source.pixelWidth)×\($0.1.source.pixelHeight)" })
         guard sizes.count == 1 else { throw MergeError.sizeMismatch(sizes.sorted().joined(separator: ", ")) }
         guard Set(metas.map(\.1.hdr)).count == 1 else { throw MergeError.mixedHDR }
+        guard metas.allSatisfy({ $0.1.displays.count <= 1 }) else { throw MergeError.multipleDisplays }
 
         // Var varje tagning börjar i den nya inspelningen.
         var offsets: [Double] = []

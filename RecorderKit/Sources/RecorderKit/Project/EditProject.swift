@@ -588,7 +588,10 @@ extension RecordingBundle {
             if p.segments.isEmpty { p.segments = [.init(start: 0, end: duration)] }
             return p
         }
-        return .initial(duration: duration)
+        var p = EditProject.initial(duration: duration)
+        // Flera skärmar: en skärm i taget i 16:9, och bilden följer markören mellan dem.
+        if (try? readMeta())?.displays.count ?? 0 > 1 { p.aspect = .wide; p.framing = .fill }
+        return p
     }
 
     public func saveProject(_ project: EditProject) throws {

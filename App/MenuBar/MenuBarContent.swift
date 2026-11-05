@@ -31,6 +31,11 @@ struct MenuBarContent: View {
             Button("Spela in område …") { recorder.recordArea() }
                 .keyboardShortcut(hotKeys.binding(.area).keyboardShortcut)
                 .disabled(recorder.isBusy)
+            if NSScreen.screens.count > 1 {
+                Button("Spela in alla skärmar") { recorder.recordAllDisplays() }
+                    .disabled(recorder.isBusy)
+                    .help("Varje skärm på ett eget spår; i redigeraren följer bilden markören mellan dem.")
+            }
             Menu("Spela in kamera eller iPhone") { DeviceMenuItems(recorder: recorder) }
                 .disabled(recorder.isBusy)
             Divider()

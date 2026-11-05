@@ -306,6 +306,14 @@ växer fram. ⚠️ Först förstorades den råa skärmbilden — en mask hade s
 den maskade (provat med ifylld och pixlad mask: ingen läsbar text i luppen). ⚠️ En svart ruta
 som bakgrund i `CIBlendWithMask` gav svarta hörn runt cirkeln; bakgrunden ska vara `.empty()`.
 
+## Flera skärmar (2026-11-05)
+
+- Påhittat paket (A 960×540 pt + B 640×360 pt till höger, 100 pt ned): skrivbordet 3200×1080 px
+  med skärmarna rätt placerade; i 16:9 med "fyll och följ" visar bilden A, står kvar inom
+  säkerhetszonen och glider över till B när markören går dit (mitt 0,30 → 0,70).
+- ⚠️ −12780 igen: extraskärmarnas `AVURLAsset` skapades i en beräknad egenskap och släpptes
+  medan kompositionen använde dem. De läses nu en gång och hålls i `LoadedRecording`.
+
 ## Röstbehandling under inspelningen (2026-11-05)
 
 - Med `setVoiceProcessingEnabled(true)` på mikrofonen sjönk ScreenCaptureKits samtidiga

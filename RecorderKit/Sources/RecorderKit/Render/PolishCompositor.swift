@@ -16,11 +16,14 @@ public final class PolishInstruction: NSObject, AVVideoCompositionInstructionPro
     public let mediaTrackIDs: [CMPersistentTrackID]
     /// Skärmspår B: förrulle och efterrulle för övertoningar.
     public let alternateTrackID: CMPersistentTrackID?
+    /// Flera skärmar: skärm 2, 3 … (skärm 1 är skärmspåret).
+    public let displayTrackIDs: [CMPersistentTrackID]
 
     public init(timeRange: CMTimeRange, plan: RenderPlan, screenTrackID: CMPersistentTrackID,
                 cameraTrackID: CMPersistentTrackID?, mediaTrackIDs: [CMPersistentTrackID] = [],
-                alternateTrackID: CMPersistentTrackID? = nil) {
+                alternateTrackID: CMPersistentTrackID? = nil, displayTrackIDs: [CMPersistentTrackID] = []) {
         self.alternateTrackID = alternateTrackID
+        self.displayTrackIDs = displayTrackIDs
         self.timeRange = timeRange
         self.plan = plan
         self.screenTrackID = screenTrackID
@@ -30,6 +33,7 @@ public final class PolishInstruction: NSObject, AVVideoCompositionInstructionPro
         if let cameraTrackID { ids.append(NSNumber(value: cameraTrackID)) }
         ids += mediaTrackIDs.map { NSNumber(value: $0) }
         if let alternateTrackID { ids.append(NSNumber(value: alternateTrackID)) }
+        ids += displayTrackIDs.map { NSNumber(value: $0) }
         requiredSourceTrackIDs = ids
     }
 }
@@ -86,7 +90,9 @@ public class PolishCompositor: NSObject, AVVideoCompositing, @unchecked Sendable
             }
             let t = request.compositionTime.seconds
             let alternate = instruction.alternateTrackID.flatMap { request.sourceFrame(byTrackID: $0) }.map { CIImage(cvPixelBuffer: $0) }
-            let image = instruction.plan.render(outputTime: t, screen: screen, camera: camera, media: media, alternate: alternate)
+            let displays = instruction.displayTrackIDs.map { request.sourceFrame(byTrackID: $0).map { CIImage(cvPixelBuffer: $0) } }
+            let image = instruction.plan.render(outputTime: t, screen: screen, camera: camera, media: media, alternate: alternate,
+                                                displays: displays)
             let bounds = CGRect(origin: .zero, size: instruction.plan.canvas)
             if Self.acceptsHDR && !Self.rendersHDR, let flat = flatten(image, bounds: bounds) {
                 RenderContext.shared.render(flat, to: output, bounds: bounds, colorSpace: colorSpace)

@@ -84,6 +84,14 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Alla skärmar (2026-11-05): Spela in alla skärmar (när det finns fler än en; MCP
+  `all_displays`). Varje övrig skärm i en egen ström (bara bild) till `screen-<n>.mov` på samma
+  klocka; `meta.displays` och `source` = det virtuella skrivbordet. I renderingen läggs skärmarna
+  ihop på sina platser (spår 700+ i kompositionen) innan allt annat — markör, klick, zoom, pennan
+  och masker räknar redan i globala punkter. Nya projekt: 16:9 som fyller och följer markören,
+  dvs en skärm i taget med glidning över gränsen. Ihopslagning av sådana paket vägras än.
+  ⚠️ Inspelningen med flera skärmar är inte provad live (datorn har en skärm); renderingen är
+  provad med ett påhittat paket med två skärmar.
 - Insticksprogram (2026-11-05): mappar med `plugin.json` och ett körbart program i
   `~/Library/Application Support/Bjarbys skärminspelare/Plugins/` (programmet måste ligga i
   mappen). Händelserna `recording.finished` och `export.finished` (i bakgrunden) och åtgärder i

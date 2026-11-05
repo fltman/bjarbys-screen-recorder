@@ -40,6 +40,8 @@ public struct CaptureTarget: @unchecked Sendable {
     /// Bara för område: utsnittet i skärmens egna punkter.
     public let sourceRect: CGRect?
     public let pixelScale: CGFloat
+    /// Alla skärmar: de övriga skärmarna (den här är den första). Tom = en skärm.
+    public var otherDisplays: [CaptureTarget] = []
 
     /// Skärmspårets storlek i pixlar, avrundad till jämna tal (krävs av kodaren).
     public var pixelSize: (width: Int, height: Int) {
@@ -52,6 +54,17 @@ public struct CaptureTarget: @unchecked Sendable {
     static func ownApplications(in content: SCShareableContent) -> [SCRunningApplication] {
         let me = Bundle.main.bundleIdentifier ?? ""
         return content.applications.filter { $0.bundleIdentifier == me }
+    }
+
+    /// Alla skärmar: huvudskärmen, med de övriga i `otherDisplays` (från vänster till höger).
+    public static func allDisplays(in content: SCShareableContent) -> CaptureTarget? {
+        let main = content.displays.first { $0.displayID == CGMainDisplayID() } ?? content.displays.first
+        guard let main else { return nil }
+        var t = display(main, in: content)
+        t.otherDisplays = content.displays.filter { $0.displayID != main.displayID }
+            .sorted { $0.frame.minX < $1.frame.minX }
+            .map { display($0, in: content) }
+        return t
     }
 
     /// Hela skärmen. `includingOwnApp` bara för provlägen som visar något eget som ska spelas in.

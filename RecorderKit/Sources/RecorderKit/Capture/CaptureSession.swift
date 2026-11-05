@@ -104,6 +104,8 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
     private var statusTimer: Timer?
     /// Eko- och brusreduceringen under inspelningen, när den är vald.
     private var liveVoice: LiveVoiceProcessing?
+    /// Alla skärmar: strömmarna för skärm 2, 3 …
+    private var displayStreams: [DisplayStream] = []
     private var lastDiskCheck = Date.distantPast
     private var freeBytes: Int64?
     private var restartAttempts = 0
@@ -182,6 +184,34 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         let stream = try makeStream()
         try await stream.startCapture()
         self.stream = stream
+        // Alla skärmar: övriga skärmar i egna strömmar på samma klocka, och skrivbordet i meta.
+        if !target.otherDisplays.isEmpty {
+            var displays = [RecordingMeta.Display(file: RecordingBundle.fileName(for: .screen), title: target.title,
+                                                  displayID: target.displayID, contentRect: Rect(target.contentRect),
+                                                  pixelWidth: target.pixelSize.width, pixelHeight: target.pixelSize.height)]
+            for (i, other) in target.otherDisplays.enumerated() {
+                let file = "screen-\(i + 1).mov"
+                do {
+                    let s = try DisplayStream(target: other, url: bundle.recordingDir.appendingPathComponent(file), clock: clock,
+                                              fps: options.fps, hdr: options.hdr)
+                    try await s.start(filter: other.filter)
+                    displayStreams.append(s)
+                    displays.append(.init(file: file, title: other.title, displayID: other.displayID, contentRect: Rect(other.contentRect),
+                                          pixelWidth: other.pixelSize.width, pixelHeight: other.pixelSize.height))
+                } catch {
+                    notice = String(localized: "\(other.title) gick inte att spela in: \(error.localizedDescription)")
+                }
+            }
+            if displays.count > 1 {
+                let union = displays.map { $0.contentRect.cgRect }.reduce(CGRect.null) { $0.union($1) }
+                let scale = max(target.pixelScale, target.otherDisplays.map(\.pixelScale).max() ?? 1)
+                meta.displays = displays
+                meta.source = .init(kind: .display, title: String(localized: "Alla skärmar"), displayID: target.displayID, windowID: nil,
+                                    contentRect: Rect(union), pixelScale: Double(scale),
+                                    pixelWidth: Int((union.width * scale / 2).rounded()) * 2,
+                                    pixelHeight: Int((union.height * scale / 2).rounded()) * 2)
+            }
+        }
         startCleanWatch()
         streamClock = stream.synchronizationClock
 
@@ -344,6 +374,8 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         for tap in taps { tap.stop() }
         liveVoice?.stop()
         liveVoice = nil
+        for s in displayStreams { _ = await s.stop(at: end) }
+        displayStreams = []
         taps = []
 
         // Sista rutan vid sluttiden, och töm köerna innan filerna stängs.
