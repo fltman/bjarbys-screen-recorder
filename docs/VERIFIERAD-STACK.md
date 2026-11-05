@@ -319,6 +319,11 @@ som bakgrund i `CIBlendWithMask` gav svarta hörn runt cirkeln; bakgrunden ska v
 - macOS 26 läser fortfarande dokumentpaketens `QuickLook/`-mapp (`qlmanage -t` och `-p -o`):
   `Thumbnail.png` blir miniatyren och `Preview.mov`/`.mp4`/`.png` förhandsvisningen. En symbolisk
   länk till skärmspåret fungerar (Quick Look följer den). Inget tillägg behövs.
+- AV1 via ffmpeg 8.0.1 (libaom-av1, `-usage realtime -cpu-used 8 -row-mt 1 -crf 34`): 6 s
+  1080p60 på 2,6 s, 4,3 Mbit/s; färgerna som H.264-exporten (200,99,161 mot 200,98,162). ⚠️
+  `-color_primaries`/`-color_trc` räckte inte (märkt "unknown"); `setparams` sist i filtret
+  märker rutorna och då följer kodaren med. libaom tar `-cpu-used` 0–8 (9 gav fel). Avslutas
+  ffmpeg i förtid dödar SIGPIPE appen om den inte ignoreras.
 - VideoToolbox på M5 har **ingen AV1-kodare** (`VTCopyVideoEncoderList`: H.264, HEVC och ProRes,
   i hård- och mjukvara); AV1 avkodas i hårdvara. AV1-export kräver alltså en extern kodare.
 

@@ -7,7 +7,7 @@ import VideoToolbox
 
 /// Förvalen i exportdialogen.
 public struct ExportPreset: Identifiable, Hashable, Sendable {
-    public enum Codec: String, Sendable { case h264, hevc, hevcHDR, prores, proresAlpha, gif, audioAAC, audioWAV, audioStems }
+    public enum Codec: String, Sendable { case h264, hevc, hevcHDR, av1, prores, proresAlpha, gif, audioAAC, audioWAV, audioStems }
 
     public let id: String
     public let name: String
@@ -28,6 +28,8 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
         .init(id: "prores-alfa", name: "ProRes 4444 med alfa",
               detail: "Genomskinlig bakgrund — lägg skärmen ovanpå något eget i Final Cut, Resolve, Premiere",
               codec: .proresAlpha, shortSide: 1080, fps: 60),
+        .init(id: "mp4-av1", name: "MP4 AV1", detail: "Minst filer vid samma kvalitet — kodas med ffmpeg på datorn, tar längre tid",
+              codec: .av1, shortSide: 1080, fps: 60),
         .init(id: "mkv-1080", name: "MKV 1080p", detail: "H.264 i Matroska — för OBS-vana arbetsflöden, VLC, mpv",
               codec: .h264, shortSide: 1080, fps: 60, matroska: true),
         .init(id: "gif", name: "GIF", detail: "För Slack och GitHub, högst 800 px", codec: .gif, shortSide: 450, fps: 15),
@@ -41,7 +43,7 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
     public var fileExtension: String {
         if matroska { return "mkv" }
         return switch codec {
-        case .h264, .hevc, .hevcHDR: "mp4"
+        case .h264, .hevc, .hevcHDR, .av1: "mp4"
         case .prores, .proresAlpha: "mov"
         case .gif: "gif"
         case .audioAAC: "m4a"
@@ -60,7 +62,9 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
     public var isHDR: Bool { codec == .hevcHDR }
 
     /// Förvalen som passar inspelningen (HDR-förvalet bara för en HDR-inspelning).
-    public static func available(hdr: Bool) -> [ExportPreset] { all.filter { hdr || !$0.isHDR } }
+    public static func available(hdr: Bool) -> [ExportPreset] {
+        all.filter { (hdr || !$0.isHDR) && ($0.codec != .av1 || FFmpeg.av1Encoder != nil) }
+    }
 
     /// Bitrate i bit/s för en bildyta.
     public func bitrate(for canvas: CGSize, fps override: Int? = nil) -> Int {
@@ -70,6 +74,7 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
         case .h264: return Int(pixels * Double(fps) * 0.09)
         case .hevc: return Int(pixels * Double(fps) * 0.06)
         case .hevcHDR: return Int(pixels * Double(fps) * 0.075)
+        case .av1: return Int(pixels * Double(fps) * 0.025) // bara för uppskattningen (CRF)
         case .prores: return Int(pixels * Double(fps) * 1.6) // bara för uppskattningen
         case .proresAlpha: return Int(pixels * Double(fps) * 3.6)
         case .gif: return Int(pixels * Double(fps) * 0.25)
@@ -85,7 +90,7 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
     }
 
     /// Kvalitetsvalet gäller H.264 och HEVC (ProRes, GIF och ljud har sin egen).
-    public var usesQuality: Bool { codec == .h264 || codec == .hevc || codec == .hevcHDR }
+    public var usesQuality: Bool { codec == .h264 || codec == .hevc || codec == .hevcHDR || codec == .av1 }
 
     /// Bildytan för exporten. GIF begränsas till 800 px på längsta sidan.
     public func canvas(aspect: EditProject.Aspect, source: CGSize) -> CGSize {
@@ -156,7 +161,11 @@ public final class Exporter: @unchecked Sendable {
         lock.withLock { cancelled = true }
         reader?.cancelReading()
         writer?.cancelWriting()
+        lock.withLock { process }?.terminate()
     }
+
+    /// ffmpeg under en AV1-export (avbryts med `cancel`).
+    private var process: Process?
 
     private var isCancelled: Bool { lock.withLock { cancelled } }
 
@@ -180,6 +189,8 @@ public final class Exporter: @unchecked Sendable {
                 Matroska.Chapter(start: $0.start - span.seconds.lowerBound, end: $0.end - span.seconds.lowerBound, title: $0.title)
             }
             try await Matroska.remux(temp, to: url, chapters: chapters) { progress(0.95 + $0 * 0.05) }
+        } else if preset.codec == .av1 {
+            try await exportAV1(built, canvas: canvas, to: url, progress: progress)
         } else if preset.isAudioOnly {
             try await exportAudio(built, to: url, progress: progress)
         } else if preset.codec == .gif {
@@ -400,6 +411,129 @@ public final class Exporter: @unchecked Sendable {
                 }
             }
         }
+    }
+
+    // MARK: - AV1 (via ffmpeg)
+
+    /// AV1 i MP4: rutorna renderas som vanligt och skickas råa (BGRA) till ffmpeg, som kodar dem
+    /// med den AV1-kodare den har. Ljudet görs först till en tillfällig M4A (med ljudnivån) och
+    /// läggs in rakt över; kapitlen följer med som ffmpeg-metadata.
+    private func exportAV1(_ built: CompositionBuilder.Result, canvas: CGSize, to url: URL,
+                           progress: @escaping @Sendable (Double) -> Void) async throws {
+        guard let ffmpeg = FFmpeg.executable, let encoder = FFmpeg.av1Encoder else {
+            throw ExportError.failed(String(localized: "AV1 kräver ffmpeg med en AV1-kodare (t.ex. brew install ffmpeg)."))
+        }
+        let span = clampedRange(built)
+        let dir = url.deletingLastPathComponent()
+        let tag = UUID().uuidString
+        var temps: [URL] = []
+        defer { for t in temps { try? FileManager.default.removeItem(at: t) } }
+
+        // Ljudet.
+        var audioURL: URL?
+        let audioTracks = try await built.composition.loadTracks(withMediaType: .audio)
+        if !audioTracks.isEmpty {
+            let mix = range == nil ? built.audioMix
+                : CompositionBuilder.audioMix(for: built.composition, plan: built.plan, appIDs: recording.apps.map(\.id), edges: span.seconds)
+            var gain: Float = 1
+            if let target = loudnessTarget, let m = try await Loudness.measureMix(built.composition, audioMix: mix, range: span.time) {
+                let g = Loudness.mixGain(for: m, target: target)
+                gain = Float(pow(10, g.db / 20))
+                loudnessReport = (m.integrated, g.db, g.limitedByPeaks)
+            }
+            let a = dir.appendingPathComponent(".\(tag).m4a")
+            temps.append(a)
+            try await writeAudio(built.composition, tracks: audioTracks, mix: mix, gain: gain, span: span.time, to: a, wav: false) { _ in }
+            audioURL = a
+        }
+        // Kapitlen.
+        let chapters = built.plan.overlayTrack.chapterList(in: span.seconds).map {
+            (start: $0.start - span.seconds.lowerBound, end: $0.end - span.seconds.lowerBound, title: $0.title)
+        }
+        var chapterURL: URL?
+        if !chapters.isEmpty {
+            let c = dir.appendingPathComponent(".\(tag).txt")
+            temps.append(c)
+            try FFmpeg.chapterMetadata(chapters).write(to: c, atomically: true, encoding: .utf8)
+            chapterURL = c
+        }
+
+        let w = Int(canvas.width), h = Int(canvas.height)
+        var args = ["-hide_banner", "-loglevel", "error", "-y",
+                    "-f", "rawvideo", "-pix_fmt", "bgra", "-video_size", "\(w)x\(h)", "-framerate", "\(fps)", "-i", "pipe:0"]
+        if let audioURL { args += ["-i", audioURL.path] }
+        if let chapterURL { args += ["-f", "ffmetadata", "-i", chapterURL.path] }
+        args += ["-map", "0:v"]
+        if audioURL != nil { args += ["-map", "1:a", "-c:a", "copy"] }
+        if chapterURL != nil { args += ["-map_chapters", audioURL != nil ? "2" : "1"] }
+        // Rutorna är sRGB; till YUV med BT.709 (ffmpegs förval är BT.601) och märkt så. Märkningen
+        // sätts också på rutorna (setparams): kodaren tar den därifrån, flaggorna räckte inte.
+        args += ["-vf", "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p,"
+                     + "setparams=color_primaries=bt709:color_trc=bt709:colorspace=bt709:range=tv",
+                 "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv"]
+        args += FFmpeg.av1Arguments(encoder, quality: quality)
+        args += ["-movflags", "+faststart", url.path]
+
+        let process = Process()
+        process.executableURL = ffmpeg
+        process.arguments = args
+        let input = Pipe(), errors = Pipe()
+        process.standardInput = input
+        process.standardError = errors
+        process.standardOutput = FileHandle.nullDevice
+        // Avslutas ffmpeg i förtid ska skrivningen i röret ge ett fel, inte döda appen (SIGPIPE).
+        signal(SIGPIPE, SIG_IGN)
+        try process.run()
+        lock.withLock { self.process = process }
+
+        // Bilden: kompositörens rutor, rad för rad (raderna kan ha utfyllnad) in i röret.
+        let reader = try AVAssetReader(asset: built.composition)
+        reader.timeRange = span.time
+        let videoTracks = try await built.composition.loadTracks(withMediaType: .video)
+        let out = AVAssetReaderVideoCompositionOutput(videoTracks: videoTracks, videoSettings: [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+            kCVPixelBufferMetalCompatibilityKey as String: true,
+        ])
+        out.videoComposition = built.videoComposition
+        out.alwaysCopiesSampleData = false
+        reader.add(out)
+        self.reader = reader
+        guard reader.startReading() else { process.terminate(); throw ExportError.failed(reader.error?.localizedDescription ?? "Läsningen startade inte") }
+        let total = max(span.seconds.upperBound - span.seconds.lowerBound, 0.001)
+        let offset = span.seconds.lowerBound
+        let handle = input.fileHandleForWriting
+        var broken = false
+        await Task.detached { [self] in
+            var row = Data(count: w * 4)
+            while !isCancelled, let sb = out.copyNextSampleBuffer() {
+                guard let px = CMSampleBufferGetImageBuffer(sb) else { continue }
+                CVPixelBufferLockBaseAddress(px, .readOnly)
+                let base = CVPixelBufferGetBaseAddress(px)!.assumingMemoryBound(to: UInt8.self)
+                let bpr = CVPixelBufferGetBytesPerRow(px)
+                let rows = min(h, CVPixelBufferGetHeight(px)), cols = min(w, CVPixelBufferGetWidth(px)) * 4
+                var frame = Data(capacity: w * h * 4)
+                for y in 0..<rows {
+                    row.withUnsafeMutableBytes { $0.copyMemory(from: UnsafeRawBufferPointer(start: base + y * bpr, count: cols)) }
+                    frame.append(row)
+                }
+                CVPixelBufferUnlockBaseAddress(px, .readOnly)
+                do { try handle.write(contentsOf: frame) } catch { broken = true; break }
+                progress(min(0.99, max(0, CMSampleBufferGetPresentationTimeStamp(sb).seconds - offset) / total))
+            }
+            try? handle.close()
+        }.value
+        process.waitUntilExit()
+        lock.withLock { self.process = nil }
+        if isCancelled || reader.status == .cancelled {
+            try? FileManager.default.removeItem(at: url)
+            throw ExportError.cancelled
+        }
+        let message = String(decoding: errors.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard process.terminationStatus == 0, !broken else {
+            throw ExportError.failed(String(localized: "ffmpeg (\(encoder)) misslyckades: \(message.isEmpty ? "kod \(process.terminationStatus)" : message)"))
+        }
+        progress(1)
     }
 
     // MARK: - Bara ljud

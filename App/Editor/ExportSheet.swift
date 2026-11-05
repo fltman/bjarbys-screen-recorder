@@ -314,6 +314,7 @@ struct ExportSheet: View {
         case .h264: "play.rectangle"
         case .hevc: "4k.tv"
         case .hevcHDR: "sun.max"
+        case .av1: "film"
         case .prores: "film.stack"
         case .proresAlpha: "square.on.square.dashed"
         case .gif: "photo.on.rectangle.angled"

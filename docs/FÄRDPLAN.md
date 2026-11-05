@@ -84,6 +84,10 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- AV1 (2026-11-05): förvalet MP4 AV1 finns när en ffmpeg med AV1-kodare hittas (Homebrews
+  platser, PATH; SVT-AV1 > rav1e > libaom). Rutorna renderas som vanligt och skickas råa (BGRA)
+  i ett rör; ljudet görs först till en tillfällig M4A och kapitlen som ffmpeg-metadata. Uppmätt
+  med libaom (realtid, cpu-used 8): 1080p60 2,3× realtid, 4,3 Mbit/s mot 11,5 för H.264.
 - MKV (2026-11-05): förvalet MKV 1080p exporterar en MP4 och packar om den rakt över till
   Matroska med en egen liten skrivare (`Export/Matroska.swift`): H.264/HEVC + AAC, kapitel,
   kluster vid nyckelbilder och sökpunkter. Inget ffmpeg-beroende.
