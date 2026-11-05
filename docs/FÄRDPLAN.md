@@ -69,6 +69,10 @@ tagning, sedan redigerbar polish, sedan resten.
 
 - Kortkommandon i filmen (2026-11-05): bubbla nere eller uppe i mitten, räknar upp
   upprepningar ("⌘Z ×3"), visas i utdatatid så att 4×-delar inte blinkar förbi.
+- Standardutseende (2026-11-05): Stil › Standardutseende sparar projektets utseende (bakgrund,
+  ram, format, markör, kamera, kortkommandon, undertexter, övergångar, zoomnivå) i
+  inställningarna; nya projekt får det (`EditProject.standardStyle`, också i MCP-läget), och
+  "Använd här" ger ett befintligt projekt det. Innehållet rörs aldrig.
 - Trimma delar i tidslinjen (2026-11-05): dra i en dels ände för att flytta början eller slutet
   i inspelningen (inget tas bort, materialet går att dra fram igen; stannar vid grannarna, vid
   inspelningens ändar och vid 0,1 s); ⌥-dra för att sträcka delen till en ny fart (0,25–8×).

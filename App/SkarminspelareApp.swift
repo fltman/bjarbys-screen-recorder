@@ -7,6 +7,7 @@ struct SkarminspelareApp: App {
 
     init() {
         Self.lockLanguage()
+        StandardStyle.load()
         // Provlägen och MCP-servern ska aldrig fastna på "Öppna fönstren igen?" efter en
         // krasch: frågan är modal, och ingen ser den (uppmätt: varje provstart hängde efter
         // en krasch). Registreringsdomänen gäller bara den här processen.

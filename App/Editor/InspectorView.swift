@@ -35,6 +35,8 @@ struct InspectorView: View {
     }
 
     @AppStorage("inspectorTab") private var tab: Tab = .style
+    /// Ökas när standardutseendet sparas eller glöms, så att avsnittet ritas om.
+    @State private var styleRevision = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -51,6 +53,7 @@ struct InspectorView: View {
                         frameSection
                         transitionSection
                         if model.recording.hasCamera { cameraSection }
+                        standardStyleSection
                     case .motion:
                         autoZoomSection
                         cursorSection
@@ -508,6 +511,31 @@ struct InspectorView: View {
     private func appDecibels(_ id: String) -> Binding<Double> {
         Binding(get: { 20 * log10(max(model.project.audio.appVolume(id), 0.0316)) },
                 set: { db in model.update { $0.audio.appVolumes[id] = pow(10, db / 20) } })
+    }
+
+    /// Standardutseendet: det här projektets stil för nya inspelningar, eller standarden hit.
+    private var standardStyleSection: some View {
+        Section2("Standardutseende", systemImage: "star") {
+            let standard = EditProject.standardStyle
+            let same = standard.map { model.project.hasSameStyle(as: $0) } ?? false
+            Text(standard == nil ? "Nya inspelningar får appens eget utseende."
+                                 : (same ? "Det här projektet har standardutseendet." : "Nya inspelningar får det sparade utseendet."))
+                .font(.caption).foregroundStyle(.secondary)
+            HStack {
+                Button("Spara som standard") { StandardStyle.save(model.project); styleRevision += 1 }
+                    .disabled(same)
+                    .help("Bakgrund, ram, format, markör, kamera, kortkommandon, undertexter, övergångar och zoomnivå blir standard för nya inspelningar.")
+                Button("Använd här") { if let s = EditProject.standardStyle { model.update { $0.adoptStyle(of: s) } } }
+                    .disabled(standard == nil || same)
+            }
+            .controlSize(.small)
+            if standard != nil {
+                Button("Glöm standardutseendet") { StandardStyle.forget(); styleRevision += 1 }
+                    .controlSize(.small)
+                    .buttonStyle(.link)
+            }
+        }
+        .id(styleRevision)
     }
 
     /// En linjär volym visad och ändrad i dB.

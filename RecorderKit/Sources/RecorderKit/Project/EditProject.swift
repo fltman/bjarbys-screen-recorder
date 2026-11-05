@@ -74,9 +74,37 @@ public struct EditProject: Codable, Equatable, Sendable {
     /// Ett nytt projekt för en inspelning: allt med, i normal hastighet.
     public static func initial(duration: Double) -> EditProject {
         var p = EditProject()
+        if let standard = standardStyle { p.adoptStyle(of: standard) }
         p.segments = [ClipSegment(start: 0, end: duration)]
         return p
     }
+
+    // MARK: - Standardutseende
+
+    /// Utseendet nya projekt får (sätts av appen ur inställningarna), eller nil = appens eget.
+    nonisolated(unsafe) public static var standardStyle: EditProject?
+
+    /// Tar över utseendet från ett annat projekt: bakgrund, ram, format, markör, kamera,
+    /// kortkommandon, undertexter, övergångar, zoomnivå. Innehållet (delar, zoomar, lager,
+    /// kapitel, ljud, masker) rörs inte.
+    public mutating func adoptStyle(of other: EditProject) {
+        autoZoom = other.autoZoom; zoomScale = other.zoomScale
+        background = other.background; padding = other.padding; cornerRadius = other.cornerRadius
+        shadow = other.shadow; aspect = other.aspect; framing = other.framing
+        cursor = other.cursor; camera = other.camera; shortcuts = other.shortcuts; captions = other.captions
+        showsChapterBanner = other.showsChapterBanner; transition = other.transition
+        fadeInOut = other.fadeInOut; motionBlur = other.motionBlur
+    }
+
+    /// Bara utseendet, för att spara som standard.
+    public var styleOnly: EditProject {
+        var p = EditProject()
+        p.adoptStyle(of: self)
+        return p
+    }
+
+    /// Samma utseende som `other`.
+    public func hasSameStyle(as other: EditProject) -> Bool { styleOnly == other.styleOnly }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)

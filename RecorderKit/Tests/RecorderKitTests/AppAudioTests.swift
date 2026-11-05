@@ -47,3 +47,24 @@ import Foundation
         #expect(back.crop == c.crop && back.softness == 0.4 && back.speed == 2)
     }
 }
+
+@Suite struct StandardStyleTests {
+    /// Utseendet följer med, innehållet aldrig.
+    @Test func adoptStyleKeepsContent() throws {
+        var source = try BundleJSON.decoder.decode(EditProject.self, from: Data("{}".utf8))
+        source.padding = 0.2; source.cornerRadius = 0.05; source.aspect = .vertical; source.motionBlur = true
+        source.background = EditProject.Background.presets[3]; source.camera.mirror.toggle()
+        source.segments = [.init(start: 0, end: 9)]
+        source.overlays = [Overlay(kind: .fact, at: 1, title: "Inte stil")]
+        var target = EditProject.initial(duration: 4)
+        target.zooms = [.init(start: 1, end: 2, scale: 2, centerX: 0.5, centerY: 0.5)]
+        target.adoptStyle(of: source.styleOnly)
+        #expect(target.padding == 0.2 && target.aspect == .vertical && target.motionBlur)
+        #expect(target.background == source.background && target.camera == source.camera)
+        #expect(target.segments.count == 1 && target.segments[0].end == 4)
+        #expect(target.overlays.isEmpty && target.zooms.count == 1)
+        #expect(target.hasSameStyle(as: source))
+        let roundTrip = try JSONDecoder().decode(EditProject.self, from: JSONEncoder().encode(source.styleOnly))
+        #expect(roundTrip.hasSameStyle(as: source) && roundTrip.overlays.isEmpty)
+    }
+}

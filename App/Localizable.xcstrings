@@ -409,6 +409,23 @@
         }
       }
     },
+    "Använd här": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use here"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Använd här"
+          }
+        }
+      }
+    },
     "Apples röstisolering: brus, fläktar och tangentbord tas bort, rösten blir kvar.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -490,6 +507,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bakgrund"
+          }
+        }
+      }
+    },
+    "Bakgrund, ram, format, markör, kamera, kortkommandon, undertexter, övergångar och zoomnivå blir standard för nya inspelningar.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Background, frame, format, cursor, camera, shortcuts, captions, transitions and zoom level become the default for new recordings."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bakgrund, ram, format, markör, kamera, kortkommandon, undertexter, övergångar och zoomnivå blir standard för nya inspelningar."
           }
         }
       }
@@ -915,6 +949,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Den hemliga nyckeln sparas i nyckelringen. Ge nyckeln rätt att skriva i hinken och inget annat."
+          }
+        }
+      }
+    },
+    "Det här projektet har standardutseendet.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This project has the default look."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Det här projektet har standardutseendet."
           }
         }
       }
@@ -1765,6 +1816,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ger undertexter, redigering via texten och bortklippning av pauser. Görs lokalt med whisper.cpp."
+          }
+        }
+      }
+    },
+    "Glöm standardutseendet": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget the default look"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glöm standardutseendet"
           }
         }
       }
@@ -3554,6 +3622,40 @@
         }
       }
     },
+    "Nya inspelningar får appens eget utseende.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New recordings get the app's own look."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nya inspelningar får appens eget utseende."
+          }
+        }
+      }
+    },
+    "Nya inspelningar får det sparade utseendet.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New recordings get the saved look."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nya inspelningar får det sparade utseendet."
+          }
+        }
+      }
+    },
     "Nyckel-id": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4387,6 +4489,23 @@
         }
       }
     },
+    "Spara som standard": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save as default"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spara som standard"
+          }
+        }
+      }
+    },
     "Spara undertexter (.srt) bredvid filmen": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4672,6 +4791,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Standardmikrofonen"
+          }
+        }
+      }
+    },
+    "Standardutseende": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default Look"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standardutseende"
           }
         }
       }

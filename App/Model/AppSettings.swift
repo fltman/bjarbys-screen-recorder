@@ -108,3 +108,26 @@ final class AppSettings: ObservableObject {
         return o
     }
 }
+
+/// Standardutseendet för nya inspelningar, sparat i inställningarna som ett projekt med bara
+/// utseendet (läses med samma förlåtande avkodning som `project.json`).
+enum StandardStyle {
+    private static let key = "standardStyle"
+
+    /// Läser in det sparade utseendet till `EditProject.standardStyle` (vid start, också i MCP-läget).
+    static func load() {
+        guard let data = UserDefaults.standard.data(forKey: key) else { return }
+        EditProject.standardStyle = try? JSONDecoder().decode(EditProject.self, from: data)
+    }
+
+    static func save(_ project: EditProject) {
+        let style = project.styleOnly
+        UserDefaults.standard.set(try? JSONEncoder().encode(style), forKey: key)
+        EditProject.standardStyle = style
+    }
+
+    static func forget() {
+        UserDefaults.standard.removeObject(forKey: key)
+        EditProject.standardStyle = nil
+    }
+}

@@ -56,6 +56,8 @@ is included; to have the app follow your system language instead, run
 - Transitions at the cuts (crossfade, through black, blur with a zoom punch, flash), set for
   the whole video or per cut, with the sound crossfaded too and a short fade at every cut so
   nothing clicks; fades at the start and end.
+- Save a project's look (background, frame, format, cursor, camera, captions, transitions) as
+  the default, and every new recording starts with it.
 - Drag and resize layers directly in the preview; fact boxes and QR codes snap to a corner.
 - A camera bubble in any corner, round or rounded square.
 
