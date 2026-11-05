@@ -28,6 +28,7 @@ echo "→ arkiverar"
 xcodebuild -project Skarminspelare.xcodeproj -scheme Skarminspelare -configuration Release \
     -destination 'generic/platform=macOS' -archivePath "$ARKIV" \
     CODE_SIGN_IDENTITY="Developer ID Application" DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Manual \
+    CURRENT_PROJECT_VERSION="$(git rev-list --count HEAD)" \
     -quiet archive
 fi
 I_ARKIV="$ARKIV/Products/Applications/Skarminspelare.app"
@@ -65,6 +66,7 @@ done
 
 APP="$RELEASE/$NAMN.app"
 ditto "$RELEASE/notariserad/Skarminspelare.app" "$APP"
+touch "$APP"   # ikoncachen går på appmappens ändringstid (se build.sh)
 echo "→ kontrollerar"
 xcrun stapler validate "$APP"
 codesign --verify --deep --strict "$APP"
@@ -78,4 +80,8 @@ shasum -a 256 "$ZIP" | tee "$ZIP.sha256"
 mkdir -p site/download
 cp "$ZIP" site/download/Bjarbys-skarminspelare.zip
 echo "$VERSION" > site/download/VERSION
+# Mellanleden (arkivet, uppladdningen, den hämtade kopian) har samma bundle-id: avregistrera dem,
+# så att `open`, URL-schemat och Dock inte tar en av dem i stället för dist-appen.
+LSREG=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+find "$PWD/$RELEASE" -name '*.app' -prune -print0 | xargs -0 -n1 "$LSREG" -u 2>/dev/null || true
 echo "→ klart: $ZIP ($(du -h "$ZIP" | cut -f1)), kopia i site/download/"

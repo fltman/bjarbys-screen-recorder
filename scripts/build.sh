@@ -18,11 +18,15 @@ if [ ! -x build/whisper-static/bin/whisper-cli ] && [ -f "${WHISPER_CPP:-$HOME/P
     ./scripts/build-whisper.sh
 fi
 
-echo "→ bygger ($KONFIG)"
+# Byggnumret = antalet commits. macOS (Dock, Finder) cachar appikonen per bundle-id, version och
+# appmappens ändringstid: med samma nummer i varje bygge visade Dock den ikonlösa allra första
+# versionen i ett dygn efter att ikonen kommit till.
+BYGGNUMMER="$(git rev-list --count HEAD 2>/dev/null || echo 1)"
+echo "→ bygger ($KONFIG, bygge $BYGGNUMMER)"
 xcodebuild -project Skarminspelare.xcodeproj -scheme Skarminspelare \
     -configuration "$KONFIG" -derivedDataPath build \
     -destination 'platform=macOS,arch=arm64' \
-    CODE_SIGN_IDENTITY="$IDENTITET" DEVELOPMENT_TEAM="$TEAM" \
+    CODE_SIGN_IDENTITY="$IDENTITET" DEVELOPMENT_TEAM="$TEAM" CURRENT_PROJECT_VERSION="$BYGGNUMMER" \
     -quiet build
 
 BYGGD="build/Build/Products/$KONFIG/Skarminspelare.app"
@@ -31,6 +35,9 @@ rm -rf "$APP_UT"
 mkdir -p dist
 # Att döpa om .app-mappen bryter inte signaturen; den täcker innehållet.
 ditto "$BYGGD" "$APP_UT"
+# ditto behåller byggkatalogens ändringstid (Xcode skapar .app-mappen bara en gång), och
+# ikoncachen går på den: ny tid för varje bygge.
+touch "$APP_UT"
 
 codesign --verify --deep --strict --verbose=1 "$APP_UT" 2>&1 | sed 's/^/  /'
 # Bara dist-appen ska vara registrerad: annars kan `open`, URL-schemat och Genvägar
