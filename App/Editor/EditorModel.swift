@@ -386,6 +386,60 @@ final class EditorModel: ObservableObject {
         update { p in for r in ranges { p.cut(r) } }
     }
 
+    // MARK: - Masker
+
+    @Published private(set) var scanning: Double?
+    @Published private(set) var scanNote: String?
+    @Published var selectedMaskID: UUID?
+    private var scanTask: Task<Void, Never>?
+
+    /// Läser all text i inspelningen och lägger masker över det känsliga. Tidigare automatiska
+    /// masker ersätts; egna och ändrade behålls.
+    func scanForSensitiveText(kinds: Set<SensitiveText.Kind>) {
+        guard scanning == nil else { return }
+        scanning = 0
+        scanNote = nil
+        let rec = recording
+        scanTask = Task {
+            do {
+                let found = try await MaskScanner.scan(rec, kinds: kinds) { p in
+                    Task { @MainActor [weak self] in if self?.scanning != nil { self?.scanning = p } }
+                }
+                update { p in p.masks = p.masks.filter { $0.kind == .manual } + found }
+                scanNote = found.isEmpty ? String(localized: "Inget känsligt hittades.")
+                                         : String(localized: "\(found.count) områden döljs.")
+            } catch {
+                if !Task.isCancelled { scanNote = error.localizedDescription }
+            }
+            scanning = nil
+        }
+    }
+
+    func cancelScan() { scanTask?.cancel(); scanTask = nil; scanning = nil }
+
+    func addMaskAtPlayhead() {
+        let s = sourceTimeAtPlayhead
+        let c = plan.cursorPath.hasData ? plan.cursorPath.position(at: s) : CGPoint(x: 0.5, y: 0.5)
+        let rect = Rect(x: min(max(0, c.x - 0.1), 0.8), y: min(max(0, c.y - 0.03), 0.94), width: 0.2, height: 0.06)
+        let mask = EditProject.Mask(start: s, end: min(s + 3, recording.meta.duration),
+                                    keyframes: [.init(t: s, rect: rect)], style: .blur, kind: .manual,
+                                    hint: String(localized: "Eget område"))
+        update { $0.masks.append(mask) }
+        selectedMaskID = mask.id
+    }
+
+    func updateMask(_ id: UUID, _ change: (inout EditProject.Mask) -> Void) {
+        update { p in
+            guard let i = p.masks.firstIndex(where: { $0.id == id }) else { return }
+            change(&p.masks[i])
+        }
+    }
+
+    func deleteMask(_ id: UUID) {
+        update { $0.masks.removeAll { $0.id == id } }
+        if selectedMaskID == id { selectedMaskID = nil }
+    }
+
     @Published private(set) var measuringLoudness = false
     @Published private(set) var loudnessNote: String?
 

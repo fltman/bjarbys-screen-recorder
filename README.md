@@ -44,6 +44,11 @@ translation that follows the system language.
 - Cut dead time, where nobody speaks and neither mouse nor keyboard moves, with one button.
 - Lower the computer audio while you speak, and level the microphone to −16 LUFS (EBU R128).
 
+**Privacy**
+- Find emails, phone numbers, Swedish personal ID numbers, card numbers and API keys on
+  screen (Vision OCR, locally) and blur, pixelate or cover them. The masks follow text that
+  scrolls. Add your own areas too.
+
 **Export:** MP4 (H.264, 1080p), MP4 (HEVC, 4K), ProRes 422 and GIF.
 
 ## Measured, not assumed
@@ -94,6 +99,7 @@ folder.
   camera), `Writing` (one `AVAssetWriter` per track on a shared clock), `Telemetry` (mouse,
   clicks, cursor images), `Project`, `Motion` (springs, cursor and camera paths), `Render`
   (one Core Image compositor on Metal for both preview and export) and `Export`.
+- `RecorderKit/Privacy/` finds sensitive text and turns it into masks that follow it.
 - `RecorderKit/Speech/` runs whisper.cpp, maps word times back onto the recording and builds
   the captions.
 - `App/` is the SwiftUI and AppKit interface: menu bar, recording panel, area selector,
@@ -104,8 +110,9 @@ folder.
 ## Status
 
 The recording engine, the editor and export are done, and most of the speech phase of
-[`docs/FÄRDPLAN.md`](docs/FÄRDPLAN.md). Next on the roadmap are noise reduction,
-automatic masking of sensitive text, a "save the last minutes" buffer, and HDR and 120 fps.
+[`docs/FÄRDPLAN.md`](docs/FÄRDPLAN.md). Masking of sensitive text is
+done too. Next on the roadmap are noise reduction, a "save the last minutes" buffer, and HDR
+and 120 fps.
 
 Built and tested on macOS 26.1 on an Apple M5 only. Not yet tried with a real camera or
 with a window that moves during recording. Transcription has been measured on synthetic

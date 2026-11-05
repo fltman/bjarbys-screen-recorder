@@ -11,6 +11,7 @@ import SwiftUI
 ///     Skarminspelare --prov-aterstall <mapp>
 ///     Skarminspelare --prov-transkribera <paket> [--modell <fil>] [--sprak sv]
 ///     Skarminspelare --prov-ljudstyrka <ljudfil>
+///     Skarminspelare --prov-maskera <paket> <t1,t2,…> <mapp>   (söker känslig text, renderar)
 ///
 /// Skriver en JSON-rapport på stdout och avslutar med 0 vid lyckat prov.
 /// Behörigheterna (skärminspelning m.m.) måste ha getts till appen.
@@ -41,6 +42,10 @@ enum TestMode {
                 code = await transcribeTest(bundle: URL(fileURLWithPath: args[i + 1]),
                                             model: value(after: "--modell", in: args),
                                             language: value(after: "--sprak", in: args) ?? "sv")
+            } else if let i = args.firstIndex(of: "--prov-maskera"), args.count > i + 3 {
+                code = await renderTest(bundle: URL(fileURLWithPath: args[i + 1]),
+                                        times: args[i + 2].split(separator: ",").compactMap { Double($0) },
+                                        out: URL(fileURLWithPath: args[i + 3]), scanMasks: true)
             } else if let i = args.firstIndex(of: "--prov-ljudstyrka"), args.count > i + 1 {
                 let m = try? await Loudness.measure(AVURLAsset(url: URL(fileURLWithPath: args[i + 1])))
                 print(m.map { String(format: #"{"lufs":%.2f,"topp_dbfs":%.2f,"forstarkning_db":%.2f}"#, $0.integrated,
@@ -120,10 +125,21 @@ enum TestMode {
 
     /// `--prov-rendera <paket> <t1,t2,…> <mapp>`: färdiga rutor som PNG vid utdatatiderna,
     /// genom samma komposition och kompositör som förhandsvisning och export.
-    static func renderTest(bundle url: URL, times: [Double], out: URL) async -> Int32 {
+    static func renderTest(bundle url: URL, times: [Double], out: URL, scanMasks: Bool = false) async -> Int32 {
         do {
             let rec = try LoadedRecording.load(RecordingBundle(url: url))
             var project = rec.bundle.loadProject(duration: rec.meta.duration)
+            if scanMasks {
+                // Masker söks men sparas inte i paketet.
+                let started = Date()
+                project.masks = try await MaskScanner.scan(rec, kinds: Set(SensitiveText.Kind.allCases))
+                let list = project.masks.map { m in
+                    String(format: "{\"typ\":\"%@\",\"tips\":\"%@\",\"tid\":[%.1f,%.1f],\"nyckelrutor\":%d}",
+                           m.kind.rawValue, m.hint, m.start, m.end, m.keyframes.count)
+                }
+                print(String(format: "{\"sokning_s\":%.1f,\"masker\":[%@]}", Date().timeIntervalSince(started),
+                             list.joined(separator: ",")))
+            }
             if project.autoZoom && !project.zooms.contains(where: { $0.isAuto }) {
                 project.zooms += AutoZoom.generate(events: rec.events, mapping: rec.mapping,
                                                    duration: rec.meta.duration, scale: project.zoomScale)

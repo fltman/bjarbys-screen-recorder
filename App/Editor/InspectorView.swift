@@ -20,6 +20,7 @@ struct InspectorView: View {
                 autoZoomSection
                 cursorSection
                 shortcutSection
+                maskSection
                 if model.recording.hasCamera { cameraSection }
                 if model.recording.hasMicrophone || model.recording.hasSystemAudio {
                     speechSection
@@ -176,6 +177,101 @@ struct InspectorView: View {
     }
 
     @State private var deadMinimum = 2.0
+    @AppStorage("maskKinds") private var maskKindsRaw = "email,phone,personalNumber,card,secret"
+
+    private var maskKinds: Set<SensitiveText.Kind> {
+        Set(maskKindsRaw.split(separator: ",").compactMap { SensitiveText.Kind(rawValue: String($0)) })
+    }
+
+    private func kindName(_ k: SensitiveText.Kind) -> LocalizedStringKey {
+        switch k {
+        case .email: "E-post"
+        case .phone: "Telefonnummer"
+        case .personalNumber: "Personnummer"
+        case .card: "Kortnummer"
+        case .secret: "Nycklar och lösenord"
+        case .manual: "Eget område"
+        }
+    }
+
+    private var maskSection: some View {
+        Section2("Dölj känsligt", systemImage: "eye.slash") {
+            ForEach(SensitiveText.Kind.allCases.filter { $0 != .manual }, id: \.self) { k in
+                Toggle(kindName(k), isOn: Binding(get: { maskKinds.contains(k) }, set: { on in
+                    var set = maskKinds
+                    if on { set.insert(k) } else { set.remove(k) }
+                    maskKindsRaw = SensitiveText.Kind.allCases.filter(set.contains).map(\.rawValue).joined(separator: ",")
+                }))
+            }
+            HStack {
+                if let p = model.scanning {
+                    ProgressView(value: p).frame(maxWidth: 120)
+                    Button("Avbryt") { model.cancelScan() }
+                } else {
+                    Button("Sök i inspelningen") { model.scanForSensitiveText(kinds: maskKinds) }
+                        .disabled(maskKinds.isEmpty)
+                }
+                Button("Eget område") { model.addMaskAtPlayhead() }
+            }
+            .controlSize(.small)
+            if let note = model.scanNote { Text(note).font(.caption).foregroundStyle(.secondary) }
+            Text("Texten läses lokalt med Vision, oftare där bilden rör sig. Kontrollera resultatet innan du delar filmen.")
+                .font(.caption).foregroundStyle(.secondary)
+            ForEach(model.project.masks) { mask in
+                maskRow(mask)
+            }
+        }
+    }
+
+    private func maskRow(_ mask: EditProject.Mask) -> some View {
+        let selected = model.selectedMaskID == mask.id
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Toggle("", isOn: Binding(get: { mask.enabled }, set: { v in model.updateMask(mask.id) { $0.enabled = v } }))
+                    .labelsHidden()
+                Text(kindName(mask.kind)).font(.callout)
+                Text(mask.hint).font(.caption.monospaced()).foregroundStyle(.secondary)
+                Spacer()
+                Text(String(format: "%.1f–%.1f s", mask.start, mask.end)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                model.selectedMaskID = selected ? nil : mask.id
+                if let t = model.timeMap.output(at: mask.start + 0.01) { model.scrub(to: t) }
+            }
+            if selected {
+                Picker("Utseende", selection: Binding(get: { mask.style }, set: { v in model.updateMask(mask.id) { $0.style = v } })) {
+                    Text("Oskärpa").tag(EditProject.Mask.Style.blur)
+                    Text("Pixlar").tag(EditProject.Mask.Style.pixelate)
+                    Text("Fylld").tag(EditProject.Mask.Style.solid)
+                }
+                .pickerStyle(.segmented)
+                if mask.kind == .manual, let r = mask.keyframes.first?.rect {
+                    LabeledSlider("Sidled", value: maskRect(mask.id, \.x, r), range: 0...1, format: "%.2f")
+                    LabeledSlider("Höjdled", value: maskRect(mask.id, \.y, r), range: 0...1, format: "%.2f")
+                    LabeledSlider("Bredd", value: maskRect(mask.id, \.width, r), range: 0.01...1, format: "%.2f")
+                    LabeledSlider("Höjd", value: maskRect(mask.id, \.height, r), range: 0.01...1, format: "%.2f")
+                }
+                HStack {
+                    Button("Börja här") { let s = model.sourceTimeAtPlayhead; model.updateMask(mask.id) { $0.start = min(s, $0.end - 0.1) } }
+                    Button("Sluta här") { let s = model.sourceTimeAtPlayhead; model.updateMask(mask.id) { $0.end = max(s, $0.start + 0.1) } }
+                    Spacer()
+                    Button("Ta bort", role: .destructive) { model.deleteMask(mask.id) }
+                }
+                .controlSize(.small)
+            }
+        }
+        .padding(6)
+        .background(RoundedRectangle(cornerRadius: 6).fill(selected ? Color.accentColor.opacity(0.1) : .clear))
+    }
+
+    private func maskRect(_ id: UUID, _ key: WritableKeyPath<Rect, Double>, _ r: Rect) -> Binding<Double> {
+        Binding(get: { r[keyPath: key] }, set: { v in
+            model.updateMask(id) { m in
+                for i in m.keyframes.indices { m.keyframes[i].rect[keyPath: key] = v }
+            }
+        })
+    }
 
     private var speechSection: some View {
         Section2("Tal", systemImage: "captions.bubble") {

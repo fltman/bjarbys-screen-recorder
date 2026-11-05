@@ -103,6 +103,23 @@
         }
       }
     },
+    "%lld områden döljs.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld areas are hidden."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld områden döljs."
+          }
+        }
+      }
+    },
     "%lld rutor tappade": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -426,6 +443,40 @@
         }
       }
     },
+    "Bredd": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Width"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bredd"
+          }
+        }
+      }
+    },
+    "Börja här": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start here"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Börja här"
+          }
+        }
+      }
+    },
     "Cirkel": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -596,6 +647,23 @@
         }
       }
     },
+    "Dölj känsligt": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide sensitive"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dölj känsligt"
+          }
+        }
+      }
+    },
     "Dölj när den står still": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -609,6 +677,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dölj när den står still"
+          }
+        }
+      }
+    },
+    "E-post": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-post"
+          }
+        }
+      }
+    },
+    "Eget område": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Own area"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eget område"
           }
         }
       }
@@ -779,6 +881,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fyll och följ markören"
+          }
+        }
+      }
+    },
+    "Fylld": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solid"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fylld"
           }
         }
       }
@@ -1038,6 +1157,40 @@
         }
       }
     },
+    "Höjd": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Höjd"
+          }
+        }
+      }
+    },
+    "Höjdled": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertical"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Höjdled"
+          }
+        }
+      }
+    },
     "Hörn": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1204,6 +1357,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ingen signal från %@"
+          }
+        }
+      }
+    },
+    "Inget känsligt hittades.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing sensitive was found."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inget känsligt hittades."
           }
         }
       }
@@ -1565,6 +1735,23 @@
         }
       }
     },
+    "Kortnummer": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card numbers"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kortnummer"
+          }
+        }
+      }
+    },
     "Krävs för att spela in skärmen och datorljudet.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1922,6 +2109,23 @@
         }
       }
     },
+    "Nycklar och lösenord": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keys and passwords"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nycklar och lösenord"
+          }
+        }
+      }
+    },
     "Något gick fel": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2024,6 +2228,40 @@
         }
       }
     },
+    "Personnummer": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal ID numbers"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personnummer"
+          }
+        }
+      }
+    },
+    "Pixlar": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixels"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixlar"
+          }
+        }
+      }
+    },
     "Placering": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2071,6 +2309,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rundad ruta"
+          }
+        }
+      }
+    },
+    "Sidled": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Horizontal"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sidled"
           }
         }
       }
@@ -2156,6 +2411,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Skärmströmmen slutade svara (%@). Allt fram till avbrottet är sparat."
+          }
+        }
+      }
+    },
+    "Sluta här": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End here"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sluta här"
           }
         }
       }
@@ -2466,6 +2738,23 @@
         }
       }
     },
+    "Sök i inspelningen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search the recording"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sök i inspelningen"
+          }
+        }
+      }
+    },
     "Ta bort": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2602,6 +2891,23 @@
         }
       }
     },
+    "Telefonnummer": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phone numbers"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefonnummer"
+          }
+        }
+      }
+    },
     "Text": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2615,6 +2921,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Text"
+          }
+        }
+      }
+    },
+    "Texten läses lokalt med Vision, oftare där bilden rör sig. Kontrollera resultatet innan du delar filmen.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The text is read locally with Vision, more often where the picture moves. Check the result before you share the video."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texten läses lokalt med Vision, oftare där bilden rör sig. Kontrollera resultatet innan du delar filmen."
           }
         }
       }
@@ -2853,6 +3176,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Utjämning"
+          }
+        }
+      }
+    },
+    "Utseende": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utseende"
           }
         }
       }

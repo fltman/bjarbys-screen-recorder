@@ -203,7 +203,8 @@ public final class RenderPlan: @unchecked Sendable {
                 .transformed(by: CGAffineTransform(translationX: -e.minX, y: -e.minY))
                 .transformed(by: CGAffineTransform(scaleX: screenRect.width / e.width, y: screenRect.height / e.height))
                 .transformed(by: CGAffineTransform(translationX: screenRect.minX, y: screenRect.minY))
-            layer = scaled.applyingFilter("CIBlendWithMask", parameters: [
+            let masked = applyMasks(to: scaled, at: s)
+            layer = masked.applyingFilter("CIBlendWithMask", parameters: [
                 kCIInputBackgroundImageKey: CIImage.empty(),
                 kCIInputMaskImageKey: mask,
             ])
@@ -296,6 +297,38 @@ public final class RenderPlan: @unchecked Sendable {
             out = Self.withAlpha(placed, shown.opacity).composited(over: out)
         }
         return out.cropped(to: canvasRect)
+    }
+
+    /// Döljer maskernas områden i skärmbilden (före zoom, så att de följer innehållet).
+    func applyMasks(to screen: CIImage, at s: Double) -> CIImage {
+        var out = screen
+        for mask in project.masks {
+            guard let r = mask.rect(at: s) else { continue }
+            // Lite marginal: OCR-rutan sitter tätt kring bokstäverna.
+            let a = point(CGPoint(x: r.minX, y: r.minY)), b = point(CGPoint(x: r.maxX, y: r.maxY))
+            var rect = CGRect(x: min(a.x, b.x), y: min(a.y, b.y), width: abs(b.x - a.x), height: abs(b.y - a.y))
+            rect = rect.insetBy(dx: -max(4, rect.height * 0.25), dy: -max(3, rect.height * 0.2)).integral
+                .intersection(screenRect)
+            guard !rect.isEmpty else { continue }
+            let patch: CIImage
+            switch mask.style {
+            case .blur:
+                let sigma = max(6, rect.height * 0.45)
+                patch = screen.cropped(to: rect).clampedToExtent().applyingGaussianBlur(sigma: sigma)
+                    .applyingFilter("CIColorControls", parameters: [kCIInputSaturationKey: 0.6])
+                    .cropped(to: rect)
+            case .pixelate:
+                patch = screen.cropped(to: rect).clampedToExtent()
+                    .applyingFilter("CIPixellate", parameters: [kCIInputScaleKey: max(8, rect.height / 2.5),
+                                                                kCIInputCenterKey: CIVector(x: rect.minX, y: rect.minY)])
+                    .cropped(to: rect)
+            case .solid:
+                patch = Self.roundedRect(rect, radius: min(6, rect.height * 0.2),
+                                         color: CIColor(red: 0.12, green: 0.12, blue: 0.14))
+            }
+            out = patch.composited(over: out)
+        }
+        return out
     }
 
     /// Begränsar mittpunkten utifrån vad som syns i hela bildytan, axel för axel. Täcker det

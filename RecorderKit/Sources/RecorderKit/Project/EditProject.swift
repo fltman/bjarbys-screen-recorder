@@ -28,6 +28,8 @@ public struct EditProject: Codable, Equatable, Sendable {
     public var audio: AudioMix
     public var shortcuts: ShortcutStyle
     public var captions: CaptionStyle
+    /// Dolda områden: känslig text som hittats automatiskt, och egna.
+    public var masks: [Mask]
 
     public init() {
         schemaVersion = RecorderKit.formatVersion
@@ -46,6 +48,7 @@ public struct EditProject: Codable, Equatable, Sendable {
         audio = AudioMix()
         shortcuts = ShortcutStyle()
         captions = CaptionStyle()
+        masks = []
     }
 
     /// Ett nytt projekt för en inspelning: allt med, i normal hastighet.
@@ -74,6 +77,7 @@ public struct EditProject: Codable, Equatable, Sendable {
         audio = c.value(.audio, d.audio)
         shortcuts = c.value(.shortcuts, d.shortcuts)
         captions = c.value(.captions, d.captions)
+        masks = c.value(.masks, d.masks)
     }
 
     // MARK: - Delar
@@ -268,6 +272,58 @@ public struct EditProject: Codable, Equatable, Sendable {
             visible = c.value(.visible, d.visible)
             position = c.value(.position, d.position)
             size = c.value(.size, d.size)
+        }
+    }
+
+    /// Ett område som döljs, i innehållets koordinater (0–1, origo uppe till vänster) så att
+    /// det zoomar med bilden. Följer texten via nyckelrutor; mellan två olika lägen täcks
+    /// båda (och allt mellan), så att inget syns medan texten rör sig.
+    public struct Mask: Codable, Equatable, Hashable, Sendable, Identifiable {
+        public enum Style: String, Codable, Sendable, CaseIterable { case blur, pixelate, solid }
+        public struct Keyframe: Codable, Equatable, Hashable, Sendable {
+            public var t: Double
+            public var rect: Rect
+            public init(t: Double, rect: Rect) { self.t = t; self.rect = rect }
+            public init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                t = c.value(.t, 0); rect = c.value(.rect, .zero)
+            }
+        }
+        public var id: UUID
+        public var start: Double
+        public var end: Double
+        public var keyframes: [Keyframe]
+        public var style: Style
+        public var kind: SensitiveText.Kind
+        /// Ofarlig beskrivning ("a•••••"), aldrig själva texten.
+        public var hint: String
+        public var enabled: Bool
+
+        public init(id: UUID = UUID(), start: Double, end: Double, keyframes: [Keyframe], style: Style = .blur,
+                    kind: SensitiveText.Kind = .manual, hint: String = "", enabled: Bool = true) {
+            self.id = id; self.start = start; self.end = end; self.keyframes = keyframes
+            self.style = style; self.kind = kind; self.hint = hint; self.enabled = enabled
+        }
+
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = c.value(.id, UUID())
+            start = c.value(.start, 0); end = c.value(.end, 0)
+            keyframes = c.value(.keyframes, [])
+            style = c.value(.style, .blur)
+            kind = c.value(.kind, .manual)
+            hint = c.value(.hint, "")
+            enabled = c.value(.enabled, true)
+        }
+
+        /// Området vid källtiden `t`, eller nil utanför maskens tid.
+        public func rect(at t: Double) -> CGRect? {
+            guard enabled, t >= start, t <= end, let first = keyframes.first else { return nil }
+            guard keyframes.count > 1, t > first.t else { return first.rect.cgRect }
+            for (a, b) in zip(keyframes, keyframes.dropFirst()) where t <= b.t {
+                return a.rect == b.rect ? a.rect.cgRect : a.rect.cgRect.union(b.rect.cgRect)
+            }
+            return keyframes.last!.rect.cgRect
         }
     }
 

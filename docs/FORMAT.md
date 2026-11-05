@@ -79,6 +79,7 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 | `cursor` | `visible`, `scale`, `smoothing`, `hideWhenIdle`, `clickEffect` |
 | `shortcuts` | `visible`, `position` (`bottom`, `top`), `size` |
 | `captions` | `visible`, `size` — undertexter ur `transcript.json` |
+| `masks[]` | `start`, `end`, `keyframes[]` (`t`, `rect` normaliserat), `style` (`blur`, `pixelate`, `solid`), `kind`, `hint` (aldrig själva texten), `enabled` |
 | `camera` | `visible`, `shape`, `size`, `corner`, `mirror` |
 | `audio` | volym och tystning per spår; `duckSystem`, `duckLevel` sänker datorljudet under tal |
 

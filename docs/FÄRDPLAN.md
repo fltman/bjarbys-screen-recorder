@@ -9,7 +9,7 @@ tagning, sedan redigerbar polish, sedan resten.
 | 1 | Inspelningsmotor: skärm/fönster/område, mik + datorljud på egna spår, kamera, markör som data, fragmenterad skrivning, kraschåterställning, disk- och mikvakt, HUD | klar 2026-11-04 |
 | 2 | Polish-redigerare: fjäderzoom, syntetisk markör, bakgrund, kamerabubbla, tidslinje, export MP4/HEVC/ProRes/GIF | klar 2026-11-04 |
 | 3 | Transkript och redigering via text, utfyllnadsord/tystnad bort, undertexter, brusreducering, loudness, ducking. ⚠️ SpeechTranscriber kan inte svenska → KB-Whisper/whisper.cpp | nästan klar 2026-11-05: transkript, text-redigering, undertexter (inbrända + .srt), dödtid, eh/öh, ducking, utjämning till −16 LUFS. Kvar: brusreducering |
-| 4 | Maskning av känslig info: Vision-OCR, masker som följer texten, ogenomskinliga fyllningar | |
+| 4 | Maskning av känslig info: Vision-OCR, masker som följer texten, ogenomskinliga fyllningar | klar 2026-11-05 (egna masker justeras med reglage, inte genom att dra i bilden) |
 | 5 | Flashback-buffert (egen, SDK saknar SCClipBufferingOutput), App Intents, URL-schema, CLI + MCP, steg-för-steg-guide, felrapport | |
 | 6 | HDR, 120 fps med jämn takt, ProRes 4444 med alfa, ljud per app (CATapDescription), teleprompter, stillbild/rullande skärmbild, delning till egen S3/R2 | |
 
@@ -23,6 +23,10 @@ tagning, sedan redigerbar polish, sedan resten.
 
 ## Byggt efter fas 2
 
+- Dölj känsligt (fas 4, 2026-11-05): `RecorderKit/Privacy/`. Mönster för e-post, telefon,
+  personnummer, kort (Luhn) och nycklar/lösenord; Vision läser skärmspåret; masker med
+  nyckelrutor i innehållets koordinater (oskärpa, pixlar eller fylld). Egna masker läggs till
+  vid spelhuvudet och justeras med reglage. Att dra masker direkt i bilden är inte byggt.
 - Tal (fas 3, 2026-11-05): transkribering med whisper.cpp (KB-Whisper för svenska) i
   `RecorderKit/Speech/`, `transcript.json` i paketet. Textpanel i redigeraren där överstrukna
   ord är bortklippta och går att ta tillbaka; inbrända undertexter och .srt vid export; "dödtid"

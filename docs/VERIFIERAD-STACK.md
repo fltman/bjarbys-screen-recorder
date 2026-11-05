@@ -99,3 +99,22 @@ som mikrofonspår som börjar 1,0 s in), whisper.cpp i `~/Projekt/whisper.cpp`, 
   förstärkningen så att topparna stannar under −1 dBFS.
 - Exporten lägger monomikrofonen i båda kanalerna: filmen blir 3 dB starkare än spåret ensamt.
   Prov: spår −32,37 LUFS → +13,36 dB → exporten mätte −16,0 LUFS, topp −3,5 dBFS.
+
+## Fas 4: dölja känsligt (2026-11-05)
+
+Provpaket: 1920×1080, vit bakgrund, en e-postadress, en `sk-proj-…`-nyckel, ett telefonnummer
+som scrollar 300 px under 3–4 s, och en rad vanlig text (ffmpeg `drawtext`, Arial 34 px).
+
+- Vision (`.accurate`, sv+en, utan språkkorrigering) hittade alla tre; den vanliga raden
+  lämnades orörd. Sökning på 6 s: 0,8 s med fyra rutor åt gången.
+- ⚠️ **En ruta i sekunden räcker inte när text rör sig**: masken stod kvar där numret senast
+  lästes, och numret syntes mitt i scrollen (ruta 3,5 s). Rättat: där bilden ändrats mellan
+  två läsningar (64×40-gråskala, någon pixel > 3 nivåer) läses fem rutor i sekunden, masken
+  täcker både förra och nästa läge mellan nyckelrutorna, och den sträcker sig till läsningen
+  före första och efter sista träffen. Därefter täckt hela scrollen.
+- Att hoppa över rutor som "ser likadana ut" användes inte: en ny textrad på en stor skärm
+  ändrar för lite i en liten jämförelsebild.
+- Känd gräns: text som glider in över annan text (två rader ovanpå varandra) läses inte av OCR,
+  och kan då synas i kanten under en kort stund. Därför: kontrollera filmen innan den delas.
+- En nyckel lästes olika i olika rutor (med och utan prefix) och blev två masker som tillsammans
+  täckte hela tiden — rätt resultat, men listan kan visa samma sak två gånger.
