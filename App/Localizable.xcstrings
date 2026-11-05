@@ -392,6 +392,23 @@
         }
       }
     },
+    "16:9, hela inspelningen, undertexter på platta nere": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "16:9, the whole recording, boxed captions at the bottom"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "16:9, hela inspelningen, undertexter på platta nere"
+          }
+        }
+      }
+    },
     "1:1 kvadrat": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -405,6 +422,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "1:1 kvadrat"
+          }
+        }
+      }
+    },
+    "1:1, hela inspelningen, undertexter med kontur nere": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1:1, the whole recording, outlined captions at the bottom"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1:1, hela inspelningen, undertexter med kontur nere"
           }
         }
       }
@@ -456,6 +490,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "60 bilder/s"
+          }
+        }
+      }
+    },
+    "9:16 som fyller bilden och följer markören, undertexter med kontur mitt i": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "9:16 filling the frame and following the cursor, outlined captions in the middle"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "9:16 som fyller bilden och följer markören, undertexter med kontur mitt i"
           }
         }
       }
@@ -3826,6 +3877,23 @@
         }
       }
     },
+    "Kvadrat": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Square"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kvadrat"
+          }
+        }
+      }
+    },
     "Ladda upp exporterade filmer till din egen S3-kompatibla lagring (Cloudflare R2, AWS S3, MinIO, Backblaze B2) och få en länk i urklipp.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -5203,6 +5271,23 @@
         }
       }
     },
+    "Reel / Shorts": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reel / Shorts"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reel / Shorts"
+          }
+        }
+      }
+    },
     "Region": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -5777,6 +5862,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Snabba upp 4×"
+          }
+        }
+      }
+    },
+    "Snabbval": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick setup"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snabbval"
           }
         }
       }
@@ -7732,6 +7834,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Webbläsare"
+          }
+        }
+      }
+    },
+    "YouTube": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YouTube"
           }
         }
       }

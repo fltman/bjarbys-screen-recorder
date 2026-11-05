@@ -108,6 +108,26 @@ public struct EditProject: Codable, Equatable, Sendable {
         chrome.kind = other.chrome.kind; chrome.dark = other.chrome.dark
     }
 
+    /// Snabbval för var filmen ska visas: format, utfyllnad och undertexternas stil i ett svep.
+    public enum Platform: String, CaseIterable, Sendable { case youtube, reel, square }
+
+    /// YouTube: 16:9 med hela inspelningen och undertexter på platta nere. Reel/Shorts: 9:16 som
+    /// fyller bilden och följer markören, undertexter med kontur mitt i och ordet som sägs
+    /// markerat. Kvadrat: 1:1 med hela inspelningen och kontur nere. Annat rörs inte.
+    public mutating func apply(platform: Platform) {
+        switch platform {
+        case .youtube:
+            aspect = .wide; framing = .fit
+            captions.position = .bottom; captions.look = .box
+        case .reel:
+            aspect = .vertical; framing = .fill
+            captions.position = .middle; captions.look = .outline; captions.highlightWord = true
+        case .square:
+            aspect = .square; framing = .fit
+            captions.position = .bottom; captions.look = .outline
+        }
+    }
+
     /// Bara utseendet, för att spara som standard.
     public var styleOnly: EditProject {
         var p = EditProject()

@@ -219,6 +219,16 @@ struct InspectorView: View {
 
     private var frameSection: some View {
         Section2("Bild", systemImage: "rectangle.inset.filled") {
+            HStack(spacing: 6) {
+                Text("Snabbval").foregroundStyle(.secondary)
+                Button("YouTube") { model.update { $0.apply(platform: .youtube) } }
+                    .help("16:9, hela inspelningen, undertexter på platta nere")
+                Button("Reel / Shorts") { model.update { $0.apply(platform: .reel) } }
+                    .help("9:16 som fyller bilden och följer markören, undertexter med kontur mitt i")
+                Button("Kvadrat") { model.update { $0.apply(platform: .square) } }
+                    .help("1:1, hela inspelningen, undertexter med kontur nere")
+            }
+            .controlSize(.small)
             Picker("Format", selection: binding(\.aspect)) {
                 Text("Inspelningens").tag(EditProject.Aspect.source)
                 Text("16:9 bred").tag(EditProject.Aspect.wide)

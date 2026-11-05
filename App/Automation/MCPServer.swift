@@ -163,6 +163,7 @@ enum MCPServer {
                 "cursor_scale": ["type": "number", "minimum": 0.8, "maximum": 3],
                 "captions": ["type": "boolean", "description": "Burn in captions (needs a transcript)."],
                 "caption_highlight": ["type": "boolean", "description": "Highlight the word being said in the burned-in captions."],
+                "platform": ["type": "string", "enum": ["youtube", "reel", "square"], "description": "One-click setup: youtube = 16:9 fit, captions boxed at the bottom; reel = 9:16 filling the frame and following the cursor, outlined captions in the middle with the word highlighted; square = 1:1 fit, outlined captions. Applied before the other options."],
                 "caption_position": ["type": "string", "enum": ["bottom", "middle", "top"], "description": "Where captions sit (middle suits vertical Reels)."],
                 "caption_style": ["type": "string", "enum": ["box", "outline"], "description": "White text on a dark box, or bold text with a black outline and no box."],
                 "shortcuts": ["type": "boolean", "description": "Show recorded keyboard shortcuts."],
@@ -505,6 +506,7 @@ enum MCPServer {
         var rec = try resolve(a)
         var p = rec.bundle.loadProject(duration: rec.meta.duration)
         var notes: [String] = []
+        if let v = (a["platform"] as? String).flatMap(EditProject.Platform.init(rawValue:)) { p.apply(platform: v) }
         if let s = a["aspect"] as? String { p.aspect = EditProject.Aspect(rawValue: s) ?? p.aspect }
         if let s = a["framing"] as? String { p.framing = EditProject.Framing(rawValue: s) ?? p.framing }
         if let i = a["background_preset"] as? Int, EditProject.Background.presets.indices.contains(i) {

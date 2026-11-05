@@ -84,6 +84,8 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Snabbval (2026-11-05): Stil › Bild › YouTube / Reel / Shorts / Kvadrat sätter format,
+  utfyllnad och undertextstil i ett klick (`EditProject.apply(platform:)`); MCP `platform`.
 - Sök och byt namn i biblioteket (2026-11-05): sökfält ovanför korten (alla ord måste finnas i
   namnet, källan, datumtexten eller talet; skiftläget spelar ingen roll, å ä ö är egna bokstäver),
   med citatet kring träffen när den var i talet; transkripten läses i bakgrunden. Byt namn …

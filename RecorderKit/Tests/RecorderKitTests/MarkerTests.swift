@@ -26,3 +26,16 @@ import Foundation
         #expect(e.k == .marker && e.t == 3.5)
     }
 }
+
+@Suite struct PlatformTests {
+    @Test func reelFillsVerticalWithCaptionsInTheMiddle() {
+        var p = EditProject()
+        p.padding = 0.1
+        p.apply(platform: .reel)
+        #expect(p.aspect == .vertical && p.framing == .fill)
+        #expect(p.captions.position == .middle && p.captions.look == .outline && p.captions.highlightWord)
+        #expect(p.padding == 0.1)
+        p.apply(platform: .youtube)
+        #expect(p.aspect == .wide && p.framing == .fit && p.captions.position == .bottom && p.captions.look == .box)
+    }
+}
