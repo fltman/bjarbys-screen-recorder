@@ -118,6 +118,10 @@ enum TestMode {
                     model.trimSegment(a, start: -1); lines.append("A start -1: \(state())")
                     model.trimSegment(b, end: 99); lines.append("B slut 99 (inspelningen \(String(format: "%.2f", model.recording.meta.duration))): \(state())")
                     model.trimSegment(b, start: 2.98); lines.append("B start 2,98 (minst 0,1 s): \(state())")
+                    model.moveSegment(b, toIndexAmongOthers: 0)
+                    lines.append("B först: \(state()) — ordning \(model.project.segments.map { $0.id == a ? "A" : "B" }.joined())")
+                    model.moveSegment(b, toIndexAmongOthers: 1)
+                    lines.append("B sist igen: \(model.project.segments.map { $0.id == a ? "A" : "B" }.joined())")
                     model.selectedSegmentID = a
                     print(lines.joined(separator: "\n"))
                     code = 0

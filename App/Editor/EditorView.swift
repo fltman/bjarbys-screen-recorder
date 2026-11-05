@@ -69,6 +69,8 @@ struct EditorView: View {
         Group {
             Button("") { model.togglePlay() }.keyboardShortcut(.space, modifiers: [])
             Button("") { model.split() }.keyboardShortcut("b", modifiers: .command)
+            Button("") { model.trimToPlayhead(start: true) }.keyboardShortcut("[", modifiers: .option)
+            Button("") { model.trimToPlayhead(start: false) }.keyboardShortcut("]", modifiers: .option)
             Button("") { model.deleteSelection() }.keyboardShortcut(.delete, modifiers: [])
             Button("") { model.undo() }.keyboardShortcut("z", modifiers: .command)
             Button("") { model.redo() }.keyboardShortcut("z", modifiers: [.command, .shift])

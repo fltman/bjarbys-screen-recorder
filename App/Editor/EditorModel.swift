@@ -286,6 +286,23 @@ final class EditorModel: ObservableObject {
         }
     }
 
+    /// ⌥[ / ⌥]: delen under spelhuvudet börjar respektive slutar vid spelhuvudet (på rutan).
+    func trimToPlayhead(start: Bool) {
+        guard let seg = segment(atOutput: currentTime) else { return }
+        let s = sourceTimeAtPlayhead
+        if start { trimSegment(seg.id, start: s) } else { trimSegment(seg.id, end: s) }
+        selectedSegmentID = seg.id
+    }
+
+    /// Flyttar en del till platsen `index` bland de andra delarna (filmens ordning).
+    func moveSegment(_ id: UUID, toIndexAmongOthers index: Int) {
+        update { p in
+            guard let i = p.segments.firstIndex(where: { $0.id == id }) else { return }
+            let seg = p.segments.remove(at: i)
+            p.segments.insert(seg, at: max(0, min(index, p.segments.count)))
+        }
+    }
+
     func segment(atOutput t: Double) -> EditProject.ClipSegment? {
         for (seg, piece) in zip(project.segments.filter { $0.duration > 0.001 }, plan.timeMap.pieces)
         where t >= piece.outputStart && t < piece.outputEnd {

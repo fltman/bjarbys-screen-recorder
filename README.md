@@ -47,7 +47,8 @@ is included; to have the app follow your system language instead, run
 - Keyboard shortcuts pressed during recording appear as a small caption ("⌘Z ×3").
 - Split, delete and change the speed of parts of the recording, with undo. Trim a part by
   dragging its ends on the timeline — nothing is removed from the recording, so you can drag
-  it back out — and ⌥-drag an end to stretch the part to a new speed.
+  it back out — and ⌥-drag an end to stretch the part to a new speed. Drag a selected part to
+  move it; ⌥[ and ⌥] trim the part under the playhead to the playhead.
 - Layers: title cards, callouts around the button you clicked, fact boxes, QR codes, free
   text anywhere, images (logos, product shots), video inserts (picture-in-picture or full
   frame, with their sound, cropped, with soft edges, at 0.25–4× speed), chapters with a banner, and extra audio

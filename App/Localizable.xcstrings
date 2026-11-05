@@ -970,6 +970,23 @@
         }
       }
     },
+    "Dra i ändarna i tidslinjen för att trimma (⌥ ändrar farten), dra delen för att flytta den. ⌥[ och ⌥] trimmar till spelhuvudet.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag the ends on the timeline to trim (⌥ changes the speed), drag the part to move it. ⌥[ and ⌥] trim to the playhead."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dra i ändarna i tidslinjen för att trimma (⌥ ändrar farten), dra delen för att flytta den. ⌥[ och ⌥] trimmar till spelhuvudet."
+          }
+        }
+      }
+    },
     "Dra upp ett område (%@)": {
       "extractionState": "extracted_with_value",
       "localizations": {

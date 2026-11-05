@@ -20,6 +20,23 @@ struct TimelineView: View {
         case trimEnd(UUID, end: Double, speed: Double)
         /// ⌥: sträck delen — samma innehåll, ny längd i filmen, alltså ny hastighet.
         case stretch(UUID, sourceLength: Double, outLength: Double, fromStart: Bool)
+        /// Flytta den markerade delen till en ny plats i ordningen.
+        case moveSegment(UUID, grab: CGFloat)
+    }
+    /// Var pekaren är medan en del flyttas (för spöket och insättningsmärket).
+    @State private var moveX: CGFloat = 0
+    @State private var moveStartX: CGFloat = 0
+
+    /// Platsen bland de andra delarna där den flyttade delen hamnar, och märkets x.
+    private func dropTarget(for id: UUID, at px: CGFloat, pps: Double) -> (index: Int, x: CGFloat)? {
+        let segments = model.project.segments.filter { $0.duration > 0.001 }
+        let pieces = model.editTimeMap.pieces
+        let others = zip(segments, pieces).filter { $0.0.id != id }
+        guard !others.isEmpty else { return nil }
+        let t = self.t(px, pps)
+        let index = others.filter { t > ($0.1.outputStart + $0.1.outputEnd) / 2 }.count
+        let mx = index == 0 ? x(others[0].1.outputStart, pps) : x(others[index - 1].1.outputEnd, pps)
+        return (index, mx)
     }
 
     /// Delens kant under punkten i klippfilen: vid en gräns mellan två delar den sida pekaren är på.
@@ -189,6 +206,10 @@ struct TimelineView: View {
                              with: .color(.white))
                 }
             }
+            // Flyttas: delen tonas ned på sin gamla plats.
+            if case let .moveSegment(id, _) = drag, id == seg.id {
+                ctx.fill(shape, with: .color(.black.opacity(0.5)))
+            }
             // Medan delen dras: längden i filmen (och farten när den sträcks).
             if let id = draggedSegmentID, id == seg.id {
                 let len = piece.outputEnd - piece.outputStart
@@ -199,6 +220,16 @@ struct TimelineView: View {
                          with: .color(.accentColor))
                 ctx.draw(label, at: CGPoint(x: rect.midX, y: rect.maxY - 15))
             }
+        }
+
+        // Delen som flyttas: ett spöke vid pekaren och ett märke där den hamnar.
+        if case let .moveSegment(id, grab) = drag, let piece = piece(for: id),
+           let target = dropTarget(for: id, at: moveX, pps: pps) {
+            let w = max(2, CGFloat((piece.outputEnd - piece.outputStart) * pps) - 1)
+            let ghost = CGRect(x: moveX - grab, y: clipY + 4, width: w, height: clipH - 8)
+            ctx.fill(RoundedRectangle(cornerRadius: 6).path(in: ghost), with: .color(.accentColor.opacity(0.35)))
+            ctx.stroke(RoundedRectangle(cornerRadius: 6).path(in: ghost), with: .color(.accentColor), lineWidth: 2)
+            ctx.fill(Path(CGRect(x: target.x - 1.5, y: clipY - 4, width: 3, height: clipH + 8)), with: .color(.accentColor))
         }
 
         // Zoomblock.
@@ -409,7 +440,10 @@ struct TimelineView: View {
         }
     }
 
+    @State private var lastPPS: Double = 100
+
     private func handleDrag(_ value: DragGesture.Value, pps: Double) {
+        lastPPS = pps
         let map = model.editTimeMap
         if drag == nil {
             let p = value.startLocation
@@ -455,7 +489,14 @@ struct TimelineView: View {
                 }
                 model.selectedMaskID = hit?.id
             } else if p.y >= clipY && p.y <= clipY + clipH {
-                model.selectedSegmentID = model.segment(atOutput: t(p.x, pps))?.id
+                let hit = segment(atOutputLive: t(p.x, pps))
+                // Den markerade delen flyttas när den dras; en annan del markeras och spolas till.
+                if let hit, hit.id == model.selectedSegmentID, let piece = piece(for: hit.id) {
+                    drag = .moveSegment(hit.id, grab: p.x - x(piece.outputStart, pps))
+                    moveX = p.x; moveStartX = p.x
+                } else {
+                    model.selectedSegmentID = hit?.id
+                }
                 model.selectedZoomID = nil
             }
         }
@@ -482,6 +523,8 @@ struct TimelineView: View {
         case let .resizeOverlay(id, duration):
             let d = max(0.5, duration + Double(value.translation.width) / pps)
             model.updateOverlay(id) { $0.duration = d }
+        case .moveSegment:
+            moveX = value.location.x
         case let .trimStart(id, start, speed):
             model.trimSegment(id, start: start + Double(value.translation.width) / pps * speed)
         case let .trimEnd(id, end, speed):
@@ -497,9 +540,22 @@ struct TimelineView: View {
     /// När en del trimmats: spelhuvudet till den nya kanten, så att den första (eller sista)
     /// bilden syns.
     private func dragEnded() {
+        if case let .moveSegment(id, _) = drag {
+            // Ett klick utan dragning spolar dit, som i resten av tidslinjen.
+            if abs(moveX - moveStartX) < 3 {
+                model.scrub(to: t(moveX, lastPPS))
+            } else if let target = dropTarget(for: id, at: moveX, pps: lastPPS) {
+                model.moveSegment(id, toIndexAmongOthers: target.index)
+            }
+        }
         if case let .trimStart(id, _, _) = drag, let piece = piece(for: id) { model.scrub(to: piece.outputStart) }
         if case let .trimEnd(id, _, _) = drag, let piece = piece(for: id) { model.scrub(to: max(piece.outputStart, piece.outputEnd - 1.0 / 60)) }
         drag = nil
+    }
+
+    private func segment(atOutputLive t: Double) -> EditProject.ClipSegment? {
+        let segments = model.project.segments.filter { $0.duration > 0.001 }
+        return zip(segments, model.editTimeMap.pieces).first { t >= $0.1.outputStart && t < $0.1.outputEnd }?.0
     }
 
     private func piece(for id: UUID) -> TimeMap.Piece? {
