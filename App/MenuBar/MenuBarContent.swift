@@ -54,7 +54,8 @@ struct MenuBarContent: View {
             }
             Divider()
             Menu("Inspelning") {
-                Toggle("Spela in kortkommandon", isOn: $settings.keystrokes)
+                Toggle("Kortkommandon och skrivande", isOn: $settings.keystrokes)
+                    .help("Kortkommandon visas i filmen, och skrivande ger en zoom där du skriver — bara när och var, aldrig vad. Kräver Indataövervakning (och Tillgänglighet för var).")
                 Toggle("Nedräkning", isOn: $settings.countdown)
                 if AppSettings.hdrAvailable {
                     Toggle("HDR (10 bit)", isOn: $settings.hdr)

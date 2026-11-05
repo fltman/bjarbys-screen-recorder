@@ -168,6 +168,7 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         let input = InputRecorder(clock: clock, log: log, keystrokes: options.keystrokes)
         let probe = ElementProbe(log: log)
         input.onMouseDown = { point, t in probe.probe(at: point, t: t) }
+        input.onTyping = { t in probe.typing(t: t) }
         input.start()
         self.input = input
         meta.keystrokesRecorded = input.keystrokesActive

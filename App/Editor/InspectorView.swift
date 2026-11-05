@@ -345,7 +345,7 @@ struct InspectorView: View {
                 .pickerStyle(.segmented)
                 LabeledSlider("Storlek", value: binding(\.shortcuts.size), range: 0.6...1.8, format: "%.0f %%", scale: 100)
             } else {
-                Text("Inga kortkommandon i den här inspelningen. Slå på «Spela in kortkommandon» i menyn före nästa inspelning; det kräver Indataövervakning.")
+                Text("Inga kortkommandon i den här inspelningen. Slå på «Kortkommandon och skrivande» i menyn före nästa inspelning; det kräver Indataövervakning.")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }

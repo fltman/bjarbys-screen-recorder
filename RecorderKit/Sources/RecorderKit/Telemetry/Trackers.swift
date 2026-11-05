@@ -159,6 +159,46 @@ public final class ElementProbe: @unchecked Sendable {
         }
     }
 
+    /// Någon skriver: skrivmarkörens ram i det fokuserade elementet (eller elementets ram om det
+    /// är lagom stort), loggad som `typing`. Utan Tillgänglighet loggas bara tiden. Värdet i
+    /// fältet läses aldrig — bara var markeringen ligger.
+    public func typing(t: Double) {
+        guard Self.isTrusted else {
+            log.append(InputEvent(t: t, k: .typing))
+            return
+        }
+        queue.async { [self] in
+            var focused: CFTypeRef?
+            var rect: CGRect?
+            if AXUIElementCopyAttributeValue(systemWide, kAXFocusedUIElementAttribute as CFString, &focused) == .success,
+               let focused, CFGetTypeID(focused) == AXUIElementGetTypeID() {
+                let element = focused as! AXUIElement
+                rect = Self.caret(in: element)
+                if rect == nil, let f = Self.frame(of: element), f.height < 240, f.width < 2400 { rect = f }
+            }
+            log.append(InputEvent(t: t, k: .typing, rect: rect.map(Rect.init)))
+        }
+    }
+
+    /// Ramen för markeringen (skrivmarkören) via `AXBoundsForRange`, eller nil.
+    static func caret(in element: AXUIElement) -> CGRect? {
+        var rangeValue: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, &rangeValue) == .success,
+              let rangeValue, CFGetTypeID(rangeValue) == AXValueGetTypeID() else { return nil }
+        var range = CFRange()
+        guard AXValueGetValue(rangeValue as! AXValue, .cfRange, &range) else { return nil }
+        // En tom markering har ingen bredd; ta tecknet före (eller efter) markören.
+        var probe = CFRange(location: max(0, range.location - (range.length == 0 ? 1 : 0)), length: max(1, range.length))
+        var bounds: CFTypeRef?
+        guard let param = AXValueCreate(.cfRange, &probe),
+              AXUIElementCopyParameterizedAttributeValue(element, kAXBoundsForRangeParameterizedAttribute as CFString,
+                                                         param, &bounds) == .success,
+              let bounds, CFGetTypeID(bounds) == AXValueGetTypeID() else { return nil }
+        var r = CGRect.zero
+        guard AXValueGetValue(bounds as! AXValue, .cgRect, &r), r.height > 0, r.height < 400 else { return nil }
+        return r
+    }
+
     static func frame(of element: AXUIElement) -> CGRect? {
         var posValue: CFTypeRef?
         var sizeValue: CFTypeRef?

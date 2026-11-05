@@ -2772,6 +2772,23 @@
         }
       }
     },
+    "Inga kortkommandon i den här inspelningen. Slå på «Kortkommandon och skrivande» i menyn före nästa inspelning; det kräver Indataövervakning.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No keyboard shortcuts in this recording. Turn on «Shortcuts and Typing» in the menu before the next recording; it needs Input Monitoring."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inga kortkommandon i den här inspelningen. Slå på «Kortkommandon och skrivande» i menyn före nästa inspelning; det kräver Indataövervakning."
+          }
+        }
+      }
+    },
     "Inga kortkommandon i den här inspelningen. Slå på «Spela in kortkommandon» i menyn före nästa inspelning; det kräver Indataövervakning.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3482,6 +3499,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kortkommandon"
+          }
+        }
+      }
+    },
+    "Kortkommandon och skrivande": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcuts and Typing"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kortkommandon och skrivande"
+          }
+        }
+      }
+    },
+    "Kortkommandon visas i filmen, och skrivande ger en zoom där du skriver — bara när och var, aldrig vad. Kräver Indataövervakning (och Tillgänglighet för var).": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcuts appear in the film, and typing gives a zoom where you type — only when and where, never what. Needs Input Monitoring (and Accessibility for where)."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kortkommandon visas i filmen, och skrivande ger en zoom där du skriver — bara när och var, aldrig vad. Kräver Indataövervakning (och Tillgänglighet för var)."
           }
         }
       }

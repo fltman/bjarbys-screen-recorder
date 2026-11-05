@@ -38,8 +38,8 @@ is included; to have the app follow your system language instead, run
   is cut off is playable up to the last fragment and is recovered at the next launch.
 
 **Editor**
-- Zooms suggested from your clicks, with a spring-driven camera that keeps the cursor in
-  a safe zone and looks ahead. Move them, resize them, delete them or add your own on the
+- Zooms suggested from your clicks and from where you type (only when and where, never what),
+  with a spring-driven camera that keeps the cursor in a safe zone and looks ahead. Move them, resize them, delete them or add your own on the
   timeline.
 - A magnifier or a spotlight instead of a zoom: a round lens follows the cursor, or everything
   but the area around it is dimmed, while the picture stays put (privacy masks stay masked).

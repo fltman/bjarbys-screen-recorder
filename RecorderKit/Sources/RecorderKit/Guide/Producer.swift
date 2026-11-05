@@ -32,6 +32,24 @@ public enum Producer {
             }.joined(separator: "; "))
         }
 
+        // Skrivande (bara när och var, aldrig vad): skurar med skrivmarkörens område.
+        var bursts: [(start: Double, end: Double, area: CGRect?)] = []
+        for e in rec.events where e.k == .typing {
+            let r = e.rect.map { rec.mapping.normalize($0.cgRect, at: e.t) }
+            if var last = bursts.last, e.t - last.end <= AutoZoom.typingGap {
+                last.end = e.t
+                if let r { last.area = last.area.map { $0.union(r) } ?? r }
+                bursts[bursts.count - 1] = last
+            } else {
+                bursts.append((e.t, e.t, r))
+            }
+        }
+        if !bursts.isEmpty {
+            out.append("Typing (only when and where, never what): " + bursts.prefix(60).map { b in
+                "\(fmt(b.start))–\(fmt(b.end))" + (b.area.map { " at (\(fmt3($0.midX)), \(fmt3($0.midY)))" } ?? "")
+            }.joined(separator: "; "))
+        }
+
         if let words = rec.transcript?.words, !words.isEmpty {
             out.append("\n## What is said (transcript, \(words.count) words)")
             var current = "", start = words[0].start

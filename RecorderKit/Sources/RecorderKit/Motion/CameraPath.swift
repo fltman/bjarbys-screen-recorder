@@ -13,10 +13,71 @@ public enum AutoZoom {
     /// Zoomar närmare varandra än så slås ihop i stället för att zooma ut och in igen.
     static let mergeGap = 1.0
 
+    /// Skrivande tätare än så hör till samma zoom.
+    static let typingGap = 1.5
+    /// En skrivzoom börjar så här långt före första tangenten och slutar så här långt efter sista.
+    static let typingLead = 0.4
+    static let typingTail = 1.2
+
     public static func generate(events: [InputEvent], mapping: ContentMapping, duration: Double,
                                 scale: Double) -> [EditProject.ZoomSegment] {
+        guard scale > 1.01 else { return [] }
+        let all = (clickZooms(events: events, mapping: mapping, duration: duration, scale: scale)
+                   + typingZooms(events: events, mapping: mapping, duration: duration, scale: scale))
+            .sorted { $0.start < $1.start }
+        // Zoomar som ligger nära varandra slås ihop (ett klick i ett fält och sedan skrivande).
+        var zooms: [EditProject.ZoomSegment] = []
+        for z in all {
+            if var last = zooms.last, z.start - last.end < mergeGap {
+                last.end = max(last.end, z.end)
+                last.centerX = (last.centerX + z.centerX) / 2
+                last.centerY = (last.centerY + z.centerY) / 2
+                last.scale = min(last.scale, z.scale)
+                last.followsCursor = last.followsCursor && z.followsCursor
+                zooms[zooms.count - 1] = last
+            } else {
+                zooms.append(z)
+            }
+        }
+        return zooms
+    }
+
+    /// Zoomar där någon skriver: skrivandet i skurar, inramat kring skrivmarkören (eller fältet).
+    /// Kameran står still (skrivmarkören är inte musens markör).
+    static func typingZooms(events: [InputEvent], mapping: ContentMapping, duration: Double,
+                            scale: Double) -> [EditProject.ZoomSegment] {
+        var bursts: [(times: [Double], rects: [CGRect])] = []
+        for e in events where e.k == .typing {
+            let r = e.rect.map { mapping.normalize($0.cgRect, at: e.t) }
+                .flatMap { $0.intersects(CGRect(x: 0, y: 0, width: 1, height: 1)) ? $0 : nil }
+            if var last = bursts.last, e.t - last.times.last! <= typingGap {
+                last.times.append(e.t)
+                if let r { last.rects.append(r) }
+                bursts[bursts.count - 1] = last
+            } else {
+                bursts.append(([e.t], r.map { [$0] } ?? []))
+            }
+        }
+        var zooms: [EditProject.ZoomSegment] = []
+        for b in bursts {
+            // Bara skurar som vet var de skrivs (Tillgänglighet), och lite mer än ett par tangenter.
+            guard let first = b.rects.first, b.times.count >= 3 else { continue }
+            let start = max(0, b.times.first! - typingLead)
+            let end = min(duration, b.times.last! + typingTail)
+            guard end - start >= 1.0 else { continue }
+            let area = b.rects.dropFirst().reduce(first) { $0.union($1) }
+            // Ramen runt det som skrivits, med luft; zoomen så att den fyller högst 70 %.
+            let s = max(1.25, min(scale, 0.7 / max(area.width + 0.04, area.height * 3 + 0.04)))
+            zooms.append(.init(start: start, end: end, scale: s, centerX: min(max(area.midX, 0), 1),
+                               centerY: min(max(area.midY, 0), 1), followsCursor: false, isAuto: true))
+        }
+        return zooms
+    }
+
+    static func clickZooms(events: [InputEvent], mapping: ContentMapping, duration: Double,
+                           scale: Double) -> [EditProject.ZoomSegment] {
         let downs = events.filter { $0.k == .down && $0.point != nil }
-        guard !downs.isEmpty, scale > 1.01 else { return [] }
+        guard !downs.isEmpty else { return [] }
         // Elementramar loggas med klickets tid.
         var elements: [Double: CGRect] = [:]
         for e in events where e.k == .element {
@@ -54,16 +115,8 @@ public enum AutoZoom {
                 s = min(scale, 0.7 / max(el.width, el.height))
             }
             s = max(1.25, s)
-            if var last = zooms.last, start - last.end < mergeGap {
-                last.end = end
-                last.centerX = (last.centerX + center.x) / 2
-                last.centerY = (last.centerY + center.y) / 2
-                last.scale = min(last.scale, s)
-                zooms[zooms.count - 1] = last
-            } else {
-                zooms.append(.init(start: start, end: end, scale: s, centerX: center.x, centerY: center.y,
-                                   followsCursor: true, isAuto: true))
-            }
+            zooms.append(.init(start: start, end: end, scale: s, centerX: center.x, centerY: center.y,
+                               followsCursor: true, isAuto: true))
         }
         return zooms
     }

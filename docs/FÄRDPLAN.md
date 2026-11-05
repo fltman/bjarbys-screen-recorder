@@ -84,6 +84,13 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Zoom där man skriver (2026-11-05): med Kortkommandon och skrivande på loggas vanligt skrivande
+  som `typing` (högst 4/s, aldrig vilken tangent) med skrivmarkörens ram via Accessibility
+  (`AXBoundsForRange` på markeringen, annars fältets ram). Skurar (glapp ≤ 1,5 s, minst tre
+  tangenttryck) blir föreslagna zoomar 0,4 s före till 1,2 s efter, inramade kring det som
+  skrevs, med stilla kamera; ett klick i fältet strax före slås ihop med skrivzoomen. Skrivande
+  och pennan räknas som aktivitet för dödtiden. Producentens underlag listar skurarna.
+  ⚠️ Skrivmarkörens ram är inte provad live än (bara syntetiska händelser).
 - Flera format i samma svep (2026-11-05): ⌘-klick i exportfönstret markerar fler förval; de
   exporteras i tur och ordning till en vald mapp ("<inspelning> – <förval>", aldrig över en
   befintlig fil), med "MP4 4K, 2 av 3" i förloppet. Avbryt stoppar svepet; ett fel i ett format

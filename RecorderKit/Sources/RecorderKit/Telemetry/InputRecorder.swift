@@ -17,6 +17,10 @@ public final class InputRecorder: @unchecked Sendable {
     private let wantsKeystrokes: Bool
     /// Anropas vid varje musnedtryck med global punkt och tidslinjetid (för elementramen).
     public var onMouseDown: ((CGPoint, Double) -> Void)?
+    /// Anropas när någon skriver vanlig text (högst fyra gånger i sekunden), med tidslinjetiden.
+    /// Tangenten själv lämnas aldrig ut.
+    public var onTyping: ((Double) -> Void)?
+    private var lastTyping: Double = -1
     /// Ytor (globala punkter, origo uppe till vänster) där klick och scroll inte loggas: appens
     /// egna paneler (HUD, teleprompter). De syns inte i filmen, så klick där får inte bli zoomar.
     private let ignored = OSAllocatedUnfairLock(initialState: [CGRect]())
@@ -156,7 +160,11 @@ public final class InputRecorder: @unchecked Sendable {
             guard dx != 0 || dy != 0, !isIgnored(p), !drawing.withLock({ $0 }) else { return }
             log.append(InputEvent(t: t, k: .scroll, x: p.x, y: p.y, dx: dx, dy: dy))
         case .keyDown:
-            guard let label = Self.shortcutLabel(event) else { return }
+            guard let label = Self.shortcutLabel(event) else {
+                // Vanligt skrivande: bara att det hände (för zoom där man skriver och dödtiden).
+                if t - lastTyping >= 0.25 { lastTyping = t; onTyping?(t) }
+                return
+            }
             let code = Int(event.getIntegerValueField(.keyboardEventKeycode))
             log.append(InputEvent(t: t, k: .key, code: code, label: label))
         default:

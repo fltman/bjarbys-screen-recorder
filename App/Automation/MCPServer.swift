@@ -127,7 +127,7 @@ enum MCPServer {
              "inputSchema": schema(["seconds": ["type": "number", "minimum": 1, "maximum": 900],
                                     "microphone": ["type": "boolean", "description": "Record the default microphone (default false)."],
                                     "system_audio": ["type": "boolean", "description": "Record computer audio (default true)."],
-                                    "keystrokes": ["type": "boolean", "description": "Record keyboard shortcuts (needs Input Monitoring)."],
+                                    "keystrokes": ["type": "boolean", "description": "Record keyboard shortcuts and when/where text is typed (never what) — typing suggests zooms on the caret (needs Input Monitoring; Accessibility for where)."],
                                     "apps": appsArg,
                                     "hdr": ["type": "boolean", "description": "Record in HDR (10-bit BT.2020 PQ; export with preset mp4-4k-hdr for HLG)."],
                                     "hide_desktop_icons": ["type": "boolean", "description": "Keep desktop icons out of the recording."],

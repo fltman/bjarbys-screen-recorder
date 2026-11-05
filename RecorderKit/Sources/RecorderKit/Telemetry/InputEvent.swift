@@ -21,6 +21,9 @@ public struct InputEvent: Codable, Equatable, Sendable {
         /// `pts` punkterna platt som `[dt, x, y, dt, x, y, …]` (dt i s från `t`, globala punkter)
         /// och `color` färgen som `#RRGGBB`.
         case ink
+        /// Någon skrev (vanlig text): bara tiden och, med Tillgänglighet, `rect` = skrivmarkörens
+        /// ram (eller fältets). Vilken tangent det var sparas aldrig. Högst fyra i sekunden.
+        case typing
         case unknown
     }
 

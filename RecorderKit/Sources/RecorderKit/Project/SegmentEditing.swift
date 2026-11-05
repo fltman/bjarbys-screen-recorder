@@ -87,7 +87,7 @@ extension EditProject {
 /// Det typiska är början efter nedräkningen, och väntan medan något laddar.
 public enum DeadTime {
     /// Händelser som räknas som att något händer.
-    static let activity: Set<InputEvent.Kind> = [.move, .down, .up, .drag, .scroll, .key]
+    static let activity: Set<InputEvent.Kind> = [.move, .down, .up, .drag, .scroll, .key, .typing, .ink]
 
     /// Källintervall längre än `minimum` utan tal och utan aktivitet. `keep` sekunder lämnas
     /// kvar intill det som händer, så att klippet inte känns avhugget.
