@@ -48,6 +48,13 @@ Bygg först: `./scripts/build.sh`, öppna `dist/Bjarbys skärminspelare.app`.
   Med kortkommandon i bild: de ska inte krocka med undertexterna.
 - [ ] **Snabbval** — Stil › Bild › Reel / Shorts: stående, fyller bilden, undertexter mitt i.
 
+- [ ] **Logotyp** — Stil › Logotyp › Välj bild … (en PNG med genomskinlig bakgrund), prova hörn
+  och storlek; Spara som standard och öppna en ny inspelning: logotypen ska finnas där.
+- [ ] **Pilar** — Lager › Lägg till › Pil: dra pilen och dess ändar i bilden, byt färg; den ska
+  ritas fram och följa zoomen.
+- [ ] **Undertexter på engelska** — be producenten i Claude Code «översätt undertexterna till
+  engelska», välj sedan Tal › Språk i bild › Engelska och exportera (ett `.srt` per språk).
+
 ## Biblioteket
 
 - [ ] **Byt namn** — högerklicka › Byt namn …; tomt namn ger datumet tillbaka.
