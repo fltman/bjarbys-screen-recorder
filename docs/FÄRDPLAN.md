@@ -26,8 +26,9 @@ tagning, sedan redigerbar polish, sedan resten.
 - Redigering som en riktig klippredigerare (2026-11-05, påbörjad): fritt textlager, bildlager
   från fil, övergångar i snitten (via svart, oskärpa med zoomstöt, blixt), toning in/ut, extra
   ljudklipp, videoinslag (eget videospår och ljud per inslag, bild-i-bild eller helbild).
-  Nästa: övertoning mellan delar (kräver A/B-spår), övergång per snitt, flytta/trimma lager
-  genom att dra i tidslinjen och i bilden.
+  Övertoning mellan delar (skärmspår B med för- och efterrulle, filmens längd oförändrad) och
+  övergång per snitt (`transitionIn` på delen). Nästa: flytta och skala lager genom att dra i
+  bilden, ljudövertoning i snitten.
 
 - Delning (fas 6, 2026-11-05): `RecorderKit/Share/S3.swift`, egen SigV4 (CryptoKit), PUT med
   `UNSIGNED-PAYLOAD` i sökvägsstil; inställningar under «Delning …», hemlig nyckel i nyckelringen.

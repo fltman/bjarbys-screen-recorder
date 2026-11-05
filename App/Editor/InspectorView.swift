@@ -125,6 +125,29 @@ struct InspectorView: View {
                 ForEach([0.5, 1, 1.5, 2, 4, 8], id: \.self) { Text(AppLocale.format("%g×", $0)).tag($0) }
             }
             Text("\(AppLocale.format("%.1f", seg.duration)) s i inspelningen").font(.caption).foregroundStyle(.secondary)
+            // Övergången in i delen (inte för den första).
+            if model.project.segments.first?.id != seg.id {
+                Picker("Övergång in", selection: Binding(
+                    get: { seg.transitionIn?.kind.rawValue ?? "standard" },
+                    set: { v in
+                        if v == "standard" { model.setTransition(nil, for: seg.id) }
+                        else if let k = EditProject.Transition.Kind(rawValue: v) {
+                            model.setTransition(.init(kind: k, duration: seg.transitionIn?.duration ?? model.project.transition.duration), for: seg.id)
+                        }
+                    })) {
+                    Text("Standard").tag("standard")
+                    Text("Ingen").tag(EditProject.Transition.Kind.none.rawValue)
+                    Text("Via svart").tag(EditProject.Transition.Kind.dip.rawValue)
+                    Text("Oskärpa").tag(EditProject.Transition.Kind.blur.rawValue)
+                    Text("Blixt").tag(EditProject.Transition.Kind.flash.rawValue)
+                    Text("Övertoning").tag(EditProject.Transition.Kind.crossfade.rawValue)
+                }
+                if let tr = seg.transitionIn, tr.kind != .none {
+                    LabeledSlider("Längd", value: Binding(get: { tr.duration }, set: { v in
+                        model.setTransition(.init(kind: tr.kind, duration: v), for: seg.id)
+                    }), range: 0.2...2, format: "%.1f s")
+                }
+            }
             Button("Ta bort delen", role: .destructive) { model.deleteSegment(seg.id) }
                 .disabled(model.project.segments.count < 2)
         }
@@ -200,6 +223,7 @@ struct InspectorView: View {
                 Text("Via svart").tag(EditProject.Transition.Kind.dip)
                 Text("Oskärpa").tag(EditProject.Transition.Kind.blur)
                 Text("Blixt").tag(EditProject.Transition.Kind.flash)
+                Text("Övertoning").tag(EditProject.Transition.Kind.crossfade)
             }
             if model.project.transition.kind != .none {
                 LabeledSlider("Längd", value: binding(\.transition.duration), range: 0.2...1.5, format: "%.1f s")

@@ -4285,6 +4285,23 @@
         }
       }
     },
+    "Standard": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard"
+          }
+        }
+      }
+    },
     "Standardmikrofonen": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -5577,6 +5594,23 @@
         }
       }
     },
+    "Övergång in": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transition in"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Övergång in"
+          }
+        }
+      }
+    },
     "Övergångar": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -5607,6 +5641,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Övergångarna syns där du klippt; filmen har inga snitt än."
+          }
+        }
+      }
+    },
+    "Övertoning": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crossfade"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Övertoning"
           }
         }
       }

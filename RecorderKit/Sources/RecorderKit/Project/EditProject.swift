@@ -110,9 +110,11 @@ public struct EditProject: Codable, Equatable, Sendable {
         public var start: Double
         public var end: Double
         public var speed: Double
+        /// Övergången in i den här delen från delen före; nil = projektets standard.
+        public var transitionIn: Transition?
 
-        public init(id: UUID = UUID(), start: Double, end: Double, speed: Double = 1) {
-            self.id = id; self.start = start; self.end = end; self.speed = speed
+        public init(id: UUID = UUID(), start: Double, end: Double, speed: Double = 1, transitionIn: Transition? = nil) {
+            self.id = id; self.start = start; self.end = end; self.speed = speed; self.transitionIn = transitionIn
         }
 
         public var duration: Double { max(0, end - start) }
@@ -124,6 +126,7 @@ public struct EditProject: Codable, Equatable, Sendable {
             start = c.value(.start, 0)
             end = c.value(.end, 0)
             speed = c.value(.speed, 1)
+            transitionIn = c.value(.transitionIn, nil)
         }
     }
 
@@ -360,6 +363,9 @@ public struct EditProject: Codable, Equatable, Sendable {
             case blur
             /// En kort vit blixt.
             case flash
+            /// Övertoning: delarna blandas, den förra fortsätter en bit förbi snittet och nästa
+            /// börjar en bit före (ur ett andra skärmspår). Filmens längd ändras inte.
+            case crossfade
         }
         public var kind: Kind
         /// Hela övergångens längd (s), hälften före och hälften efter snittet.

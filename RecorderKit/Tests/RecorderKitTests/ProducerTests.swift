@@ -137,3 +137,35 @@ enum CIImageStub {
         #expect(errors.contains { $0.contains("saknas.png is missing") } && errors.contains { $0.contains("has no text") })
     }
 }
+
+@Suite struct CutPlanTests {
+    @Test func perCutOverridesTheStandardAndNoneIsSkipped() {
+        var segs: [EditProject.ClipSegment] = [.init(start: 0, end: 4), .init(start: 6, end: 9), .init(start: 12, end: 20)]
+        segs[1].transitionIn = .init(kind: .crossfade, duration: 1)
+        let plan = CutPlan(segments: segs, timeMap: TimeMap(segments: segs), standard: .init(kind: .dip, duration: 0.4))
+        #expect(plan.cuts.map(\.transition.kind) == [.crossfade, .dip])
+        #expect(plan.cuts[0].output == 4 && plan.cuts[1].output == 7)
+        segs[2].transitionIn = .init(kind: .none)
+        #expect(CutPlan(segments: segs, timeMap: TimeMap(segments: segs), standard: .init(kind: .dip)).cuts.count == 1)
+    }
+
+    @Test func crossfadeShowsTheOtherPartsRollInAndOut() {
+        // Del A 0–4 i 1×, del B 6–9 i 2× (ut 4–5,5). Övertoning 1 s i snittet vid 4.
+        var segs: [EditProject.ClipSegment] = [.init(start: 0, end: 4), .init(start: 6, end: 9, speed: 2)]
+        segs[1].transitionIn = .init(kind: .crossfade, duration: 1)
+        let cut = CutPlan(segments: segs, timeMap: TimeMap(segments: segs), standard: .init()).cuts[0]
+        // Före snittet: B:s förrulle, i B:s hastighet (2×): 0,25 s före snittet = 0,5 s före B:s start.
+        #expect(abs(cut.alternateSource(at: 3.75) - 5.5) < 1e-9)
+        // Efter snittet: A:s efterrulle i 1×.
+        #expect(abs(cut.alternateSource(at: 4.3) - 4.3) < 1e-9)
+        let plan = CutPlan(segments: segs, timeMap: TimeMap(segments: segs), standard: .init())
+        let mid = plan.active(at: 4)!
+        #expect(abs(mid.amount - 1) < 1e-9 && abs(mid.progress - 0.5) < 1e-9)
+        #expect(plan.active(at: 3.4) == nil && plan.active(at: 4.6) == nil)
+    }
+
+    @Test func transitionInDecodesAsNilFromOldProjects() throws {
+        let s = try BundleJSON.decoder.decode(EditProject.ClipSegment.self, from: Data(#"{"start":1,"end":2}"#.utf8))
+        #expect(s.transitionIn == nil)
+    }
+}

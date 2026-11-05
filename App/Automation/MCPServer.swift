@@ -157,7 +157,7 @@ enum MCPServer {
                 "normalize_loudness": ["type": "boolean", "description": "Set the microphone level to -16 LUFS."],
                 "duck_system_audio": ["type": "boolean"],
                 "hide_sensitive": ["type": "boolean", "description": "Find e-mails, phone numbers, ID numbers, cards and keys on screen and blur them."],
-                "transition": ["type": "string", "enum": ["none", "dip", "blur", "flash"], "description": "Transition at every cut between parts."],
+                "transition": ["type": "string", "enum": ["none", "dip", "blur", "flash", "crossfade"], "description": "Standard transition at every cut between parts (set_transition overrides one cut)."],
                 "transition_duration": ["type": "number"],
                 "fade_in_out": ["type": "boolean", "description": "Fade in from black at the start and out at the end."],
              ], required: ["recording"])],
@@ -221,6 +221,13 @@ enum MCPServer {
                                     "volume": ["type": "number"], "fade_in": ["type": "number"], "fade_out": ["type": "number"],
                                     "replace": ["type": "boolean", "description": "Remove all existing clips of this role first."]],
                                    required: ["recording", "file", "role", "at"])],
+            ["name": "set_transition",
+             "description": "Set the transition into one part (cut number 1 = between the first and second part), or \"standard\" to use the project's. Kinds: none, dip (through black), blur, flash, crossfade (the parts blend; uses material just past the cut, the video length does not change).",
+             "inputSchema": schema(["recording": recordingArg,
+                                    "cut": ["type": "integer", "minimum": 1],
+                                    "kind": ["type": "string", "enum": ["standard", "none", "dip", "blur", "flash", "crossfade"]],
+                                    "duration": ["type": "number"]],
+                                   required: ["recording", "cut", "kind"])],
             ["name": "preflight",
              "description": "Check the decisions against the rules. Errors block delivery; warnings must be justified in the delivery note.",
              "inputSchema": schema(["recording": recordingArg], required: ["recording"])],
@@ -286,6 +293,19 @@ enum MCPServer {
         case "set_overlays": return try setOverlays(a)
         case "set_chapters": return try setChapters(a)
         case "set_segments": return try setSegments(a)
+        case "set_transition":
+            let rec = try resolve(a)
+            var p = rec.bundle.loadProject(duration: rec.meta.duration)
+            let cut = (a["cut"] as? Int) ?? 0
+            guard cut >= 1, cut < p.segments.count else { throw ToolError("cut must be 1…\(max(1, p.segments.count - 1)) (there are \(p.segments.count) parts).") }
+            let kind = a["kind"] as? String ?? "standard"
+            if kind == "standard" { p.segments[cut].transitionIn = nil }
+            else if let k = EditProject.Transition.Kind(rawValue: kind) {
+                p.segments[cut].transitionIn = .init(kind: k, duration: min(2, max(0.2, number(a["duration"]) ?? p.transition.duration)))
+            }
+            try rec.bundle.saveProject(p)
+            let cuts = CutPlan(segments: p.segments, timeMap: TimeMap(segments: p.segments), standard: p.transition).cuts
+            return "Saved. Cuts with transitions: " + (cuts.isEmpty ? "none" : cuts.map { "\($0.transition.kind.rawValue) \(Producer.fmt($0.transition.duration)) s at \(Producer.fmt($0.output)) s" }.joined(separator: "; "))
         case "add_audio": return try await addAudio(a)
         case "preflight":
             let rec = try resolve(a)

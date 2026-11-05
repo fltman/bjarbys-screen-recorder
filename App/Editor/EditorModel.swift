@@ -38,6 +38,8 @@ final class EditorModel: ObservableObject {
     private var builtIsolation = false
     private var builtClips: [String] = []
     private var builtVideos: [String] = []
+    private var builtStandardCrossfade = false
+    private var builtStandardDuration = 0.0
     /// Videoinslagen ligger i kompositionen: ändras de byggs den om.
     private var videoSignature: [String] {
         project.overlays.filter { $0.kind == .video }.map { "\($0.id)\($0.at)\($0.file)\($0.offset)\($0.duration)\($0.volume > 0)" }
@@ -120,6 +122,8 @@ final class EditorModel: ObservableObject {
         let full = project.segments != builtSegments || project.audio.voiceIsolation != builtIsolation
             || project.audioClips.map { "\($0.id)\($0.at)\($0.file)" } != builtClips
             || videoSignature != builtVideos
+            || (project.transition.kind == .crossfade) != builtStandardCrossfade
+            || (project.transition.kind == .crossfade && project.transition.duration != builtStandardDuration)
         rebuildTask = Task {
             try? await Task.sleep(for: .milliseconds(full ? 120 : 30))
             guard !Task.isCancelled else { return }
@@ -154,6 +158,8 @@ final class EditorModel: ObservableObject {
                 builtIsolation = project.audio.voiceIsolation
                 builtClips = project.audioClips.map { "\($0.id)\($0.at)\($0.file)" }
                 builtVideos = videoSignature
+                builtStandardCrossfade = project.transition.kind == .crossfade
+                builtStandardDuration = project.transition.duration
                 plan = newPlan
                 let item = AVPlayerItem(asset: result.composition)
                 item.videoComposition = result.videoComposition
@@ -170,7 +176,8 @@ final class EditorModel: ObservableObject {
         } else if let built, let item = player.currentItem {
             plan = newPlan
             item.videoComposition = CompositionBuilder.videoComposition(
-                plan: newPlan, duration: built.duration, fps: Self.previewFPS, hasCamera: recording.hasCamera)
+                plan: newPlan, duration: built.duration, fps: Self.previewFPS, hasCamera: recording.hasCamera,
+                hasAlternate: built.composition.tracks.contains { $0.trackID == 6 })
             item.audioMix = CompositionBuilder.audioMix(for: built.composition, plan: newPlan)
             if !isPlaying { await seek(to: currentTime) }
         }
@@ -243,6 +250,13 @@ final class EditorModel: ObservableObject {
             p.segments.removeAll { $0.id == id }
         }
         selectedSegmentID = nil
+    }
+
+    /// Övergången in i en del; nil = projektets standard.
+    func setTransition(_ transition: EditProject.Transition?, for id: UUID) {
+        update { p in
+            if let i = p.segments.firstIndex(where: { $0.id == id }) { p.segments[i].transitionIn = transition }
+        }
     }
 
     func setSpeed(_ speed: Double, for id: UUID) {

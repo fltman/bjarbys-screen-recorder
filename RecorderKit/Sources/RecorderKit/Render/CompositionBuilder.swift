@@ -126,6 +126,41 @@ public enum CompositionBuilder {
             try? track.insertTimeRange(CMTimeRange(start: range.start, duration: length), of: source, at: start)
         }
 
+        // Övertoningar: skärmspår B med nästa dels förrulle före snittet och förra delens
+        // efterrulle efter, i delarnas hastighet. Filmens tidslinje ändras inte.
+        var hasAlternate = false
+        let fades = plan.cutPlan.cuts.filter { $0.transition.kind == .crossfade }
+        if !fades.isEmpty, let alt = composition.addMutableTrack(withMediaType: .video, preferredTrackID: alternateScreenTrackID) {
+            let available = try await screenSource.load(.timeRange)
+            // Spårets slut hålls här: ett tomt kompositionsspår har en ogiltig tidslängd (NaN),
+            // och då blir varje jämförelse falsk och ingenting läggs in.
+            var altEnd = CMTime.zero
+            func place(source a: Double, _ b: Double, speed: Double, at out: Double) {
+                let s0 = max(a, available.start.seconds), s1 = min(b, available.end.seconds)
+                guard s1 - s0 > 0.01 else { return }
+                let at = CMTimeMaximum(CMTime(seconds: out + (s0 - a) / speed, preferredTimescale: timescale), altEnd)
+                if altEnd < at { alt.insertEmptyTimeRange(CMTimeRange(start: altEnd, end: at)) }
+                let range = CMTimeRange(start: CMTime(seconds: s0, preferredTimescale: timescale),
+                                        end: CMTime(seconds: s1, preferredTimescale: timescale))
+                do { try alt.insertTimeRange(range, of: screenSource, at: at) } catch { return }
+                var length = range.duration
+                if abs(speed - 1) > 0.001 {
+                    length = CMTime(seconds: range.duration.seconds / speed, preferredTimescale: timescale)
+                    alt.scaleTimeRange(CMTimeRange(start: at, duration: range.duration), toDuration: length)
+                }
+                altEnd = at + length
+                hasAlternate = true
+            }
+            for cut in fades.sorted(by: { $0.output < $1.output }) {
+                let half = max(0.05, cut.transition.duration / 2)
+                place(source: cut.after.sourceStart - half * cut.after.speed, cut.after.sourceStart,
+                      speed: cut.after.speed, at: cut.output - half)
+                place(source: cut.before.sourceEnd, cut.before.sourceEnd + half * cut.before.speed,
+                      speed: cut.before.speed, at: cut.output)
+            }
+            if !hasAlternate { composition.removeTrack(alt) }
+        }
+
         // Videoinslag: eget videospår (och ljud) per lager, i normal hastighet från sin startpunkt.
         let videos = plan.project.overlays.filter { $0.kind == .video }
         for (i, o) in videos.enumerated() {
@@ -149,7 +184,7 @@ public enum CompositionBuilder {
             }
         }
 
-        let video = videoComposition(plan: plan, duration: cursor, fps: fps, hasCamera: hasCamera)
+        let video = videoComposition(plan: plan, duration: cursor, fps: fps, hasCamera: hasCamera, hasAlternate: hasAlternate)
         let mix = audioMix(for: composition, plan: plan)
         return Result(composition: composition, videoComposition: video, audioMix: mix, duration: cursor)
     }
@@ -159,16 +194,20 @@ public enum CompositionBuilder {
     static let cameraTrackID: CMPersistentTrackID = 2
     static let microphoneTrackID: CMPersistentTrackID = 3
     static let systemTrackID: CMPersistentTrackID = 4
+    /// Skärmspår B för övertoningar.
+    static let alternateScreenTrackID: CMPersistentTrackID = 6
     /// Ljudklipp får id 100, 101 … i projektets ordning, så att mixen hittar dem igen.
     static let audioClipTrackBase: CMPersistentTrackID = 100
     /// Videoinslag: bild 200, 201 …, ljud 300, 301 … i videolagrens ordning.
     static let videoOverlayTrackBase: CMPersistentTrackID = 200
     static let videoAudioTrackBase: CMPersistentTrackID = 300
 
-    public static func videoComposition(plan: RenderPlan, duration: CMTime, fps: Int, hasCamera: Bool) -> AVVideoComposition {
+    public static func videoComposition(plan: RenderPlan, duration: CMTime, fps: Int, hasCamera: Bool,
+                                        hasAlternate: Bool = false) -> AVVideoComposition {
         let instruction = PolishInstruction(timeRange: CMTimeRange(start: .zero, duration: duration), plan: plan,
                                             screenTrackID: screenTrackID, cameraTrackID: hasCamera ? cameraTrackID : nil,
-                                            mediaTrackIDs: plan.videoOverlayIDs.indices.map { videoOverlayTrackBase + CMPersistentTrackID($0) })
+                                            mediaTrackIDs: plan.videoOverlayIDs.indices.map { videoOverlayTrackBase + CMPersistentTrackID($0) },
+                                            alternateTrackID: hasAlternate ? alternateScreenTrackID : nil)
         return AVVideoComposition(configuration: .init(
             colorPrimaries: AVVideoColorPrimaries_ITU_R_709_2,
             colorTransferFunction: AVVideoTransferFunction_ITU_R_709_2,

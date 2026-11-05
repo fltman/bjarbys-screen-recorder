@@ -70,7 +70,7 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 
 | Fält | Betydelse |
 |---|---|
-| `segments[]` | delarna som är med, i ordning: `start`, `end`, `speed` |
+| `segments[]` | delarna som är med, i ordning: `start`, `end`, `speed`, `transitionIn` (övergången in i delen; saknas = projektets) |
 | `zooms[]` | `start`, `end`, `scale`, `centerX`/`centerY` (0–1), `followsCursor`, `isAuto` |
 | `autoZoom`, `zoomScale` | föreslå zoomar ur klicken, och hur mycket |
 | `background` | `kind` (`gradient`, `solid`, `blur`), `colorA`, `colorB`, `angle` |
@@ -82,7 +82,7 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 | `captions` | `visible`, `size` — undertexter ur `transcript.json` |
 | `masks[]` | `start`, `end`, `keyframes[]` (`t`, `rect` normaliserat), `style` (`blur`, `pixelate`, `solid`), `kind`, `hint` (aldrig själva texten), `enabled` |
 | `camera` | `visible`, `shape`, `size`, `corner`, `mirror` |
-| `transition`, `fadeInOut` | övergång i snitten (`kind`: `none`, `dip`, `blur`, `flash`; `duration`) och toning i början/slutet |
+| `transition`, `fadeInOut` | standardövergång i snitten (`kind`: `none`, `dip`, `blur`, `flash`, `crossfade`; `duration`) och toning i början/slutet |
 | `overlays[]` | bildlagret: `kind` (`title`, `callout`, `fact`, `qr`, `text`, `image`, `video` — video med `offset` i filen och `volume`, helbild = `frame` [0,0,1,1]), `frame` (fri placering 0–1), `file` (bild i `media/`), `size`, `background`, `at` (källtid), `duration` (s i filmen), `title`, `lines`, `url`, `target` (0–1, markeringens mål), `corner` |
 | `chapters[]`, `showsChapterBanner` | kapitel (`at`, `title`) och om kapitelraden visas |
 | `audioClips[]` | extra ljud i `media/`: `role` (`narration`, `music`, `effect`), `at`, `file`, `text`, `duration`, `volume`, `fadeIn`, `fadeOut` |

@@ -53,6 +53,8 @@ public final class RenderPlan: @unchecked Sendable {
     public let speech: [ClosedRange<Double>]
     /// Bildlagret och kapitlen i utdatatid.
     public let overlayTrack: OverlayTrack
+    /// Snitten med sina övergångar.
+    public let cutPlan: CutPlan
     let overlayImages = CaptionImageCache()
     /// Paketets media/, för bildlager.
     let mediaDir: URL?
@@ -185,6 +187,7 @@ public final class RenderPlan: @unchecked Sendable {
         }
         showsCaptions = project.captions.visible && !(captions?.cues.isEmpty ?? true)
         overlayTrack = OverlayTrack(overlays: project.overlays, chapters: project.chapters, timeMap: timeMap)
+        cutPlan = CutPlan(segments: project.segments, timeMap: timeMap, standard: project.transition)
 
         // Kortkommandon: bara de texter som faktiskt förekommer ritas, en gång var.
         let track = ShortcutTrack(events: events, timeMap: timeMap)
@@ -205,7 +208,8 @@ public final class RenderPlan: @unchecked Sendable {
     // MARK: - Rita en ruta
 
     /// Den färdiga rutan vid utdatatiden `t`.
-    public func render(outputTime t: Double, screen: CIImage?, camera: CIImage?, media: [UUID: CIImage] = [:]) -> CIImage {
+    public func render(outputTime t: Double, screen: CIImage?, camera: CIImage?, media: [UUID: CIImage] = [:],
+                       alternate: CIImage? = nil) -> CIImage {
         let s = timeMap.source(at: t)
         let canvasRect = CGRect(origin: .zero, size: canvas)
         var layer = CIImage.empty()
@@ -216,7 +220,21 @@ public final class RenderPlan: @unchecked Sendable {
                 .transformed(by: CGAffineTransform(translationX: -e.minX, y: -e.minY))
                 .transformed(by: CGAffineTransform(scaleX: screenRect.width / e.width, y: screenRect.height / e.height))
                 .transformed(by: CGAffineTransform(translationX: screenRect.minX, y: screenRect.minY))
-            let masked = applyMasks(to: scaled, at: s)
+            var masked = applyMasks(to: scaled, at: s)
+            // Övertoning: den andra delens bild ur skärmspår B, maskad efter sin egen källtid.
+            if let alternate, let active = cutPlan.active(at: t), active.cut.transition.kind == .crossfade {
+                let ae = alternate.extent
+                let other = alternate
+                    .transformed(by: CGAffineTransform(translationX: -ae.minX, y: -ae.minY))
+                    .transformed(by: CGAffineTransform(scaleX: screenRect.width / ae.width, y: screenRect.height / ae.height))
+                    .transformed(by: CGAffineTransform(translationX: screenRect.minX, y: screenRect.minY))
+                let otherMasked = applyMasks(to: other, at: active.cut.alternateSource(at: t))
+                // Andelen av den andra bilden: växer mot snittet, sedan är den andra bilden den förra delen.
+                let share = t < active.cut.output ? active.progress : 1 - active.progress
+                masked = masked.applyingFilter("CIDissolveTransition", parameters: [
+                    kCIInputTargetImageKey: otherMasked, kCIInputTimeKey: max(0, min(1, share))])
+                    .cropped(to: screenRect)
+            }
             layer = masked.applyingFilter("CIBlendWithMask", parameters: [
                 kCIInputBackgroundImageKey: CIImage.empty(),
                 kCIInputMaskImageKey: mask,
@@ -384,18 +402,13 @@ public final class RenderPlan: @unchecked Sendable {
     }
 
     /// Övergången nära ett snitt: 1 mitt i snittet, 0 en halv övergångslängd bort.
-    func transitionAmount(at t: Double) -> Double {
-        guard project.transition.kind != .none, timeMap.pieces.count > 1 else { return 0 }
-        let half = max(0.05, project.transition.duration / 2)
-        let nearest = timeMap.pieces.dropFirst().map { abs($0.outputStart - t) }.min() ?? .infinity
-        return nearest < half ? 1 - nearest / half : 0
-    }
+    func transitionAmount(at t: Double) -> Double { cutPlan.active(at: t)?.amount ?? 0 }
 
     private func applyTransition(_ image: CIImage, at t: Double, unit u: CGFloat, canvasRect: CGRect) -> CIImage {
-        let a = transitionAmount(at: t)
-        guard a > 0.001 else { return image }
-        switch project.transition.kind {
-        case .none:
+        guard let active = cutPlan.active(at: t), active.amount > 0.001 else { return image }
+        let a = active.amount
+        switch active.cut.transition.kind {
+        case .none, .crossfade:
             return image
         case .dip:
             return Self.withAlpha(CIImage(color: .black).cropped(to: canvasRect), a).composited(over: image)

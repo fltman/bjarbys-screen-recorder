@@ -113,3 +113,49 @@ public struct ContentMapping: Sendable {
         return min(pixelWidth / f.width, pixelHeight / f.height)
     }
 }
+
+/// Snitten i filmen med sina övergångar: delens egen eller projektets standard.
+public struct CutPlan: Sendable {
+    public struct Cut: Equatable, Sendable {
+        /// Utdatatiden för snittet.
+        public let output: Double
+        public let transition: EditProject.Transition
+        /// Delen före och efter (i TimeMaps ordning).
+        public let before: TimeMap.Piece
+        public let after: TimeMap.Piece
+
+        /// Källtiden som visas i den ANDRA bilden under en övertoning vid utdatatiden `t`:
+        /// före snittet nästa dels förrulle, efter snittet förra delens efterrulle.
+        public func alternateSource(at t: Double) -> Double {
+            t < output ? after.sourceStart - (output - t) * after.speed : before.sourceEnd + (t - output) * before.speed
+        }
+    }
+
+    public let cuts: [Cut]
+
+    public init(segments: [EditProject.ClipSegment], timeMap: TimeMap, standard: EditProject.Transition) {
+        let kept = segments.filter { $0.duration > 0.001 }
+        var cuts: [Cut] = []
+        for k in timeMap.pieces.indices.dropFirst() where k < kept.count {
+            let tr = kept[k].transitionIn ?? standard
+            guard tr.kind != .none else { continue }
+            cuts.append(Cut(output: timeMap.pieces[k].outputStart, transition: tr,
+                            before: timeMap.pieces[k - 1], after: timeMap.pieces[k]))
+        }
+        self.cuts = cuts
+    }
+
+    /// Snittet vars övergång pågår vid `t`, och hur långt den kommit: `amount` 1 i snittet,
+    /// 0 en halv övergångslängd bort; `progress` 0 → 1 genom hela övergången.
+    public func active(at t: Double) -> (cut: Cut, amount: Double, progress: Double)? {
+        var best: (Cut, Double, Double)?
+        for c in cuts {
+            let half = max(0.05, c.transition.duration / 2)
+            let d = abs(t - c.output)
+            guard d < half else { continue }
+            let amount = 1 - d / half
+            if best == nil || amount > best!.1 { best = (c, amount, (t - (c.output - half)) / (2 * half)) }
+        }
+        return best.map { ($0.0, $0.1, $0.2) }
+    }
+}

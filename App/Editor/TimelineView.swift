@@ -243,6 +243,23 @@ struct TimelineView: View {
             }
         }
 
+        // Övergångar: en romb i varje snitt som har en, bred som övergången.
+        for cut in model.plan.cutPlan.cuts {
+            let px = x(cut.output, pps)
+            let w = max(8, CGFloat(cut.transition.duration * pps))
+            let band = CGRect(x: px - w / 2, y: clipY + clipH - 10, width: w, height: 8)
+            ctx.fill(Path(roundedRect: band, cornerRadius: 4), with: .color(.white.opacity(0.75)))
+            let icon = switch cut.transition.kind {
+            case .crossfade: "×"
+            case .dip: "●"
+            case .blur: "≈"
+            case .flash: "✦"
+            case .none: ""
+            }
+            ctx.draw(Text(icon).font(.system(size: 8, weight: .bold)).foregroundStyle(.black.opacity(0.7)),
+                     at: CGPoint(x: px, y: band.midY))
+        }
+
         // Kapitel: flaggor på linjalen.
         for c in model.project.chapters {
             guard let t = model.timeMap.output(at: c.at) else { continue }

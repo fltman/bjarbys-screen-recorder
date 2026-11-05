@@ -254,3 +254,14 @@ börjar 1,4) och 00:00:02.600 vid 7,0 (2 + 0,6) — exakt. Inslagets ljud i expo
 ordning; kompositören skickar rutorna till renderaren via `PolishInstruction.mediaTrackIDs`.
 Preflight räknar bild-i-bild-ramen i täckningskontrollen (fångade att inslaget låg över
 exportknappen).
+
+## Övertoning och övergång per snitt (2026-11-05)
+
+Provpaket där skärmen visar sin egen tidskod; delar 0–4 och 7–12 s, övertoning 1 s in i del 2.
+Rutor: vid 3,6 syns 6.6 svagt (B:s förrulle, 10 %), vid 4,0 blandas 04 och 07 till hälften, vid
+4,4 finns 4.4 kvar svagt (A:s efterrulle). Exporten är 9,000 s — övertoningen tar materialet
+utanför snitten ur skärmspår B (id 6) och ändrar inte filmens längd.
+- ⚠️ **Ett tomt `AVMutableCompositionTrack` har ogiltig `timeRange` (NaN)**: jämförelser mot den
+  blir falska och första versionen lade därför aldrig in något i spår B. Slutet hålls nu i en
+  egen variabel.
+- Maskerna läggs också på B-bilden, med dess egen källtid, så inget känsligt syns i övertoningen.

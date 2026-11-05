@@ -14,9 +14,13 @@ public final class PolishInstruction: NSObject, AVVideoCompositionInstructionPro
     public let cameraTrackID: CMPersistentTrackID?
     /// Videolagrens spår, i planens ordning (`plan.videoOverlayIDs`).
     public let mediaTrackIDs: [CMPersistentTrackID]
+    /// Skärmspår B: förrulle och efterrulle för övertoningar.
+    public let alternateTrackID: CMPersistentTrackID?
 
     public init(timeRange: CMTimeRange, plan: RenderPlan, screenTrackID: CMPersistentTrackID,
-                cameraTrackID: CMPersistentTrackID?, mediaTrackIDs: [CMPersistentTrackID] = []) {
+                cameraTrackID: CMPersistentTrackID?, mediaTrackIDs: [CMPersistentTrackID] = [],
+                alternateTrackID: CMPersistentTrackID? = nil) {
+        self.alternateTrackID = alternateTrackID
         self.timeRange = timeRange
         self.plan = plan
         self.screenTrackID = screenTrackID
@@ -25,6 +29,7 @@ public final class PolishInstruction: NSObject, AVVideoCompositionInstructionPro
         var ids = [NSNumber(value: screenTrackID)]
         if let cameraTrackID { ids.append(NSNumber(value: cameraTrackID)) }
         ids += mediaTrackIDs.map { NSNumber(value: $0) }
+        if let alternateTrackID { ids.append(NSNumber(value: alternateTrackID)) }
         requiredSourceTrackIDs = ids
     }
 }
@@ -70,7 +75,8 @@ public final class PolishCompositor: NSObject, AVVideoCompositing, @unchecked Se
                 }
             }
             let t = request.compositionTime.seconds
-            let image = instruction.plan.render(outputTime: t, screen: screen, camera: camera, media: media)
+            let alternate = instruction.alternateTrackID.flatMap { request.sourceFrame(byTrackID: $0) }.map { CIImage(cvPixelBuffer: $0) }
+            let image = instruction.plan.render(outputTime: t, screen: screen, camera: camera, media: media, alternate: alternate)
             RenderContext.shared.render(image, to: output, bounds: CGRect(origin: .zero, size: instruction.plan.canvas),
                                         colorSpace: colorSpace)
             request.finish(withComposedVideoFrame: output)
