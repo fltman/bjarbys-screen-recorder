@@ -44,6 +44,17 @@
 	<string>Kameran spelas in på ett eget spår och läggs som en bubbla i videon, som du kan flytta och dölja i efterhand.</string>
 	<key>NSAudioCaptureUsageDescription</key>
 	<string>Datorljudet spelas in på ett eget spår, skilt från mikrofonen.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.brattoo.skarminspelare</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>skarminspelare</string>
+			</array>
+		</dict>
+	</array>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>

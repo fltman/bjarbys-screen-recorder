@@ -494,6 +494,23 @@
         }
       }
     },
+    "Börjar spela in skärmen där pekaren är.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starts recording the screen the pointer is on."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Börjar spela in skärmen där pekaren är."
+          }
+        }
+      }
+    },
     "Cirkel": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2245,6 +2262,23 @@
         }
       }
     },
+    "Pausa eller fortsätt inspelningen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause or resume the recording"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausa eller fortsätt inspelningen"
+          }
+        }
+      }
+    },
     "Personnummer": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2326,6 +2360,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rundad ruta"
+          }
+        }
+      }
+    },
+    "Senaste inspelningen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Latest recording"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senaste inspelningen"
           }
         }
       }
@@ -2517,6 +2568,23 @@
         }
       }
     },
+    "Spela in": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spela in"
+          }
+        }
+      }
+    },
     "Spela in fönster …": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2653,6 +2721,23 @@
         }
       }
     },
+    "Stoppa": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stoppa"
+          }
+        }
+      }
+    },
     "Stoppa (⌃⌥⌘R)": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2670,6 +2755,23 @@
         }
       }
     },
+    "Stoppa inspelningen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop the recording"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stoppa inspelningen"
+          }
+        }
+      }
+    },
     "Stoppa inspelningen  (%@)": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2683,6 +2785,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stoppa inspelningen  (%@)"
+          }
+        }
+      }
+    },
+    "Stoppar inspelningen och sparar den i biblioteket.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stops the recording and saves it in the library."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stoppar inspelningen och sparar den i biblioteket."
           }
         }
       }
@@ -3550,6 +3669,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Öppna inställningar"
+          }
+        }
+      }
+    },
+    "Öppna senaste inspelningen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the latest recording"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öppna senaste inspelningen"
           }
         }
       }

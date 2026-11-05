@@ -39,6 +39,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 TestMode.run()
                 return
             }
+            if MCPServer.isRequested {
+                NSApp.setActivationPolicy(.prohibited)
+                MCPServer.run()
+                return
+            }
             let app = AppModel.shared
             let hk = HotKeys.shared
             hk.register(15, id: HotKeyID.toggleRecording) { app.recorder.toggleFromHotKey() } // R
@@ -61,4 +66,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    /// `skarminspelare://spela-in`, `…/stoppa`, `…/paus`, `…/omrade`, `…/bibliotek`,
+    /// `…/oppna?sokvag=<paket>` — för Genvägar, Raycast, Alfred och skript.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        MainActor.assumeIsolated {
+            for url in urls {
+                if url.isFileURL {
+                    AppModel.shared.openEditor(RecordingBundle(url: url))
+                } else {
+                    URLCommands.handle(url)
+                }
+            }
+        }
+    }
 }

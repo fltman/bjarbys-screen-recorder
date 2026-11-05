@@ -130,3 +130,15 @@ mikrofonen förskjuten 1,0 s.
   Talet −17,5 → −17,3 dBFS (orört).
 - Synk mot det rena talet (hölje i 1 ms-steg, korskorrelation): 0 ms, både i filen och i
   exporten. Den inledande sekunden (mikrofonens senare start) är tyst i filen.
+
+## Styrning utifrån (2026-11-05)
+
+- MCP-servern (`--mcp`) provad med en riktig JSON-RPC-klient över stdin/stdout: initialize
+  (protokoll 2025-06-18), tools/list (8 verktyg), ping, okänd metod → −32601, och alla verktyg.
+  `record_screen` 3 s → 3,0 s, 3024×1964 (Terminals behörighet). Transkribering 1,0 s,
+  redigering (Reel, undertexter, röstisolering, −16 LUFS, dödtid) direkt, två rutor 0,2 s,
+  export 11,5 s → 8,5 s 1080p på 1,9 s med `.srt`. Processen avslutas rent när stdin stängs.
+- Transkriberingen läser den röstisolerade mikrofonen om den finns: på brusprovet blev
+  "längst och upp till höger" (rått) rätt "längst upp till höger" (isolerat), både small och medium.
+- ⚠️ Sökvägar med å/ä/ö kan ligga i en annan Unicode-form på disken än i en sträng i skalet;
+  jämför normaliserat (NFC) innan något raderas.

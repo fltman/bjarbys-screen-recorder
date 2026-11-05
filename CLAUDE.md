@@ -48,6 +48,13 @@ open Skarminspelare.xcodeproj
   `docs/FÄRDPLAN.md` — faserna.
 - `vault/` — Obsidian-valv för arbetsanteckningar, gitignorerat, kommer aldrig in i repot.
 
+## Styrning utifrån
+
+- `Skarminspelare --mcp` — MCP-server över stdio (`App/Automation/MCPServer.swift`). stdout är
+  protokollet: skriv aldrig `print()` i kod som kan köras där; logga till stderr.
+- `skarminspelare://spela-in|stoppa|vaxla|paus|omrade|fonster|bibliotek|oppna?sokvag=…`
+  (`URLCommands.swift`), och App Intents för Genvägar i samma fil.
+
 ## Tal (whisper.cpp)
 
 Transkriberingen kör whisper.cpp som extern process: `whisper-cli` och `vad-speech-segments`

@@ -104,7 +104,9 @@ public enum Transcriber {
         let problems = setup.problems
         guard problems.isEmpty else { throw WhisperError.missing(problems) }
         let kind: RecordingMeta.TrackKind = rec.hasMicrophone ? .microphone : .system
-        guard let asset = rec.asset(kind) else { throw WhisperError.noAudio }
+        // Den röstisolerade mikrofonen om den finns (samma tidslinje, utan brus).
+        let isolated = kind == .microphone ? rec.isolatedMicrophone : nil
+        guard let asset = isolated ?? rec.asset(kind) else { throw WhisperError.noAudio }
 
         let work = FileManager.default.temporaryDirectory
             .appendingPathComponent("skarminspelare-whisper-\(UUID().uuidString)", isDirectory: true)

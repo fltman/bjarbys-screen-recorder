@@ -50,6 +50,13 @@ translation that follows the system language.
   screen (Vision OCR, locally) and blur, pixelate or cover them. The masks follow text that
   scrolls. Add your own areas too.
 
+**Control from agents, scripts and Shortcuts**
+- An MCP server built into the app: `--mcp` gives agents such as Claude Code tools to record
+  the screen, transcribe, edit (format, Reel, captions, cuts, dead time, noise, loudness,
+  hiding sensitive text), render frames to look at, and export.
+- A URL scheme (`skarminspelare://spela-in`, `…/stoppa`, `…/paus`, `…/oppna?sokvag=…`) and
+  Shortcuts actions for the app itself.
+
 **Export:** MP4 (H.264, 1080p), MP4 (HEVC, 4K), ProRes 422 and GIF.
 
 ## Measured, not assumed
@@ -94,6 +101,16 @@ For speech, build [whisper.cpp](https://github.com/ggml-org/whisper.cpp) (its
 app looks in `~/Projekt/whisper.cpp`, `~/whisper.cpp` and a few other places, or you choose the
 folder.
 
+### Using it from Claude Code
+
+```bash
+claude mcp add skarminspelare -- "/Applications/Bjarbys skärminspelare.app/Contents/MacOS/Skarminspelare" --mcp
+```
+
+Then ask for things like *"record my screen for 20 seconds while I show the settings page, cut
+the dead time, make a 9:16 version with captions and export it"*. The server records with
+the screen recording permission of the terminal it runs from.
+
 ## How it is put together
 
 - `RecorderKit/` holds all the logic as a local Swift package: `Capture` (ScreenCaptureKit,
@@ -112,7 +129,7 @@ folder.
 
 The recording engine, the editor and export are done, and most of the speech phase of
 [`docs/FÄRDPLAN.md`](docs/FÄRDPLAN.md). Masking of sensitive text is
-done too. Next on the roadmap are a "save the last minutes" buffer, control from scripts and agents, and HDR
+done too. Next on the roadmap are a "save the last minutes" buffer, a step-by-step guide generator, and HDR
 and 120 fps.
 
 Built and tested on macOS 26.1 on an Apple M5 only. Not yet tried with a real camera or
