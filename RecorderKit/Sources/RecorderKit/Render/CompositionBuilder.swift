@@ -159,6 +159,36 @@ public enum CompositionBuilder {
                       speed: cut.before.speed, at: cut.output)
             }
             if !hasAlternate { composition.removeTrack(alt) }
+
+            // Samma förrulle och efterrulle för mikrofonen och datorljudet, så att ljudet tonas
+            // över i stället för att klippas.
+            for (kind, id) in [(RecordingMeta.TrackKind.microphone, alternateMicTrackID), (.system, alternateSystemTrackID)] {
+                guard let src = await sourceTrack(kind, .audio), let range = try? await src.load(.timeRange),
+                      let track = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: id) else { continue }
+                var end = CMTime.zero
+                var any = false
+                func put(_ a: Double, _ b: Double, speed: Double, at out: Double) {
+                    let s0 = max(a, range.start.seconds), s1 = min(b, range.end.seconds)
+                    guard s1 - s0 > 0.01 else { return }
+                    let at = CMTimeMaximum(CMTime(seconds: out + (s0 - a) / speed, preferredTimescale: timescale), end)
+                    if end < at { track.insertEmptyTimeRange(CMTimeRange(start: end, end: at)) }
+                    let r = CMTimeRange(start: CMTime(seconds: s0, preferredTimescale: timescale), end: CMTime(seconds: s1, preferredTimescale: timescale))
+                    do { try track.insertTimeRange(r, of: src, at: at) } catch { return }
+                    var length = r.duration
+                    if abs(speed - 1) > 0.001 {
+                        length = CMTime(seconds: r.duration.seconds / speed, preferredTimescale: timescale)
+                        track.scaleTimeRange(CMTimeRange(start: at, duration: r.duration), toDuration: length)
+                    }
+                    end = at + length
+                    any = true
+                }
+                for cut in fades.sorted(by: { $0.output < $1.output }) {
+                    let half = max(0.05, cut.transition.duration / 2)
+                    put(cut.after.sourceStart - half * cut.after.speed, cut.after.sourceStart, speed: cut.after.speed, at: cut.output - half)
+                    put(cut.before.sourceEnd, cut.before.sourceEnd + half * cut.before.speed, speed: cut.before.speed, at: cut.output)
+                }
+                if !any { composition.removeTrack(track) }
+            }
         }
 
         // Videoinslag: eget videospår (och ljud) per lager, i normal hastighet från sin startpunkt.
@@ -194,8 +224,10 @@ public enum CompositionBuilder {
     static let cameraTrackID: CMPersistentTrackID = 2
     static let microphoneTrackID: CMPersistentTrackID = 3
     static let systemTrackID: CMPersistentTrackID = 4
-    /// Skärmspår B för övertoningar.
+    /// Skärmspår B för övertoningar, och mikrofonens och datorljudets B-spår.
     static let alternateScreenTrackID: CMPersistentTrackID = 6
+    static let alternateMicTrackID: CMPersistentTrackID = 7
+    static let alternateSystemTrackID: CMPersistentTrackID = 8
     /// Ljudklipp får id 100, 101 … i projektets ordning, så att mixen hittar dem igen.
     static let audioClipTrackBase: CMPersistentTrackID = 100
     /// Videoinslag: bild 200, 201 …, ljud 300, 301 … i videolagrens ordning.
@@ -229,46 +261,45 @@ public enum CompositionBuilder {
         }
         var params: [AVMutableAudioMixInputParameters] = []
         func time(_ s: Double) -> CMTime { CMTime(seconds: max(0, s), preferredTimescale: 600) }
-        func apply(_ p: AVMutableAudioMixInputParameters, base: Double, ramps: [Ducking.Ramp]) {
-            if ramps.first.map({ $0.start > 0.001 }) ?? true { p.setVolume(Float(base), at: .zero) }
+        func apply(_ p: AVMutableAudioMixInputParameters, _ envelope: GainEnvelope) {
+            let ramps = envelope.ramps()
+            if ramps.first.map({ $0.start > 0.001 }) ?? true { p.setVolume(Float(envelope.value(at: 0)), at: .zero) }
             for r in ramps {
                 p.setVolumeRamp(fromStartVolume: Float(r.from), toEndVolume: Float(r.to),
                                 timeRange: CMTimeRange(start: time(r.start), end: time(r.end)))
             }
         }
+        let cutOutputs = map.pieces.dropFirst().map(\.outputStart)
+        let cutPart = GainEnvelope.cuts(plan.cutPlan.cuts, allOutputs: cutOutputs)
         for track in composition.tracks(withMediaType: .audio) {
             let p = AVMutableAudioMixInputParameters(track: track)
             p.audioTimePitchAlgorithm = .spectral
             switch track.trackID {
-            case microphoneTrackID, systemTrackID:
-                let isMic = track.trackID == microphoneTrackID
+            case microphoneTrackID, systemTrackID, alternateMicTrackID, alternateSystemTrackID:
+                let isMic = track.trackID == microphoneTrackID || track.trackID == alternateMicTrackID
                 let volume = isMic ? (mix.microphoneMuted ? 0 : mix.microphoneVolume) : (mix.systemMuted ? 0 : mix.systemVolume)
                 var under = narration
                 if !isMic && mix.duckSystem { under += plan.speech }
-                let ramps = volume > 0 ? Ducking.ramps(speech: under, level: volume * mix.duckLevel, normal: volume) : []
-                apply(p, base: volume, ramps: ramps)
+                var parts = [GainEnvelope.duck(under: under, factor: mix.duckLevel)]
+                let isAlternate = track.trackID == alternateMicTrackID || track.trackID == alternateSystemTrackID
+                parts.append(isAlternate ? GainEnvelope.alternate(plan.cutPlan.cuts) : cutPart)
+                apply(p, GainEnvelope(base: volume, parts: parts))
             case videoAudioTrackBase...:
                 let index = Int(track.trackID - videoAudioTrackBase)
                 let videos = plan.project.overlays.filter { $0.kind == .video }
-                apply(p, base: videos.indices.contains(index) ? videos[index].volume : 0, ramps: [])
+                apply(p, GainEnvelope(base: videos.indices.contains(index) ? videos[index].volume : 0))
             default:
                 let index = Int(track.trackID - audioClipTrackBase)
                 guard plan.project.audioClips.indices.contains(index),
-                      let at = map.output(at: plan.project.audioClips[index].at) else { apply(p, base: 0, ramps: []); break }
+                      let at = map.output(at: plan.project.audioClips[index].at) else { apply(p, GainEnvelope(base: 0)); break }
                 let clip = plan.project.audioClips[index]
                 let end = at + clip.duration
-                var ramps: [Ducking.Ramp] = []
-                if clip.fadeIn > 0.01 { ramps.append(.init(start: at, end: at + clip.fadeIn, from: 0, to: clip.volume)) }
-                if clip.role == .music {
-                    // Musiken sänks under tal och berättarröst, mellan toningarna.
-                    let inside = (plan.speech + narration).compactMap { r -> ClosedRange<Double>? in
-                        let a = max(r.lowerBound, at + clip.fadeIn + 0.3), b = min(r.upperBound, end - clip.fadeOut - 0.6)
-                        return b > a ? a...b : nil
-                    }
-                    ramps += Ducking.ramps(speech: inside, level: clip.volume * 0.3, normal: clip.volume)
-                }
-                if clip.fadeOut > 0.01 { ramps.append(.init(start: end - clip.fadeOut, end: end, from: clip.volume, to: 0)) }
-                apply(p, base: clip.fadeIn > 0.01 ? 0 : clip.volume, ramps: ramps.sorted { $0.start < $1.start })
+                var parts: [GainEnvelope.Part] = []
+                if clip.fadeIn > 0.01 { parts.append(.init([(at, 0), (at + clip.fadeIn, 1)])) }
+                if clip.fadeOut > 0.01 { parts.append(.init([(end - clip.fadeOut, 1), (end, 0)])) }
+                // Musiken sänks under tal och berättarröst.
+                if clip.role == .music { parts.append(GainEnvelope.duck(under: plan.speech + narration, factor: 0.3)) }
+                apply(p, GainEnvelope(base: clip.volume, parts: parts))
             }
             params.append(p)
         }
@@ -302,5 +333,80 @@ public enum Ducking {
             out.append(Ramp(start: r.upperBound, end: r.upperBound + up, from: level, to: normal))
         }
         return out
+    }
+}
+
+/// En volymkurva: styckvis linjär, ihopmultiplicerad av flera delar (grundvolym, sänkning
+/// under tal, toningar i snitten, klippens in- och uttoning). Blir till rampar som ligger
+/// kant i kant — AVAudioMix tål inte rampar som överlappar, och att lägga dem ovanpå varandra
+/// gick inte när flera saker ska hända samtidigt.
+public struct GainEnvelope: Sendable {
+    /// En del av kurvan: nycklar (tid, faktor), linjärt emellan, konstant utanför.
+    public struct Part: Sendable {
+        public var keys: [(t: Double, v: Double)]
+        public init(_ keys: [(t: Double, v: Double)]) { self.keys = keys.sorted { $0.t < $1.t } }
+
+        public func value(at t: Double) -> Double {
+            guard let first = keys.first else { return 1 }
+            if t <= first.t { return first.v }
+            for (a, b) in zip(keys, keys.dropFirst()) where t <= b.t {
+                return b.t - a.t < 1e-9 ? b.v : a.v + (b.v - a.v) * (t - a.t) / (b.t - a.t)
+            }
+            return keys.last!.v
+        }
+    }
+
+    public var base: Double
+    public var parts: [Part]
+
+    public init(base: Double, parts: [Part] = []) { self.base = base; self.parts = parts }
+
+    public func value(at t: Double) -> Double { parts.reduce(base) { $0 * $1.value(at: t) } }
+
+    /// Rampar kant i kant mellan alla brytpunkter där kurvan ändras.
+    public func ramps() -> [Ducking.Ramp] {
+        let times = Set(parts.flatMap { $0.keys.map { max(0, $0.t) } }).sorted()
+        var out: [Ducking.Ramp] = []
+        for (a, b) in zip(times, times.dropFirst()) where b - a > 1e-6 {
+            let va = value(at: a + 1e-7), vb = value(at: b - 1e-7)
+            if abs(va - vb) > 1e-4 || abs(va - value(at: a - 1e-7)) > 1e-4 {
+                out.append(.init(start: a, end: b, from: va, to: vb))
+            }
+        }
+        return out
+    }
+
+    /// Sänkning under tal: ner strax före, upp en stund efter (samma form som `Ducking`).
+    public static func duck(under ranges: [ClosedRange<Double>], factor: Double) -> Part {
+        let ramps = Ducking.ramps(speech: ranges, level: factor, normal: 1)
+        var keys: [(t: Double, v: Double)] = []
+        for r in ramps { keys.append((r.start, r.from)); keys.append((r.end, r.to)) }
+        return Part(keys.isEmpty ? [(0, 1)] : keys)
+    }
+
+    /// Huvudspåret i snitten: 20 ms ner och upp i ett vanligt snitt (inget klick), en halv
+    /// övertoning ner till 0,5 och upp igen där delarna blandas.
+    public static func cuts(_ cuts: [CutPlan.Cut], allOutputs: [Double]) -> Part {
+        var keys: [(t: Double, v: Double)] = []
+        let fades = Dictionary(cuts.filter { $0.transition.kind == .crossfade }.map { ($0.output, $0.transition.duration / 2) },
+                               uniquingKeysWith: { a, _ in a })
+        for c in allOutputs {
+            if let half = fades[c] {
+                keys += [(c - half, 1), (c, 0.5), (c + half, 1)]
+            } else {
+                keys += [(c - 0.02, 1), (c, 0), (c + 0.02, 1)]
+            }
+        }
+        return Part(keys.isEmpty ? [(0, 1)] : keys)
+    }
+
+    /// Spår B: hörs bara i övertoningarna, upp till 0,5 i snittet och ner igen.
+    public static func alternate(_ cuts: [CutPlan.Cut]) -> Part {
+        var keys: [(t: Double, v: Double)] = [(0, 0)]
+        for c in cuts where c.transition.kind == .crossfade {
+            let half = c.transition.duration / 2
+            keys += [(c.output - half, 0), (c.output, 0.5), (c.output + half, 0)]
+        }
+        return Part(keys)
     }
 }

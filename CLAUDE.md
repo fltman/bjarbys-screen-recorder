@@ -115,6 +115,11 @@ för taldetektering). Roten letas upp i `~/Projekt/whisper.cpp` m.fl., eller vä
 - Efter en krasch visar AppKit en modal "Öppna fönstren igen?" vid nästa start; provlägen och
   `--mcp` slår av det med `ApplePersistenceIgnoreState` (annars hänger de, osynligt).
 - ProRes får bara skrivas i .mov (i .mp4 kastar AVAssetWriter ett undantag).
+- `./scripts/test.sh` bygger bara RecorderKit-paketet, inte appen. Provlägen kör appbinären i
+  `build/` — bygg den med xcodebuild (eller `build.sh`) efter en ändring, annars mäter du den
+  gamla koden (hände: en övertoning "fungerade inte" i en mätning mot en gammal binär).
+- Ljudvolymer byggs som `GainEnvelope` (kurvor som multipliceras och blir rampar kant i kant);
+  lägg aldrig `setVolumeRamp` som kan överlappa.
 - Musdata: ett glapp > 0,1 s mellan händelser betyder att musen stod still. Interpolera aldrig
   över det (`CursorPath.stillGap`).
 - ⚠️ Disken är nästan full (≈12 GB ledigt nov 2026). Provinspelningar hålls korta och raderas.

@@ -265,3 +265,16 @@ utanför snitten ur skärmspår B (id 6) och ändrar inte filmens längd.
   blir falska och första versionen lade därför aldrig in något i spår B. Slutet hålls nu i en
   egen variabel.
 - Maskerna läggs också på B-bilden, med dess egen källtid, så inget känsligt syns i övertoningen.
+
+## Ljud i snitten (2026-11-05)
+
+Mikrofon med 440 Hz 0–5 s och 660 Hz 5–12 s (källtid), delar 0–4 och 7–12 s, ProRes-export,
+vänster kanal:
+- Vanligt snitt, lagt utanför en nollgenomgång: största steget runt snittet 0,0432 = 660-tonens
+  naturliga lutning — inget klick (20 ms toning ner och upp i varje snitt).
+- Övertoning 1 s: 440 Hz 0,498 → 0,371 (3,75) → 0,194 (4,1) → 0,042 (4,4); 660 Hz spegelvänt —
+  linjärt genom hela fönstret, huvudspår + B-spår summerar till 1. Mikrofonens och datorljudets
+  B-spår (id 7, 8) har samma förrulle/efterrulle som skärmspår B.
+- `AVAssetReaderAudioMixOutput` tillämpar volymrampar (fristående prov: 1 → 0,5 → 0).
+- ⚠️ Första mätningen visade ingen övertoning: den kördes mot en appbinär byggd före ändringen
+  (`test.sh` bygger bara paketet). Mät alltid efter xcodebuild.

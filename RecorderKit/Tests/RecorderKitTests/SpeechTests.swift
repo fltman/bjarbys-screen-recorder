@@ -191,3 +191,32 @@ import Foundation
         #expect(abs(20 * log10(peaky.gain) - 5) < 0.01 && peaky.limitedByPeaks)
     }
 }
+
+@Suite struct GainEnvelopeTests {
+    @Test func multipliesPartsAndRampsNeverOverlap() {
+        let env = GainEnvelope(base: 0.8, parts: [
+            GainEnvelope.duck(under: [5...8], factor: 0.25),
+            .init([(0, 0), (1, 1)]),                     // intoning
+        ])
+        #expect(abs(env.value(at: 0.5) - 0.4) < 1e-9)    // 0,8 × 0,5
+        #expect(abs(env.value(at: 6) - 0.2) < 1e-9)      // 0,8 × 0,25
+        #expect(abs(env.value(at: 3) - 0.8) < 1e-9)
+        let ramps = env.ramps()
+        for (a, b) in zip(ramps, ramps.dropFirst()) { #expect(a.end <= b.start + 1e-9) }
+        #expect(ramps.first?.start == 0)
+    }
+
+    @Test func cutsDipBrieflyOrHalfwayForCrossfades() {
+        var segs: [EditProject.ClipSegment] = [.init(start: 0, end: 4), .init(start: 7, end: 10), .init(start: 12, end: 15)]
+        segs[2].transitionIn = .init(kind: .crossfade, duration: 1)
+        let map = TimeMap(segments: segs)
+        let cuts = CutPlan(segments: segs, timeMap: map, standard: .init()).cuts
+        let main = GainEnvelope.cuts(cuts, allOutputs: map.pieces.dropFirst().map(\.outputStart))
+        #expect(abs(main.value(at: 4)) < 1e-9 && abs(main.value(at: 4.02) - 1) < 1e-9)   // vanligt snitt
+        #expect(abs(main.value(at: 7) - 0.5) < 1e-9 && abs(main.value(at: 6.75) - 0.75) < 1e-9) // övertoning
+        let alt = GainEnvelope.alternate(cuts)
+        #expect(abs(alt.value(at: 7) - 0.5) < 1e-9 && alt.value(at: 4) == 0 && alt.value(at: 8) == 0)
+        // Huvudspåret + B summerar till 1 genom hela övertoningen.
+        for t in stride(from: 6.5, through: 7.5, by: 0.1) { #expect(abs(main.value(at: t) + alt.value(at: t) - 1) < 1e-9) }
+    }
+}
