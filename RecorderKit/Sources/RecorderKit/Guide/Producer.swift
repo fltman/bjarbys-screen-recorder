@@ -118,6 +118,12 @@ public enum Producer {
                     error("\(name): target frame outside the screen.")
                 }
                 if o.title.count > 32 { warn("\(name): label over 32 characters.") }
+            case .text:
+                if o.title.isEmpty { error("\(name) has no text.") }
+                if o.title.count > 120 { warn("\(name): over 120 characters — long to read on screen.") }
+            case .image:
+                if o.file.isEmpty || !mediaExists(o.file) { error("\(name): image \(o.file) is missing in media/.") }
+                if o.frame == nil { error("\(name) has no frame.") }
             }
         }
         // Två rutor i samma hörn samtidigt.

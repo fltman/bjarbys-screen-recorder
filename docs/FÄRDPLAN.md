@@ -23,6 +23,11 @@ tagning, sedan redigerbar polish, sedan resten.
 
 ## Byggt efter fas 2
 
+- Redigering som en riktig klippredigerare (2026-11-05, påbörjad): fritt textlager, bildlager
+  från fil, övergångar i snitten (via svart, oskärpa med zoomstöt, blixt), toning in/ut, extra
+  ljudklipp. Nästa: videoinslag (fler videospår i kompositionen, bild-i-bild och helbild),
+  övertoning mellan delar (kräver A/B-spår), styckvisa övergångar per snitt.
+
 - Delning (fas 6, 2026-11-05): `RecorderKit/Share/S3.swift`, egen SigV4 (CryptoKit), PUT med
   `UNSIGNED-PAYLOAD` i sökvägsstil; inställningar under «Delning …», hemlig nyckel i nyckelringen.
   «Ladda upp och kopiera länk» efter export; MCP `export` med `upload: true`.

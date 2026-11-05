@@ -54,6 +54,8 @@ public final class RenderPlan: @unchecked Sendable {
     /// Bildlagret och kapitlen i utdatatid.
     public let overlayTrack: OverlayTrack
     let overlayImages = CaptionImageCache()
+    /// Paketets media/, för bildlager.
+    let mediaDir: URL?
 
     struct Sprite {
         let image: CIImage
@@ -80,9 +82,10 @@ public final class RenderPlan: @unchecked Sendable {
 
     public init(canvas: CGSize, project: EditProject, meta: RecordingMeta, events: [InputEvent],
                 cursors: CursorCatalog, cursorsDir: URL, hasCamera: Bool, words: [Transcript.Word] = [],
-                transparentBackground: Bool = false,
+                transparentBackground: Bool = false, mediaDir: URL? = nil,
                 cursorPath: CursorPath? = nil, cameraPath: CameraPath? = nil) {
         self.transparent = transparentBackground
+        self.mediaDir = mediaDir
         self.canvas = canvas
         self.project = project
         timeMap = TimeMap(segments: project.segments)
@@ -308,18 +311,17 @@ public final class RenderPlan: @unchecked Sendable {
             out = bubble.composited(over: out)
         }
 
-        // Bildlagret som ligger fast i bildytan: rubrikkort, faktarutor, QR-kort.
+        // Övergångar i snitten: på filmen, men före lagren och texterna, så att de går att
+        // läsa genom övergången.
         let u = OverlayRenderer.unit(canvas)
+        out = applyTransition(out, at: t, unit: u, canvasRect: canvasRect)
+
+        // Bildlagret som ligger fast i bildytan: rubrikkort, faktarutor, QR-kort, text, bilder.
         for shown in overlayTrack.visible(at: t) where shown.overlay.kind != .callout {
             let o = shown.overlay
             let key = "\(o.kind.rawValue)|\(o.id)|\(o.title)|\(o.lines.joined(separator: "¦"))|\(o.url)"
-            let image = overlayImages.image(for: key) {
-                switch o.kind {
-                case .title: OverlayRenderer.title(o, canvas: canvas)
-                case .qr: OverlayRenderer.qr(o, canvas: canvas)
-                default: OverlayRenderer.fact(o, canvas: canvas)
-                }
-            }
+            let key2 = key + "|\(o.file)|\(o.size)|\(o.background)|\(o.frame.map { "\($0.width)x\($0.height)" } ?? "")"
+            let image = overlayImages.image(for: key2) { overlayImage(o) }
             let e = image.extent
             let slide = (1 - Self.easeOut(shown.entrance)) * u * 0.02
             if o.kind == .title {
@@ -365,7 +367,44 @@ public final class RenderPlan: @unchecked Sendable {
                                                                 y: y - e.minY))
             out = Self.withAlpha(placed, shown.opacity).composited(over: out)
         }
+        if project.fadeInOut {
+            let fadeIn = 0.6, fadeOut = 0.8, end = timeMap.outputDuration
+            let black = max(t < fadeIn ? 1 - t / fadeIn : 0, t > end - fadeOut ? (t - (end - fadeOut)) / fadeOut : 0)
+            if black > 0.001 {
+                out = Self.withAlpha(CIImage(color: .black).cropped(to: canvasRect), min(1, black)).composited(over: out)
+            }
+        }
         return out.cropped(to: canvasRect)
+    }
+
+    /// Övergången nära ett snitt: 1 mitt i snittet, 0 en halv övergångslängd bort.
+    func transitionAmount(at t: Double) -> Double {
+        guard project.transition.kind != .none, timeMap.pieces.count > 1 else { return 0 }
+        let half = max(0.05, project.transition.duration / 2)
+        let nearest = timeMap.pieces.dropFirst().map { abs($0.outputStart - t) }.min() ?? .infinity
+        return nearest < half ? 1 - nearest / half : 0
+    }
+
+    private func applyTransition(_ image: CIImage, at t: Double, unit u: CGFloat, canvasRect: CGRect) -> CIImage {
+        let a = transitionAmount(at: t)
+        guard a > 0.001 else { return image }
+        switch project.transition.kind {
+        case .none:
+            return image
+        case .dip:
+            return Self.withAlpha(CIImage(color: .black).cropped(to: canvasRect), a).composited(over: image)
+        case .flash:
+            return Self.withAlpha(CIImage(color: .white).cropped(to: canvasRect), a * 0.85).composited(over: image)
+        case .blur:
+            let zoom = 1 + 0.06 * a
+            let c = CGPoint(x: canvas.width / 2, y: canvas.height / 2)
+            return image.clampedToExtent()
+                .transformed(by: CGAffineTransform(translationX: -c.x, y: -c.y)
+                    .concatenating(CGAffineTransform(scaleX: zoom, y: zoom))
+                    .concatenating(CGAffineTransform(translationX: c.x, y: c.y)))
+                .applyingGaussianBlur(sigma: Double(u) * 0.025 * a)
+                .cropped(to: canvasRect)
+        }
     }
 
     /// Döljer maskernas områden i skärmbilden (före zoom, så att de följer innehållet).
@@ -571,10 +610,31 @@ public final class RenderPlan: @unchecked Sendable {
         return prerender(ci, extent: ci.extent)
     }
 
-    /// Var en fast ruta (rubrikkort, faktaruta, QR) hamnar i bildytan, givet dess storlek.
+    func overlayImage(_ o: Overlay) -> CIImage {
+        switch o.kind {
+        case .title: OverlayRenderer.title(o, canvas: canvas)
+        case .qr: OverlayRenderer.qr(o, canvas: canvas)
+        case .text: OverlayRenderer.text(o, canvas: canvas)
+        case .image: OverlayRenderer.image(o, mediaDir: mediaDir, canvas: canvas)
+        default: OverlayRenderer.fact(o, canvas: canvas)
+        }
+    }
+
+    /// Var en fast ruta (rubrikkort, faktaruta, QR, text, bild) hamnar i bildytan, givet dess storlek.
     func placement(of o: Overlay, size e: CGSize) -> CGPoint {
         let m = (OverlayRenderer.unit(canvas) * 0.045).rounded()
         if o.kind == .title { return CGPoint(x: (canvas.width - e.width) / 2, y: (canvas.height - e.height) / 2) }
+        if o.kind == .text {
+            // frame.x/y = textens mitt (0–1, origo uppe till vänster).
+            let f = o.frame ?? Rect(x: 0.5, y: 0.5, width: 0.6, height: 0)
+            return CGPoint(x: canvas.width * f.x - e.width / 2, y: canvas.height * (1 - f.y) - e.height / 2)
+        }
+        if o.kind == .image {
+            // frame = ramen; bilden centreras i den.
+            let f = o.frame ?? Rect(x: 0.6, y: 0.1, width: 0.3, height: 0.3)
+            let cx = canvas.width * (f.x + f.width / 2), cy = canvas.height * (1 - f.y - f.height / 2)
+            return CGPoint(x: cx - e.width / 2, y: cy - e.height / 2)
+        }
         let left = o.corner == .topLeft || o.corner == .bottomLeft
         let bottom = o.corner == .bottomLeft || o.corner == .bottomRight
         var y = bottom ? m : canvas.height - m - e.height
@@ -589,11 +649,7 @@ public final class RenderPlan: @unchecked Sendable {
     /// Rutans ram i bildytan (för preflight: täcker den något viktigt?).
     public func frame(of o: Overlay) -> CGRect? {
         guard o.kind != .callout else { return nil }
-        let image: CIImage = switch o.kind {
-        case .title: OverlayRenderer.title(o, canvas: canvas)
-        case .qr: OverlayRenderer.qr(o, canvas: canvas)
-        default: OverlayRenderer.fact(o, canvas: canvas)
-        }
+        let image = overlayImage(o)
         return CGRect(origin: placement(of: o, size: image.extent.size), size: image.extent.size)
     }
 

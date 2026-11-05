@@ -40,6 +40,11 @@ is included; to have the app follow your system language instead, run
   the pointer, with or without zoom.
 - Keyboard shortcuts pressed during recording appear as a small caption ("⌘Z ×3").
 - Split, delete and change the speed of parts of the recording, with undo.
+- Layers: title cards, callouts around the button you clicked, fact boxes, QR codes, free
+  text anywhere, images (logos, product shots), chapters with a banner, and extra audio
+  (music ducked under speech, narration, effects).
+- Transitions at the cuts (through black, blur with a zoom punch, flash) and fades at the
+  start and end.
 - A camera bubble in any corner, round or rounded square.
 
 **Speech** (with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), locally)

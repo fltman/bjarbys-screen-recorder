@@ -31,7 +31,8 @@ enum OverlayRenderer {
         }
         guard !frames.isEmpty else { return CIImage.empty() }
         let gap = padding * 0.35
-        let contentW = center ? textWidth : min(textWidth, frames.map(\.1.width).max() ?? 0)
+        // Kortet följer texten (även centrerad), upp till största bredden.
+        let contentW = min(textWidth, frames.map(\.1.width).max() ?? 0)
         let width = (contentW + padding * 2 + bar).rounded(.up)
         let height = (frames.map(\.1.height).reduce(0, +) + gap * CGFloat(frames.count - 1) + padding * 2).rounded(.up)
         guard let ctx = CGContext(data: nil, width: Int(width), height: Int(height), bitsPerComponent: 8, bytesPerRow: 0,
@@ -109,6 +110,54 @@ enum OverlayRenderer {
         let placedCaption = caption.transformed(by: CGAffineTransform(translationX: (width - caption.extent.width) / 2, y: 0))
         let composed = placedCode.composited(over: placedCaption.composited(over: box))
             .cropped(to: CGRect(x: 0, y: 0, width: width, height: height))
+        return RenderPlan.prerender(composed, extent: composed.extent)
+    }
+
+    /// Fri text: på en mörk platta, eller skuggad direkt på bilden.
+    static func text(_ o: Overlay, canvas: CGSize) -> CIImage {
+        let u = unit(canvas)
+        let maxWidth = canvas.width * CGFloat(min(max(o.frame?.width ?? 0.6, 0.1), 0.95))
+        let font = NSFont.systemFont(ofSize: u * 0.045 * o.size, weight: .bold)
+        if o.background {
+            return card([Row(text: o.title, font: font, color: .white)], maxWidth: maxWidth, padding: u * 0.022 * o.size,
+                        radius: u * 0.016, background: CGColor(red: 0.06, green: 0.06, blue: 0.09, alpha: 0.75), center: true)
+        }
+        // Utan platta: vit text med mjuk skugga, så att den syns mot både ljust och mörkt.
+        let plain = card([Row(text: o.title, font: font, color: .white)], maxWidth: maxWidth, padding: u * 0.02,
+                         radius: 0, background: CGColor(gray: 0, alpha: 0), center: true)
+        let shadow = plain.applyingFilter("CIColorMatrix", parameters: [
+            "inputRVector": CIVector(x: 0, y: 0, z: 0, w: 0), "inputGVector": CIVector(x: 0, y: 0, z: 0, w: 0),
+            "inputBVector": CIVector(x: 0, y: 0, z: 0, w: 0), "inputAVector": CIVector(x: 0, y: 0, z: 0, w: 0.75)])
+            .applyingGaussianBlur(sigma: u * 0.006).transformed(by: CGAffineTransform(translationX: 0, y: -u * 0.003))
+        let composed = plain.composited(over: shadow).cropped(to: plain.extent)
+        return RenderPlan.prerender(composed, extent: composed.extent)
+    }
+
+    /// En bild ur media/, inpassad i sin ram (bibehållna proportioner), med rundade hörn och skugga.
+    static func image(_ o: Overlay, mediaDir: URL?, canvas: CGSize) -> CIImage {
+        guard let dir = mediaDir, let source = CIImage(contentsOf: dir.appendingPathComponent(o.file)),
+              let f = o.frame else { return CIImage.empty() }
+        let box = CGSize(width: canvas.width * f.width, height: canvas.height * f.height)
+        let k = min(box.width / source.extent.width, box.height / source.extent.height)
+        let size = CGSize(width: (source.extent.width * k).rounded(), height: (source.extent.height * k).rounded())
+        let scaled = source.transformed(by: CGAffineTransform(translationX: -source.extent.minX, y: -source.extent.minY))
+            .transformed(by: CGAffineTransform(scaleX: k, y: k))
+        let u = unit(canvas)
+        let rect = CGRect(origin: .zero, size: size)
+        let radius = min(size.width, size.height) * 0.06
+        let masked = scaled.applyingFilter("CIBlendWithMask", parameters: [
+            kCIInputBackgroundImageKey: CIImage.empty(),
+            kCIInputMaskImageKey: RenderPlan.roundedRect(rect, radius: radius, color: .white)])
+        let pad = u * 0.03
+        // Skuggan efter bildens egen form (alfa): en PNG med genomskinlig marginal får annars
+        // en grå fyrkant bakom sig.
+        let shadow = masked.applyingFilter("CIColorMatrix", parameters: [
+            "inputRVector": CIVector(x: 0, y: 0, z: 0, w: 0), "inputGVector": CIVector(x: 0, y: 0, z: 0, w: 0),
+            "inputBVector": CIVector(x: 0, y: 0, z: 0, w: 0), "inputAVector": CIVector(x: 0, y: 0, z: 0, w: 0.45)])
+            .transformed(by: CGAffineTransform(translationX: 0, y: -u * 0.006))
+            .applyingGaussianBlur(sigma: u * 0.012)
+        let composed = masked.composited(over: shadow).cropped(to: rect.insetBy(dx: -pad, dy: -pad))
+            .transformed(by: CGAffineTransform(translationX: pad, y: pad))
         return RenderPlan.prerender(composed, extent: composed.extent)
     }
 

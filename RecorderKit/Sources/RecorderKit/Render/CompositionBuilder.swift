@@ -45,7 +45,8 @@ public struct LoadedRecording: @unchecked Sendable {
                          cursorPath: CursorPath? = nil, cameraPath: CameraPath? = nil) -> RenderPlan {
         RenderPlan(canvas: canvas, project: project, meta: meta, events: events, cursors: cursors,
                    cursorsDir: bundle.cursorsDir, hasCamera: hasCamera, words: transcript?.words ?? [],
-                   transparentBackground: transparentBackground, cursorPath: cursorPath, cameraPath: cameraPath)
+                   transparentBackground: transparentBackground, mediaDir: bundle.mediaDir,
+                   cursorPath: cursorPath, cameraPath: cameraPath)
     }
 }
 

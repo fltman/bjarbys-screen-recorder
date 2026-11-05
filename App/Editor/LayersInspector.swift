@@ -70,6 +70,8 @@ struct LayersInspector: View {
         case .callout: "scope"
         case .fact: "text.bubble"
         case .qr: "qrcode"
+        case .text: "textformat"
+        case .image: "photo"
         }
     }
 
@@ -79,6 +81,8 @@ struct LayersInspector: View {
         case .callout: "Markering"
         case .fact: "Faktaruta"
         case .qr: "QR-kod"
+        case .text: "Text"
+        case .image: "Bild"
         }
     }
 
@@ -87,7 +91,9 @@ struct LayersInspector: View {
             ForEach(model.project.overlays.sorted { $0.at < $1.at }) { o in overlayRow(o) }
             Menu {
                 ForEach(Overlay.Kind.allCases, id: \.self) { k in
-                    Button { model.addOverlay(k) } label: { Label(Self.name(k), systemImage: Self.icon(k)) }
+                    Button {
+                        if k == .image { pickImage() } else { model.addOverlay(k) }
+                    } label: { Label(Self.name(k), systemImage: Self.icon(k)) }
                 }
             } label: { Label("Lägg till vid spelhuvudet", systemImage: "plus") }
             .menuStyle(.borderlessButton)
@@ -127,6 +133,24 @@ struct LayersInspector: View {
                 if o.kind == .qr {
                     TextField("Adress", text: Binding(get: { o.url }, set: { v in model.updateOverlay(o.id) { $0.url = v } }))
                         .textFieldStyle(.roundedBorder)
+                }
+                if o.kind == .text {
+                    LabeledSlider("Textstorlek", value: Binding(get: { o.size }, set: { v in model.updateOverlay(o.id) { $0.size = v } }),
+                                  range: 0.5...2.5, format: "%.0f %%", scale: 100)
+                    Toggle("På en platta", isOn: Binding(get: { o.background }, set: { v in model.updateOverlay(o.id) { $0.background = v } }))
+                }
+                if o.kind == .text || o.kind == .image {
+                    let f = o.frame ?? Rect(x: 0.5, y: 0.5, width: 0.5, height: 0.3)
+                    LabeledSlider("Sidled", value: frameBinding(o.id, \.x, f), range: 0...1, format: "%.2f")
+                    LabeledSlider("Höjdled", value: frameBinding(o.id, \.y, f), range: 0...1, format: "%.2f")
+                    LabeledSlider(o.kind == .text ? "Största bredd" : "Storlek", value: Binding(get: { f.width }, set: { v in
+                        model.updateOverlay(o.id) { ov in
+                            var r = ov.frame ?? f
+                            if ov.kind == .image { r.height *= v / max(r.width, 0.01) }
+                            r.width = v
+                            ov.frame = r
+                        }
+                    }), range: 0.08...1, format: "%.2f")
                 }
                 if o.kind == .fact || o.kind == .qr {
                     Picker("Hörn", selection: Binding(get: { o.corner }, set: { v in model.updateOverlay(o.id) { $0.corner = v } })) {
@@ -177,6 +201,16 @@ struct LayersInspector: View {
             Text("Musiken sänks under tal och berättarröst. Berättarröst görs med AI-producenten i Claude Code.")
                 .font(.caption).foregroundStyle(.secondary)
         }
+    }
+
+    private func frameBinding(_ id: UUID, _ key: WritableKeyPath<Rect, Double>, _ f: Rect) -> Binding<Double> {
+        Binding(get: { f[keyPath: key] }, set: { v in model.updateOverlay(id) { o in var r = o.frame ?? f; r[keyPath: key] = v; o.frame = r } })
+    }
+
+    private func pickImage() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image]
+        if panel.runModal() == .OK, let url = panel.url { model.addImageOverlay(from: url) }
     }
 
     private func pick(_ role: AudioClip.Role) {

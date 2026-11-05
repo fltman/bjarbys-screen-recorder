@@ -630,6 +630,23 @@
         }
       }
     },
+    "Blixt": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flash"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blixt"
+          }
+        }
+      }
+    },
     "Bredd": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1918,6 +1935,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hörn"
+          }
+        }
+      }
+    },
+    "I snitten": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At cuts"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I snitten"
           }
         }
       }
@@ -3537,6 +3571,23 @@
         }
       }
     },
+    "På en platta": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On a plate"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "På en platta"
+          }
+        }
+      }
+    },
     "QR-kod": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4438,6 +4489,23 @@
         }
       }
     },
+    "Största bredd": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Max width"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Största bredd"
+          }
+        }
+      }
+    },
     "Sänk datorljudet när du pratar": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4761,6 +4829,23 @@
         }
       }
     },
+    "Tona in och ut i början och slutet": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fade in and out at the start and end"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tona in och ut i början och slutet"
+          }
+        }
+      }
+    },
     "Transkribera": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -5063,6 +5148,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Utseende"
+          }
+        }
+      }
+    },
+    "Via svart": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Through black"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Via svart"
           }
         }
       }
@@ -5437,6 +5539,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Öppna senaste inspelningen"
+          }
+        }
+      }
+    },
+    "Övergångar": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transitions"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Övergångar"
+          }
+        }
+      }
+    },
+    "Övergångarna syns där du klippt; filmen har inga snitt än.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transitions appear where you have cut; the video has no cuts yet."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Övergångarna syns där du klippt; filmen har inga snitt än."
           }
         }
       }

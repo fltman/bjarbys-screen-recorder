@@ -157,6 +157,9 @@ enum MCPServer {
                 "normalize_loudness": ["type": "boolean", "description": "Set the microphone level to -16 LUFS."],
                 "duck_system_audio": ["type": "boolean"],
                 "hide_sensitive": ["type": "boolean", "description": "Find e-mails, phone numbers, ID numbers, cards and keys on screen and blur them."],
+                "transition": ["type": "string", "enum": ["none", "dip", "blur", "flash"], "description": "Transition at every cut between parts."],
+                "transition_duration": ["type": "number"],
+                "fade_in_out": ["type": "boolean", "description": "Fade in from black at the start and out at the end."],
              ], required: ["recording"])],
             ["name": "render_frames",
              "description": "Render finished frames (with all polish) as PNG files at output times, so you can look at them.",
@@ -181,7 +184,12 @@ enum MCPServer {
              "inputSchema": schema(["recording": recordingArg,
                                     "append": ["type": "boolean"],
                                     "overlays": ["type": "array", "items": ["type": "object", "properties": [
-                                        "kind": ["type": "string", "enum": ["title", "callout", "fact", "qr"]],
+                                        "kind": ["type": "string", "enum": ["title", "callout", "fact", "qr", "text", "image"]],
+                                        "frame": ["type": "array", "items": ["type": "number"], "minItems": 3, "maxItems": 4,
+                                                  "description": "text: [centerX, centerY, maxWidth]; image: [x, y, width, height] — 0–1 of the frame, origin top-left."],
+                                        "file": ["type": "string", "description": "image: path to the image (copied into the bundle)."],
+                                        "size": ["type": "number", "description": "text: size relative to default (1)."],
+                                        "background": ["type": "boolean", "description": "text: on a dark plate (default true)."],
                                         "at": ["type": "number"], "duration": ["type": "number"],
                                         "title": ["type": "string"], "lines": ["type": "array", "items": ["type": "string"]],
                                         "url": ["type": "string"],
@@ -422,6 +430,9 @@ enum MCPServer {
         }
         if let v = a["shortcuts"] as? Bool { p.shortcuts.visible = v }
         if let v = a["duck_system_audio"] as? Bool { p.audio.duckSystem = v }
+        if let v = a["transition"] as? String, let k = EditProject.Transition.Kind(rawValue: v) { p.transition.kind = k }
+        if let v = a["transition_duration"] as? Double { p.transition.duration = min(1.5, max(0.2, v)) }
+        if let v = a["fade_in_out"] as? Bool { p.fadeInOut = v }
         if let v = a["zoom_scale"] as? Double { p.zoomScale = min(4, max(1.25, v)) }
         if let v = a["auto_zoom"] as? Bool {
             p.autoZoom = v
@@ -562,6 +573,24 @@ enum MCPServer {
                                   title: o["title"] as? String ?? "", lines: o["lines"] as? [String] ?? [],
                                   url: o["url"] as? String ?? "",
                                   corner: Overlay.Corner(rawValue: o["corner"] as? String ?? "") ?? (kind == .qr ? .bottomRight : .topRight))
+            if let f = (o["frame"] as? [Any])?.compactMap(number), f.count >= 3 {
+                overlay.frame = Rect(x: f[0], y: f[1], width: f[2], height: f.count > 3 ? f[3] : 0)
+            }
+            if let size = number(o["size"]) { overlay.size = size }
+            if let bg = o["background"] as? Bool { overlay.background = bg }
+            if kind == .text && overlay.frame == nil { overlay.frame = Rect(x: 0.5, y: 0.2, width: 0.6, height: 0) }
+            if kind == .image {
+                guard let path = o["file"] as? String,
+                      FileManager.default.fileExists(atPath: NSString(string: path).expandingTildeInPath) else {
+                    throw ToolError("image overlays need file = path to an existing image.")
+                }
+                let src = URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
+                let name = "bild-\(UUID().uuidString.prefix(6)).\(src.pathExtension.isEmpty ? "png" : src.pathExtension.lowercased())"
+                try FileManager.default.createDirectory(at: rec.bundle.mediaDir, withIntermediateDirectories: true)
+                try FileManager.default.copyItem(at: src, to: rec.bundle.mediaDir.appendingPathComponent(name))
+                overlay.file = name
+                if overlay.frame == nil { overlay.frame = Rect(x: 0.62, y: 0.08, width: 0.3, height: 0.3) }
+            }
             if let t = (o["target"] as? [Any])?.compactMap(number), t.count == 4 {
                 overlay.target = Rect(x: t[0], y: t[1], width: t[2], height: t[3])
             } else if kind == .callout, let click = number(o["target_click_at"]) ?? Optional(at) {

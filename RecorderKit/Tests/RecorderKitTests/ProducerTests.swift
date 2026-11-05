@@ -96,3 +96,44 @@ enum CIImageStub {
         #expect(Producer.preflight(project: p, words: [], duration: 20).isEmpty)
     }
 }
+
+@Suite struct TransitionAndLayerTests {
+    private func plan(_ p: EditProject) -> RenderPlan {
+        var meta = RecordingMeta(source: .init(kind: .display, title: "", displayID: 1, windowID: nil,
+                                               contentRect: Rect(x: 0, y: 0, width: 1600, height: 1000),
+                                               pixelScale: 1, pixelWidth: 1600, pixelHeight: 1000), fps: 60, appVersion: "t")
+        meta.duration = 20
+        return RenderPlan(canvas: CGSize(width: 1920, height: 1080), project: p, meta: meta, events: [], cursors: CursorCatalog(),
+                          cursorsDir: FileManager.default.temporaryDirectory, hasCamera: false)
+    }
+
+    @Test func transitionPeaksAtTheCutAndOnlyThere() {
+        var p = EditProject.initial(duration: 20)
+        p.segments = [.init(start: 0, end: 5), .init(start: 8, end: 20)]
+        p.transition = .init(kind: .dip, duration: 0.6)
+        let pl = plan(p)
+        #expect(abs(pl.transitionAmount(at: 5) - 1) < 1e-9)
+        #expect(abs(pl.transitionAmount(at: 5.15) - 0.5) < 1e-9)
+        #expect(pl.transitionAmount(at: 5.4) == 0 && pl.transitionAmount(at: 1) == 0)
+        p.transition.kind = .none
+        #expect(plan(p).transitionAmount(at: 5) == 0)
+    }
+
+    @Test func textIsCenteredOnItsFramePoint() {
+        var p = EditProject.initial(duration: 20)
+        let o = Overlay(kind: .text, at: 1, title: "Hej", frame: Rect(x: 0.25, y: 0.25, width: 0.5, height: 0))
+        p.overlays = [o]
+        let f = plan(p).frame(of: o)!
+        #expect(abs(f.midX - 480) < 1 && abs(f.midY - 810) < 1)   // 0,25 från toppen = 810 från botten
+        #expect(f.width < 960 * 0.6, "plattan följer texten, inte största bredden")
+    }
+
+    @Test func formatDefaultsAndPreflightForNewKinds() throws {
+        let t = try BundleJSON.decoder.decode(EditProject.Transition.self, from: Data("{}".utf8))
+        #expect(t.kind == .none && t.duration == 0.5)
+        var p = EditProject.initial(duration: 20)
+        p.overlays = [Overlay(kind: .image, at: 1, file: "saknas.png"), Overlay(kind: .text, at: 2)]
+        let errors = Producer.preflight(project: p, words: [], duration: 20) { _ in false }.map(\.message)
+        #expect(errors.contains { $0.contains("saknas.png is missing") } && errors.contains { $0.contains("has no text") })
+    }
+}

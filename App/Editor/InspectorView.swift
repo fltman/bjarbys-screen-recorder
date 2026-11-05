@@ -49,6 +49,7 @@ struct InspectorView: View {
                     case .style:
                         backgroundSection
                         frameSection
+                        transitionSection
                         if model.recording.hasCamera { cameraSection }
                     case .motion:
                         autoZoomSection
@@ -188,6 +189,24 @@ struct InspectorView: View {
             if fills {
                 Text("Inspelningen fyller bilden och beskärs. Bilden följer markören, även utan zoom.")
                     .font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var transitionSection: some View {
+        Section2("Övergångar", systemImage: "rectangle.2.swap") {
+            Picker("I snitten", selection: binding(\.transition.kind)) {
+                Text("Ingen").tag(EditProject.Transition.Kind.none)
+                Text("Via svart").tag(EditProject.Transition.Kind.dip)
+                Text("Oskärpa").tag(EditProject.Transition.Kind.blur)
+                Text("Blixt").tag(EditProject.Transition.Kind.flash)
+            }
+            if model.project.transition.kind != .none {
+                LabeledSlider("Längd", value: binding(\.transition.duration), range: 0.2...1.5, format: "%.1f s")
+            }
+            Toggle("Tona in och ut i början och slutet", isOn: binding(\.fadeInOut))
+            if model.project.segments.count < 2 && model.project.transition.kind != .none {
+                Text("Övergångarna syns där du klippt; filmen har inga snitt än.").font(.caption).foregroundStyle(.secondary)
             }
         }
     }

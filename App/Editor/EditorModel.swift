@@ -407,6 +407,8 @@ final class EditorModel: ObservableObject {
         case .title: o.title = String(localized: "Rubrik")
         case .fact: o.title = String(localized: "Faktaruta"); o.lines = [String(localized: "En rad text")]
         case .qr: o.title = String(localized: "Läs mer"); o.url = "https://"; o.corner = .bottomRight
+        case .text: o.title = String(localized: "Text"); o.frame = Rect(x: 0.5, y: 0.2, width: 0.6, height: 0)
+        case .image: o.frame = Rect(x: 0.62, y: 0.08, width: 0.3, height: 0.3)
         case .callout:
             if let hit = Producer.clickTarget(recording, near: s) {
                 o.target = Rect(hit.rect)
@@ -416,6 +418,19 @@ final class EditorModel: ObservableObject {
                 o.target = Rect(x: max(0, c.x - 0.05), y: max(0, c.y - 0.025), width: 0.1, height: 0.05)
             }
         }
+        update { $0.overlays.append(o); $0.overlays.sort { $0.at < $1.at } }
+        selectedOverlayID = o.id
+    }
+
+    /// En bild från fil som bildlager vid spelhuvudet (kopieras in i paketets media/).
+    func addImageOverlay(from url: URL) {
+        let name = "bild-\(UUID().uuidString.prefix(6)).\(url.pathExtension.isEmpty ? "png" : url.pathExtension.lowercased())"
+        do {
+            try FileManager.default.createDirectory(at: recording.bundle.mediaDir, withIntermediateDirectories: true)
+            try FileManager.default.copyItem(at: url, to: recording.bundle.mediaDir.appendingPathComponent(name))
+        } catch { return }
+        let o = Overlay(kind: .image, at: sourceTimeAtPlayhead, duration: 4, title: url.deletingPathExtension().lastPathComponent,
+                        frame: Rect(x: 0.62, y: 0.08, width: 0.3, height: 0.3), file: name)
         update { $0.overlays.append(o); $0.overlays.sort { $0.at < $1.at } }
         selectedOverlayID = o.id
     }

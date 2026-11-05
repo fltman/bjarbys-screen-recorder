@@ -14,6 +14,10 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
         case fact
         /// QR-kod med rubrik och adress, i ett hörn.
         case qr
+        /// Fri text var som helst i bilden (`frame`: mitt x/y och största bredd, 0–1 av bildytan).
+        case text
+        /// En bild ur `media/` (logotyp, produktbild), placerad fritt (`frame`, 0–1 av bildytan).
+        case image
     }
 
     public enum Corner: String, Codable, Sendable, CaseIterable { case topLeft, topRight, bottomLeft, bottomRight }
@@ -29,11 +33,21 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
     /// Markeringens mål: elementets ram i innehållet (0–1, origo uppe till vänster).
     public var target: Rect?
     public var corner: Corner
+    /// Fri placering i bildytan (0–1, origo uppe till vänster): text = mitt + bredd, bild = ram.
+    public var frame: Rect?
+    /// Bildens fil i `media/`.
+    public var file: String
+    /// Textens storlek relativt standard (1).
+    public var size: Double
+    /// Text på en mörk platta (annars skuggad text direkt på bilden).
+    public var background: Bool
 
     public init(id: UUID = UUID(), kind: Kind, at: Double, duration: Double = 4, title: String = "",
-                lines: [String] = [], url: String = "", target: Rect? = nil, corner: Corner = .topRight) {
+                lines: [String] = [], url: String = "", target: Rect? = nil, corner: Corner = .topRight,
+                frame: Rect? = nil, file: String = "", size: Double = 1, background: Bool = true) {
         self.id = id; self.kind = kind; self.at = at; self.duration = duration; self.title = title
         self.lines = lines; self.url = url; self.target = target; self.corner = corner
+        self.frame = frame; self.file = file; self.size = size; self.background = background
     }
 
     public init(from decoder: Decoder) throws {
@@ -47,6 +61,10 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
         url = c.value(.url, "")
         target = c.value(.target, nil)
         corner = c.value(.corner, .topRight)
+        frame = c.value(.frame, nil)
+        file = c.value(.file, "")
+        size = c.value(.size, 1)
+        background = c.value(.background, true)
     }
 }
 

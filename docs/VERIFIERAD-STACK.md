@@ -236,3 +236,11 @@ Renderade rutor: rubrikkort med dämpad bakgrund, kapitelrad, QR-kort ovanför u
 markering runt knappen. ⚠️ Faktarutan uppe till höger täckte knappen som just klickats — syntes
 bara i bilden. Preflight har nu `coverage` (rutans ram mot klickade elements ram i färdig bild,
 med zoom, ±2,5 s) och fångar det som fel.
+
+## Textlager, bildlager och övergångar (2026-11-05)
+
+Renderade rutor via MCP: textlager med platta (följer nu texten — först fick centrerad text hela
+största bredden), utan platta (skuggad), bildlager med appikonen (⚠️ skuggan gjordes först som en
+rektangel av hela bildytan och syntes som en grå fyrkant runt en PNG med genomskinlig marginal;
+nu efter bildens alfa), oskärpeövergång 0,1 s från snittet (kortkommandot läsbart ovanpå —
+lagren ritas efter övergången), intoning från svart vid 0,15 s.

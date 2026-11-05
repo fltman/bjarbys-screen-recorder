@@ -37,6 +37,10 @@ public struct EditProject: Codable, Equatable, Sendable {
     public var showsChapterBanner: Bool
     /// Extra ljud: berättarröst, musik och effekter, lagda på källtider.
     public var audioClips: [AudioClip]
+    /// Övergången i varje snitt mellan delar.
+    public var transition: Transition
+    /// Tona in från svart i början och ut till svart i slutet.
+    public var fadeInOut: Bool
 
     public init() {
         schemaVersion = RecorderKit.formatVersion
@@ -60,6 +64,8 @@ public struct EditProject: Codable, Equatable, Sendable {
         chapters = []
         showsChapterBanner = true
         audioClips = []
+        transition = Transition()
+        fadeInOut = false
     }
 
     /// Ett nytt projekt för en inspelning: allt med, i normal hastighet.
@@ -93,6 +99,8 @@ public struct EditProject: Codable, Equatable, Sendable {
         chapters = c.value(.chapters, d.chapters)
         showsChapterBanner = c.value(.showsChapterBanner, d.showsChapterBanner)
         audioClips = c.value(.audioClips, d.audioClips)
+        transition = c.value(.transition, d.transition)
+        fadeInOut = c.value(.fadeInOut, d.fadeInOut)
     }
 
     // MARK: - Delar
@@ -339,6 +347,29 @@ public struct EditProject: Codable, Equatable, Sendable {
                 return a.rect == b.rect ? a.rect.cgRect : a.rect.cgRect.union(b.rect.cgRect)
             }
             return keyframes.last!.rect.cgRect
+        }
+    }
+
+    /// Övergången i snitten. Ritas i bilden, så den kräver ingen överlappning av delarna.
+    public struct Transition: Codable, Equatable, Hashable, Sendable {
+        public enum Kind: String, Codable, Sendable, CaseIterable {
+            case none
+            /// Tona via svart.
+            case dip
+            /// Oskärpa och en lätt zoomstöt, som en snabb kamerarörelse.
+            case blur
+            /// En kort vit blixt.
+            case flash
+        }
+        public var kind: Kind
+        /// Hela övergångens längd (s), hälften före och hälften efter snittet.
+        public var duration: Double
+
+        public init(kind: Kind = .none, duration: Double = 0.5) { self.kind = kind; self.duration = duration }
+
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            kind = c.value(.kind, .none); duration = c.value(.duration, 0.5)
         }
     }
 
