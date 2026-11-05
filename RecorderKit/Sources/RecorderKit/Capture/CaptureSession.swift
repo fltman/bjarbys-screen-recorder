@@ -382,6 +382,7 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         let image = hdr ? MediaPreviews.sdrStill(still) : still
         CGImageDestinationAddImage(dest, image, [kCGImageDestinationLossyCompressionQuality: 0.8] as CFDictionary)
         CGImageDestinationFinalize(dest)
+        bundle.writeQuickLook()
     }
 
     // MARK: - Strömmen

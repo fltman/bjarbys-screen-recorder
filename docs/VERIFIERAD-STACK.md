@@ -306,6 +306,14 @@ växer fram. ⚠️ Först förstorades den råa skärmbilden — en mask hade s
 den maskade (provat med ifylld och pixlad mask: ingen läsbar text i luppen). ⚠️ En svart ruta
 som bakgrund i `CIBlendWithMask` gav svarta hörn runt cirkeln; bakgrunden ska vara `.empty()`.
 
+## Quick Look och AV1 (2026-11-05)
+
+- macOS 26 läser fortfarande dokumentpaketens `QuickLook/`-mapp (`qlmanage -t` och `-p -o`):
+  `Thumbnail.png` blir miniatyren och `Preview.mov`/`.mp4`/`.png` förhandsvisningen. En symbolisk
+  länk till skärmspåret fungerar (Quick Look följer den). Inget tillägg behövs.
+- VideoToolbox på M5 har **ingen AV1-kodare** (`VTCopyVideoEncoderList`: H.264, HEVC och ProRes,
+  i hård- och mjukvara); AV1 avkodas i hårdvara. AV1-export kräver alltså en extern kodare.
+
 ## Konturtext (2026-11-05)
 
 - Text med kontur i Core Text (`.strokeWidth`) + `CGContext.setShadow`: skuggan läggs för varje

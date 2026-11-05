@@ -84,6 +84,9 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Quick Look (2026-11-05): varje paket får `QuickLook/Thumbnail.png` och `Preview.mov` (symbolisk
+  länk till skärmspåret) — Finder visar bilden som ikon och spelar inspelningen med mellanslag,
+  utan något tillägg. Äldre inspelningar får mappen när biblioteket läses.
 - Kvalitet vid export (2026-11-05): Liten fil / Normal / Hög för MP4 (bitraten × 0,5 / 1 / 1,8;
   ProRes, GIF och ljud påverkas inte). Uppmätt 1080p60 på testbild: 5,8 / 11,5 / 18,2 Mbit/s.
   MCP `quality`.

@@ -18,6 +18,9 @@ Inspelning 2026-11-04 kl. 22.27.41.bsrec/
     cursors/<hash>.png
   project.json               redigeringsläget (fas 2) — det enda redigeraren skriver
   thumbnail.jpg
+  QuickLook/                 för Finder: Thumbnail.png (ikonen) och Preview.mov (mellanslag),
+                             en symbolisk länk till recording/screen-0.mov
+  derived/                   uträknat ur inspelningen, går alltid att göra om (se nedan)
 ```
 
 ## Tidslinjen

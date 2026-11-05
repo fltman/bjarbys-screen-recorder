@@ -21,6 +21,8 @@ final class LibraryModel: ObservableObject {
         Task.detached(priority: .utility) {
             var texts: [URL: String] = [:]
             for b in bundles {
+                // Äldre inspelningar får Quick Look-mappen (ikon och förhandsvisning i Finder).
+                if b.needsQuickLook { b.writeQuickLook() }
                 if let t = b.readTranscript() { texts[b.url] = t.words.map(\.text).joined(separator: " ") }
             }
             let found = texts
