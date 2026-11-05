@@ -39,8 +39,8 @@ is included; to have the app follow your system language instead, run
 
 **Editor**
 - Zooms suggested from your clicks and from where you type (only when and where, never what),
-  with a spring-driven camera that keeps the cursor in a safe zone and looks ahead. Move them, resize them, delete them or add your own on the
-  timeline.
+  with a spring-driven camera that keeps the cursor in a safe zone and looks ahead. Move them,
+  resize them, delete them or add your own on the timeline.
 - A magnifier or a spotlight instead of a zoom: a round lens follows the cursor, or everything
   but the area around it is dimmed, while the picture stays put (privacy masks stay masked).
 - Dragged zooms and layers snap to the playhead, the I/O marks and the cuts (⌘ to drag freely).
