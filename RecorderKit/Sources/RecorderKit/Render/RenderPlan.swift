@@ -62,6 +62,8 @@ public final class RenderPlan: @unchecked Sendable {
     public var videoOverlayIDs: [UUID] { project.overlays.filter { $0.kind == .video }.map(\.id) }
     /// Inspelningen är HDR (PQ, SDR-vitt på 100 nits).
     public let sourceHDR: Bool
+    /// Källtiden där kamerans första ruta finns (bubblan tonas in därifrån).
+    let cameraStart: Double
     /// Rutorna ritas i HDR (BT.2100 HLG) i stället för SDR (sRGB/BT.709).
     public let outputHDR: Bool
 
@@ -113,6 +115,7 @@ public final class RenderPlan: @unchecked Sendable {
                 cursorPath: CursorPath? = nil, cameraPath: CameraPath? = nil, outputHDR: Bool = false) {
         self.transparent = transparentBackground
         self.sourceHDR = meta.hdr
+        self.cameraStart = meta.track(.camera)?.start ?? 0
         self.outputHDR = outputHDR
         self.mediaDir = mediaDir
         self.canvas = canvas
@@ -344,11 +347,23 @@ public final class RenderPlan: @unchecked Sendable {
             }
             cam = cam.transformed(by: CGAffineTransform(scaleX: cameraRect.width / side, y: cameraRect.height / side))
                 .transformed(by: CGAffineTransform(translationX: cameraRect.minX, y: cameraRect.minY))
-            let bubble = cam.applyingFilter("CIBlendWithMask", parameters: [
+            var bubble = cam.applyingFilter("CIBlendWithMask", parameters: [
                 kCIInputBackgroundImageKey: CIImage.empty(),
                 kCIInputMaskImageKey: cameraMask,
             ])
-            if let cameraShadow { out = cameraShadow.composited(over: out) }
+            // Kameran kommer igång en stund efter skärmen: bubblan tonas in och växer lite i stället
+            // för att poppa fram.
+            let appear = Self.easeOut((s - cameraStart) / 0.3)
+            var shadow = cameraShadow
+            if appear < 0.999 {
+                let k = 0.9 + 0.1 * appear
+                let grow = CGAffineTransform(translationX: -cameraRect.midX, y: -cameraRect.midY)
+                    .concatenating(CGAffineTransform(scaleX: k, y: k))
+                    .concatenating(CGAffineTransform(translationX: cameraRect.midX, y: cameraRect.midY))
+                bubble = Self.withAlpha(bubble.transformed(by: grow), appear)
+                shadow = shadow.map { Self.withAlpha($0.transformed(by: grow), appear) }
+            }
+            if let shadow { out = shadow.composited(over: out) }
             out = bubble.composited(over: out)
         }
 

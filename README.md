@@ -177,11 +177,11 @@ the screen recording permission of the terminal it runs from.
 
 The recording engine, the editor, export, speech, masking of sensitive text, the flashback
 buffer and control from agents are done (see [`docs/FÄRDPLAN.md`](docs/FÄRDPLAN.md)). Per-app audio
-and HDR are in too. Recording at 120 fps (on ProMotion displays) and exporting at 120 are in,
-but the recording side has not been measured yet.
+and HDR are in too. Recording at 120 fps (on ProMotion displays) delivers about 108 frames per
+second on a full Retina display; exporting at 120 is in.
 
-Built and tested on macOS 26.1 on an Apple M5 only. Not yet tried with a real camera or
-with a window that moves during recording. Transcription has been measured on synthetic
+Built and tested on macOS 26.1 on an Apple M5 only, with the built-in camera, and with a window
+that moves during recording. The editor has not yet been tried hands-on with a mouse. Transcription has been measured on synthetic
 Swedish speech, not yet on a real microphone recording. There is no notarized binary release yet.
 
 `docs/utredningar/` holds the three research reports the app was planned from, unedited.

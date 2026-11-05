@@ -222,9 +222,23 @@ tal, film 0,57 MB, guide, 42 rader `log show` för Finder, zip 1,1 MB (`ditto -c
 - Export: syntetisk 120-fps-källa (ffmpeg `testsrc2`, 3 s) → MP4 1080p med `--fps 120`:
   `120/1`, 360 rutor, 360 unika (framemd5); med 60: 180 rutor, 180 unika. Fjädrarna är
   analytiska, så rörelsen är lika jämn i 120 som i 60.
-- Inspelning i 120: valet finns bara om en skärm har `maximumFramesPerSecond ≥ 120`.
-  **Inte uppmätt**: ScreenCaptureKit skickar bara rutor när bilden ändras, och det fanns ingen
-  rörelse att mäta mot (prova med en video eller scroll på en ProMotion-skärm).
+- Inspelning i 120: valet finns bara om en skärm har `maximumFramesPerSecond ≥ 120`. Uppmätt
+  med `--prov-bildfrekvens` (eget fönster där en ruta flyttas i varje bildruta, displaylänken 120
+  gånger/s), hela Retina-skärmen 3024×1964: **108 rutor/s** (90 %), median 8,33 ms, 95:e
+  percentilen 16,67 ms, längsta lucka 42 ms, inga tappade i skrivaren. I 60: 55 rutor/s, median
+  16,67 ms.
+- ⚠️ Första mätningarna gav långa svep av `idle`-rutor (1,0–2,5 s utan bilder), även i en
+  fristående SCK-ström med standardinställningar — skärmen var låst. Med låsskärmen ritas inga
+  fönster. Provlägena som mäter skärmens innehåll vägrar nu med låst skärm.
+
+## Kameran (2026-11-05)
+
+MacBook Pro-kameran, `--prov-inspelning 3 --kamera`:
+- Spåret: HEVC 1920×1080, ~27 rutor/s, börjar 0,5–0,75 s efter skärmen.
+- De första rutorna är nästan svarta (exponeringen ställer in sig, ~0,25–0,4 s): bubblan tonade
+  in en mörk cirkel. Nu hoppas rutor med medelluma under 24 över (högst 1,5 s); första sparade
+  rutan hade medelluma 157. Spårets start sparas i `meta.json` (`tracks[].start`) och bubblan
+  tonas in och växer från 90 % på 0,3 s därifrån, i stället för att poppa fram.
 
 ## Producenten via MCP (2026-11-05)
 

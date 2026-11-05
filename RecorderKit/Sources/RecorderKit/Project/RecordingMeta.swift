@@ -62,9 +62,13 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
         public var failed: Bool
         /// Appens bundle-id (bara `app`-spår): nyckeln för volymen i redigeringsläget.
         public var appID: String
+        /// Var på tidslinjen spåret börjar (s). Kameran kommer igång en stund efter skärmen;
+        /// bubblan tonas in därifrån. 0 i äldre paket.
+        public var start: Double
 
         public init(kind: TrackKind, file: String, deviceName: String = "", failed: Bool = false, appID: String = "") {
             self.kind = kind; self.file = file; self.deviceName = deviceName; self.failed = failed; self.appID = appID
+            self.start = 0
         }
 
         public init(from decoder: Decoder) throws {
@@ -74,6 +78,7 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
             deviceName = c.value(.deviceName, "")
             failed = c.value(.failed, false)
             appID = c.value(.appID, "")
+            start = c.value(.start, 0)
         }
     }
 

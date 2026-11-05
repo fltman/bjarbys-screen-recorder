@@ -257,9 +257,9 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
 
         for (kind, writer) in writers {
             let ok = await writer.finish()
-            if !ok || writer.appended == 0, let i = meta.tracks.firstIndex(where: { $0.kind == kind }) {
-                meta.tracks[i].failed = true
-            }
+            guard let i = meta.tracks.firstIndex(where: { $0.kind == kind }) else { continue }
+            if !ok || writer.appended == 0 { meta.tracks[i].failed = true }
+            if writer.firstPTS.isNumeric { meta.tracks[i].start = writer.firstPTS.seconds }
         }
         for (n, writer) in appWriters.enumerated() {
             let ok = await writer.finish()
@@ -364,9 +364,35 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         }
     }
 
+    /// Kameran ger några nästan svarta rutor innan exponeringen ställt in sig (~0,4 s på MacBook
+    /// Pro-kameran, uppmätt). De hoppas över, högst 1,5 s, så att spåret — och bubblans intoning —
+    /// börjar med en riktig bild. Bara på kamerans kö.
+    private var cameraWarmedUp = false
+    private var cameraFirstHost: CMTime?
+
     private func handleCamera(_ buffer: CMSampleBuffer, host: CMTime) {
         guard let t = clock.map(host) else { return }
+        if !cameraWarmedUp {
+            let first = cameraFirstHost ?? host
+            cameraFirstHost = first
+            if (host - first).seconds < 1.5, Self.meanLuma(buffer) < 24 { return }
+            cameraWarmedUp = true
+        }
         writers[.camera]?.append(buffer, at: t)
+    }
+
+    /// Medelluma (0–255) i ett glest rutnät av en 4:2:0-ruta.
+    static func meanLuma(_ buffer: CMSampleBuffer) -> Double {
+        guard let px = CMSampleBufferGetImageBuffer(buffer), CVPixelBufferIsPlanar(px) else { return 255 }
+        CVPixelBufferLockBaseAddress(px, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(px, .readOnly) }
+        guard let base = CVPixelBufferGetBaseAddressOfPlane(px, 0) else { return 255 }
+        let w = CVPixelBufferGetWidthOfPlane(px, 0), h = CVPixelBufferGetHeightOfPlane(px, 0)
+        let row = CVPixelBufferGetBytesPerRowOfPlane(px, 0)
+        let y = base.assumingMemoryBound(to: UInt8.self)
+        var sum = 0, n = 0
+        for gy in 1..<10 { for gx in 1..<16 { sum += Int(y[(h * gy / 10) * row + w * gx / 16]); n += 1 } }
+        return Double(sum) / Double(max(n, 1))
     }
 
     static func isCompleteFrame(_ buffer: CMSampleBuffer) -> Bool {

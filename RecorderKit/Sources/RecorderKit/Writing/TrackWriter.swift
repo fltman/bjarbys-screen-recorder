@@ -27,6 +27,8 @@ public final class TrackWriter: @unchecked Sendable {
     private var finished = false
 
     public private(set) var appended = 0
+    /// Första buffertens tid på inspelningens tidslinje (kameran kommer igång ~0,5 s efter skärmen).
+    public private(set) var firstPTS = CMTime.invalid
     public private(set) var dropped = 0
     public private(set) var failure: Error?
 
@@ -77,6 +79,7 @@ public final class TrackWriter: @unchecked Sendable {
             guard let retimed = Self.retime(buffer, to: pts) else { dropped += 1; return }
             if input.isReadyForMoreMediaData {
                 if input.append(retimed) {
+                    if appended == 0 { firstPTS = pts }
                     appended += 1
                     lastPTS = pts
                     lastEnd = duration.isNumeric ? pts + duration : pts
