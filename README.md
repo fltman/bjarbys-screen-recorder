@@ -55,6 +55,10 @@ is included; to have the app follow your system language instead, run
   screen (Vision OCR, locally) and blur, pixelate or cover them. The masks follow text that
   scrolls. Add your own areas too.
 
+**Polished screenshots**
+- A window, an area or the whole screen on the same background, with padding and a shadow that
+  follows the window's own rounded corners. Saved and copied to the clipboard.
+
 **Step-by-step guides**
 - Turn a recording into a guide: one finished image per click or keyboard shortcut, with what
   you said as the text (or "Click button «Export»" from the accessibility name). Markdown and a
@@ -63,7 +67,8 @@ is included; to have the app follow your system language instead, run
 **Control from agents, scripts and Shortcuts**
 - An MCP server built into the app: `--mcp` gives agents such as Claude Code tools to record
   the screen, transcribe, edit (format, Reel, captions, cuts, dead time, noise, loudness,
-  hiding sensitive text), render frames to look at, make a step-by-step guide, and export.
+  hiding sensitive text), render frames to look at, make a step-by-step guide, take polished
+  screenshots of an app's window, and export.
 - A URL scheme (`skarminspelare://spela-in`, `…/stoppa`, `…/paus`, `…/oppna?sokvag=…`) and
   Shortcuts actions for the app itself.
 

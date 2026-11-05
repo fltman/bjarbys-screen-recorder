@@ -26,6 +26,9 @@ final class AppSettings: ObservableObject {
     @AppStorage("teleprompterText") var teleprompterText: String = ""
     @AppStorage("teleprompterWPM") var teleprompterWPM: Double = 130
     @AppStorage("teleprompterFontSize") var teleprompterFontSize: Double = 26
+    /// Skärmdumparnas bakgrund (förval 0–7) och om de ska poleras alls.
+    @AppStorage("screenshotBackground") var screenshotBackground: Int = 0
+    @AppStorage("screenshotPolish") var screenshotPolish: Bool = true
 
     /// Inställningarna för transkribering, eller nil om whisper.cpp inte går att hitta.
     var whisperSetup: WhisperSetup? {

@@ -192,3 +192,10 @@ huvudskärmen + datorljud.
 - Färgskillnaden mot källan (51,102,204 → 50,114,213) finns likadant i MP4-exporten: provfilen
   från ffmpeg saknar färgmärkning och tolkas som BT.601 respektive BT.709. Riktiga inspelningar
   är märkta BT.709.
+
+## Polerade skärmdumpar (2026-11-05)
+
+- `SCContentFilter(desktopIndependentWindow:)` + `ignoreShadowsSingleWindow` ger fönstret i full
+  upplösning med genomskinliga, egna rundade hörn; skuggan görs ur bildens alfa och följer
+  formen. Finder-fönster: 1988×1076 med marginal. Område 600×400 pt → 1328×928.
+- Okänd app i MCP-verktyget svarar med listan över appar som har fönster på skärmen.

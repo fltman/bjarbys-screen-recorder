@@ -11,7 +11,7 @@ tagning, sedan redigerbar polish, sedan resten.
 | 3 | Transkript och redigering via text, utfyllnadsord/tystnad bort, undertexter, brusreducering, loudness, ducking. ⚠️ SpeechTranscriber kan inte svenska → KB-Whisper/whisper.cpp | klar 2026-11-05: transkript, text-redigering, undertexter (inbrända + .srt), dödtid, eh/öh, ducking, utjämning till −16 LUFS, brusreducering (Apples röstisolering) |
 | 4 | Maskning av känslig info: Vision-OCR, masker som följer texten, ogenomskinliga fyllningar | klar 2026-11-05 (egna masker justeras med reglage, inte genom att dra i bilden) |
 | 5 | Flashback-buffert (egen, SDK saknar SCClipBufferingOutput), App Intents, URL-schema, CLI + MCP, steg-för-steg-guide, felrapport | nästan klar 2026-11-05: MCP-server, URL-schema, Genvägar, steg-för-steg-guide, flashback-buffert. Kvar: felrapport |
-| 6 | HDR, 120 fps med jämn takt, ProRes 4444 med alfa, ljud per app (CATapDescription), teleprompter, stillbild/rullande skärmbild, delning till egen S3/R2 | påbörjad 2026-11-05: teleprompter, ProRes 4444 med alfa |
+| 6 | HDR, 120 fps med jämn takt, ProRes 4444 med alfa, ljud per app (CATapDescription), teleprompter, stillbild/rullande skärmbild, delning till egen S3/R2 | påbörjad 2026-11-05: teleprompter, ProRes 4444 med alfa, polerade skärmdumpar |
 
 ## Kvar från fas 1–2 att pröva eller göra
 
@@ -23,6 +23,10 @@ tagning, sedan redigerbar polish, sedan resten.
 
 ## Byggt efter fas 2
 
+- Polerade skärmdumpar (fas 6, 2026-11-05): fönster (utan systemets skugga, med egna hörn),
+  område eller hela skärmen på filmernas bakgrund med marginal och skugga som följer formen.
+  Menyn sparar i biblioteket under Skärmdumpar och kopierar till urklipp; MCP-verktyget
+  `screenshot` tar en apps största fönster — för README-bilder.
 - Teleprompter (fas 6, 2026-11-05): manus i ett eget fönster, rullar i ord/min i en ruta högt
   upp vid kameran under inspelningen, pausar med inspelningen. Klick i appens egna paneler
   (teleprompter, HUD, kamerabubbla) loggas inte längre — de blev annars zoomar mot knappar

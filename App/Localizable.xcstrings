@@ -1157,6 +1157,23 @@
         }
       }
     },
+    "Fönster …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window …"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fönster …"
+          }
+        }
+      }
+    },
     "För lite ledigt diskutrymme för flashback.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1238,6 +1255,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Förstoring"
+          }
+        }
+      }
+    },
+    "Förval %lld": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preset %lld"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Förval %lld"
           }
         }
       }
@@ -1340,6 +1374,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hela inspelningen"
+          }
+        }
+      }
+    },
+    "Hela skärmen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole screen"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hela skärmen"
           }
         }
       }
@@ -2245,6 +2296,23 @@
         }
       }
     },
+    "Med bakgrund och skugga": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With background and shadow"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Med bakgrund och skugga"
+          }
+        }
+      }
+    },
     "Med mikrofon": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2534,6 +2602,23 @@
         }
       }
     },
+    "Område …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Area …"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Område …"
+          }
+        }
+      }
+    },
     "Oskärpa": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2785,6 +2870,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Skärm"
+          }
+        }
+      }
+    },
+    "Skärmdump": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screenshot"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skärmdump"
+          }
+        }
+      }
+    },
+    "Skärmdumpen är kopierad och sparad": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The screenshot is copied and saved"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skärmdumpen är kopierad och sparad"
+          }
+        }
+      }
+    },
+    "Skärmen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skärmen"
           }
         }
       }

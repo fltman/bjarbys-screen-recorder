@@ -45,6 +45,19 @@ struct MenuBarContent: View {
             Divider()
         }
         flashbackMenu
+        Menu("Skärmdump") {
+            Button("Fönster …") { app.screenshots.window() }
+            Button("Område …") { app.screenshots.area() }
+            Button("Hela skärmen") { app.screenshots.fullScreen() }
+            Divider()
+            Toggle("Med bakgrund och skugga", isOn: $settings.screenshotPolish)
+            Picker("Bakgrund", selection: $settings.screenshotBackground) {
+                ForEach(EditProject.Background.presets.indices, id: \.self) { i in
+                    Text("Förval \(i + 1)").tag(i)
+                }
+            }
+            .disabled(!settings.screenshotPolish)
+        }
         Divider()
         Button("Bibliotek …") { app.showLibrary() }
         Button("Behörigheter …") { app.showPermissions() }

@@ -156,6 +156,15 @@ enum MCPServer {
                                     "times": ["type": "array", "items": ["type": "number"], "description": "Output times in seconds."],
                                     "directory": ["type": "string", "description": "Where to write the PNGs (default: a temporary folder)."]],
                                    required: ["recording", "times"])],
+            ["name": "screenshot",
+             "description": "Take a polished screenshot (on a background, with padding, rounded corners and shadow) of an app's window, the main display or an area. Returns the PNG path. Good for README images.",
+             "inputSchema": schema(["app": ["type": "string", "description": "App name (e.g. \"Safari\"); its largest on-screen window is taken."],
+                                    "window_title": ["type": "string", "description": "Part of the window title, to pick among the app's windows."],
+                                    "area": ["type": "array", "items": ["type": "number"], "minItems": 4, "maxItems": 4,
+                                             "description": "[x, y, width, height] in points on the main display (top-left origin)."],
+                                    "polish": ["type": "boolean", "description": "Background, padding and shadow (default true)."],
+                                    "background_preset": ["type": "integer", "minimum": 0, "maximum": 7],
+                                    "path": ["type": "string"]])],
             ["name": "make_guide",
              "description": "Make a step-by-step guide from the recording: one finished image per click or keyboard shortcut, with what was said as the text. Writes guide.md, guide.html (self-contained) and PNGs.",
              "inputSchema": schema(["recording": recordingArg,
@@ -200,6 +209,7 @@ enum MCPServer {
         case "render_frames": return try await renderFrames(a)
         case "export": return try await export(a)
         case "make_guide": return try await makeGuide(a)
+        case "screenshot": return try await screenshot(a)
         default: throw ToolError("Unknown tool \(name)")
         }
     }
@@ -393,6 +403,53 @@ enum MCPServer {
             out.append(file.path)
         }
         return "Rendered \(out.count) frames (\(Int(plan.canvas.width))×\(Int(plan.canvas.height)), output length \(String(format: "%.1f", plan.outputDuration)) s):\n" + out.joined(separator: "\n")
+    }
+
+    private static func screenshot(_ a: [String: Any]) async throws -> String {
+        guard CGPreflightScreenCaptureAccess() else {
+            throw ToolError("Screen recording permission is missing for the process that started this server.")
+        }
+        let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
+        let own = content.applications.filter { $0.bundleIdentifier == Bundle.main.bundleIdentifier }
+        var image: CGImage
+        var isWindow = false
+        var name = "Skärmen"
+        if let app = a["app"] as? String {
+            let title = (a["window_title"] as? String)?.lowercased()
+            let windows = content.windows.filter { w in
+                guard let owner = w.owningApplication, w.isOnScreen, w.windowLayer == 0, w.frame.width > 50 else { return false }
+                let match = owner.applicationName.localizedCaseInsensitiveContains(app)
+                    || owner.bundleIdentifier.localizedCaseInsensitiveContains(app)
+                return match && (title.map { (w.title ?? "").lowercased().contains($0) } ?? true)
+            }
+            guard let window = windows.max(by: { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }) else {
+                let names = Set(content.windows.compactMap { $0.isOnScreen && $0.windowLayer == 0 ? $0.owningApplication?.applicationName : nil })
+                throw ToolError("No on-screen window for \"\(app)\". Apps with windows: \(names.sorted().joined(separator: ", "))")
+            }
+            image = try await Screenshot.capture(window: window)
+            isWindow = true
+            name = window.owningApplication?.applicationName ?? app
+        } else {
+            guard let display = content.displays.first(where: { $0.displayID == CGMainDisplayID() }) ?? content.displays.first else {
+                throw ToolError("No display found.")
+            }
+            let area = (a["area"] as? [Double]) ?? (a["area"] as? [NSNumber])?.map(\.doubleValue)
+            let rect = area.flatMap { $0.count == 4 ? CGRect(x: $0[0], y: $0[1], width: $0[2], height: $0[3]) : nil }
+            image = try await Screenshot.capture(display: display, area: rect, excluding: own)
+            if rect != nil { name = "Område" }
+        }
+        if a["polish"] as? Bool ?? true {
+            var style = Screenshot.Style()
+            if let i = a["background_preset"] as? Int, EditProject.Background.presets.indices.contains(i) {
+                style.background = EditProject.Background.presets[i]
+            }
+            guard let polished = Screenshot.polish(image, style: style, isWindow: isWindow) else { throw ToolError("Polishing failed.") }
+            image = polished
+        }
+        let url = (a["path"] as? String).map { URL(fileURLWithPath: NSString(string: $0).expandingTildeInPath) }
+            ?? Screenshot.newURL(name: name)
+        try Screenshot.writePNG(image, to: url)
+        return "Screenshot (\(image.width)×\(image.height)): \(url.path)"
     }
 
     private static func makeGuide(_ a: [String: Any]) async throws -> String {

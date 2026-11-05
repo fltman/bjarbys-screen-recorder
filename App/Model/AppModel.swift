@@ -13,6 +13,7 @@ final class AppModel: ObservableObject {
     let library = LibraryModel()
     let recorder: RecordingController
     private(set) lazy var flashback = FlashbackController(settings: settings)
+    private(set) lazy var screenshots = ScreenshotController(settings: settings)
 
     private var libraryWindow: NSWindow?
     private var permissionsWindow: NSWindow?
