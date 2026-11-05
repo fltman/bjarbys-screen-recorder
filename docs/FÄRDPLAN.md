@@ -69,6 +69,9 @@ tagning, sedan redigerbar polish, sedan resten.
 
 - Kortkommandon i filmen (2026-11-05): bubbla nere eller uppe i mitten, räknar upp
   upprepningar ("⌘Z ×3"), visas i utdatatid så att 4×-delar inte blinkar förbi.
+- Ljudnivå vid export (2026-11-05): Som den är / −14 LUFS / −16 LUFS. Hela mixen (eller
+  utsnittet) mäts i stereo enligt BS.1770 och varje ljudbuffert skalas; förstärkningen begränsas
+  så att topparna stannar under −1 dBFS. MCP: `loudness`.
 - Strålkastare och fästpunkter (2026-11-05): zoomblockets tredje sort dämpar skärmytan (55 %)
   utom en mjuk cirkel kring markören. Zoomblock och lager som dras i tidslinjen fäster (6 px)
   mot spelhuvudet, I/O, snitten och filmens ändar, med en gul linje; ⌘ stänger av.

@@ -472,9 +472,14 @@ enum TestMode {
             let cut = value(after: "--utsnitt", in: CommandLine.arguments)?.split(separator: ",").compactMap { Double($0) }
             let exporter = Exporter(recording: rec, project: project, preset: preset,
                                     fps: value(after: "--fps", in: CommandLine.arguments).flatMap { Int($0) },
-                                    range: cut.flatMap { $0.count == 2 ? $0[0]...$0[1] : nil })
+                                    range: cut.flatMap { $0.count == 2 ? $0[0]...$0[1] : nil },
+                                    loudnessTarget: value(after: "--ljudniva", in: CommandLine.arguments).flatMap { Double($0) })
             try await exporter.run(to: out) { _ in }
             let size = (try? FileManager.default.attributesOfItem(atPath: out.path)[.size] as? Int) ?? 0
+            if let l = exporter.loudnessReport {
+                print(String(format: "{\"uppmatt_lufs\":%.2f,\"forstarkning_db\":%.2f,\"begransad\":%@}", l.measured, l.gainDB,
+                             l.limitedByPeaks ? "true" : "false"))
+            }
             print(String(format: "{\"fil\":\"%@\",\"sekunder\":%.2f,\"byte\":%d,\"langd\":%.3f}",
                          out.path, Date().timeIntervalSince(started), size,
                          exporter.range.map { $0.upperBound - $0.lowerBound } ?? TimeMap(segments: project.segments).outputDuration))

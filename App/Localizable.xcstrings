@@ -2109,6 +2109,23 @@
         }
       }
     },
+    "Hela filmens ljud mäts (BS.1770) och jämnas ut till nivån, utan att topparna går över −1 dBFS.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The whole film's audio is measured (BS.1770) and evened out to the level, with peaks kept under −1 dBFS."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hela filmens ljud mäts (BS.1770) och jämnas ut till nivån, utan att topparna går över −1 dBFS."
+          }
+        }
+      }
+    },
     "Hela inspelningen": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3312,6 +3329,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ljudeffekt …"
+          }
+        }
+      }
+    },
+    "Ljudnivå": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loudness"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ljudnivå"
           }
         }
       }
@@ -6746,6 +6780,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Övrigt datorljud"
+          }
+        }
+      }
+    },
+    "−14 LUFS (YouTube, sociala medier)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "−14 LUFS (YouTube, social media)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "−14 LUFS (YouTube, sociala medier)"
+          }
+        }
+      }
+    },
+    "−16 LUFS (podd, Apple)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "−16 LUFS (podcast, Apple)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "−16 LUFS (podd, Apple)"
           }
         }
       }

@@ -293,6 +293,12 @@ vänster kanal:
 - ⚠️ Första mätningen visade ingen övertoning: den kördes mot en appbinär byggd före ändringen
   (`test.sh` bygger bara paketet). Mät alltid efter xcodebuild.
 
+## Ljudnivå vid export (2026-11-05)
+
+En 440 Hz-ton (−32 dBFS) som ljudklipp, MP4-export, mätt med ffmpeg `ebur128`: utan utjämning
+−32,7 LUFS (vår mätning −32,73); med mål −14 → −14,0 LUFS, med −16 → −16,0. Stereomätningen
+summerar kanalernas effekt (BS.1770): samma signal i båda kanalerna är 3,01 dB över en kanal.
+
 ## Lupp (2026-11-05)
 
 Provinspelning med en påhittad musrörelse och ett lupp-block (2,5×): luppen följer markören och

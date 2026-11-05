@@ -274,6 +274,7 @@ enum MCPServer {
                                     "subtitles": ["type": "boolean", "description": "Also write an .srt next to the video (default true if transcribed)."],
                                     "fps": ["type": "integer", "description": "Frame rate of the file (default: the preset's, 60; use 120 for a 120 fps recording)."],
                                     "upload": ["type": "boolean", "description": "Upload to the S3/R2 bucket set up under Sharing in the app and return the public link."],
+                                    "loudness": ["type": "number", "description": "Even out the whole film's audio to this loudness in LUFS (e.g. -14 for YouTube, -16 for podcasts), peaks kept under -1 dBFS."],
                                     "range": ["type": "array", "items": ["type": "number"], "minItems": 2, "maxItems": 2,
                                               "description": "Only this excerpt, [start, end] in OUTPUT seconds (the edited film's time), e.g. a short social clip."]],
                                    required: ["recording"])],
@@ -817,8 +818,14 @@ enum MCPServer {
         let started = Date()
         let bounds = (a["range"] as? [Any])?.compactMap(number)
         let range = bounds.flatMap { $0.count == 2 && $0[1] > $0[0] ? $0[0]...$0[1] : nil }
-        try await Exporter(recording: rec, project: project, preset: preset, fps: a["fps"] as? Int, range: range).run(to: url) { _ in }
+        let exporter = Exporter(recording: rec, project: project, preset: preset, fps: a["fps"] as? Int, range: range,
+                                loudnessTarget: number(a["loudness"]))
+        try await exporter.run(to: url) { _ in }
         var text = String(format: "Exported %@ in %.1f s: %@", preset.name, Date().timeIntervalSince(started), url.path)
+        if let l = exporter.loudnessReport {
+            text += String(format: "\nLoudness: measured %.1f LUFS, gain %+.1f dB%@.", l.measured, l.gainDB,
+                           l.limitedByPeaks ? " (limited by peaks, under the target)" : "")
+        }
         if a["subtitles"] as? Bool ?? true, preset.id != "gif", let words = rec.transcript?.words, !words.isEmpty {
             let srt = url.deletingPathExtension().appendingPathExtension("srt")
             let captions = Captions(words: words, timeMap: TimeMap(segments: project.segments))

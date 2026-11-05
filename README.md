@@ -54,6 +54,8 @@ is included; to have the app follow your system language instead, run
   dragging its ends on the timeline — nothing is removed from the recording, so you can drag
   it back out — and ⌥-drag an end to stretch the part to a new speed. Drag a selected part to
   move it; Q and W trim the start and end of the part under the playhead to the playhead.
+- Even out the whole film's audio on export to −14 LUFS (YouTube) or −16 LUFS (podcasts),
+  measured per BS.1770 and checked against ffmpeg, with peaks kept under −1 dBFS.
 - Mark an excerpt with I and O (X clears) and export only that, e.g. a short social clip, with
   its captions; or save the finished frame at the playhead as a 4K PNG (a thumbnail).
 - Layers: title cards, callouts around the button you clicked, fact boxes, QR codes, free

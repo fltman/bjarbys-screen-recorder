@@ -220,3 +220,13 @@ import Foundation
         for t in stride(from: 6.5, through: 7.5, by: 0.1) { #expect(abs(main.value(at: t) + alt.value(at: t) - 1) < 1e-9) }
     }
 }
+
+@Suite struct StereoLoudnessTests {
+    /// Samma signal i båda kanalerna är 3,01 dB starkare än i en kanal (BS.1770 summerar effekt).
+    @Test func stereoIsThreeDecibelsAboveMono() throws {
+        let sine = (0..<(48_000 * 3)).map { Float(0.1 * sin(2 * .pi * 1000 * Double($0) / 48_000)) }
+        let mono = try #require(Loudness.integrated(sine))
+        let stereo = try #require(Loudness.integrated(channels: [sine, sine]))
+        #expect(abs(stereo - mono - 3.01) < 0.02)
+    }
+}

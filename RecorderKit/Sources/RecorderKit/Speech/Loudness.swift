@@ -18,23 +18,28 @@ public enum Loudness {
 
     /// Integrerad ljudstyrka för monosampel i 48 kHz, eller nil om allt är tystnad.
     public static func integrated(_ samples: [Float], sampleRate: Double = 48_000) -> Double? {
-        precondition(sampleRate == 48_000, "K-viktningens koefficienter gäller 48 kHz")
-        // Steg 1: högsoffilter (huvudets akustik). Steg 2: högpass (RLB).
-        var x = samples.map(Double.init)
-        biquad(&x, b: [1.53512485958697, -2.69169618940638, 1.19839281085285],
-               a: [-1.69065929318241, 0.73248077421585])
-        biquad(&x, b: [1.0, -2.0, 1.0], a: [-1.99004745483398, 0.99007225036621])
+        integrated(channels: [samples], sampleRate: sampleRate)
+    }
 
+    /// Integrerad ljudstyrka för flera kanaler (vänster, höger …): varje kanal K-viktas och
+    /// blockens medeleffekt summeras över kanalerna (vikt 1 för vänster och höger).
+    public static func integrated(channels: [[Float]], sampleRate: Double = 48_000) -> Double? {
+        precondition(sampleRate == 48_000, "K-viktningens koefficienter gäller 48 kHz")
         let block = Int(0.4 * sampleRate), step = Int(0.1 * sampleRate)
-        guard x.count >= block else { return nil }
-        // Löpande summa av kvadraterna, så att varje block kostar O(1).
-        var prefix = [Double](repeating: 0, count: x.count + 1)
-        for i in x.indices { prefix[i + 1] = prefix[i] + x[i] * x[i] }
-        var powers: [Double] = []
-        var start = 0
-        while start + block <= x.count {
-            powers.append((prefix[start + block] - prefix[start]) / Double(block))
-            start += step
+        guard let n = channels.map(\.count).min(), n >= block else { return nil }
+        var powers = [Double](repeating: 0, count: (n - block) / step + 1)
+        for samples in channels {
+            // Steg 1: högsoffilter (huvudets akustik). Steg 2: högpass (RLB).
+            var x = samples.prefix(n).map(Double.init)
+            biquad(&x, b: [1.53512485958697, -2.69169618940638, 1.19839281085285],
+                   a: [-1.69065929318241, 0.73248077421585])
+            biquad(&x, b: [1.0, -2.0, 1.0], a: [-1.99004745483398, 0.99007225036621])
+            // Löpande summa av kvadraterna, så att varje block kostar O(1).
+            var prefix = [Double](repeating: 0, count: x.count + 1)
+            for i in x.indices { prefix[i + 1] = prefix[i] + x[i] * x[i] }
+            for (k, start) in stride(from: 0, through: n - block, by: step).enumerated() where k < powers.count {
+                powers[k] += (prefix[start + block] - prefix[start]) / Double(block)
+            }
         }
         func lufs(_ p: Double) -> Double { -0.691 + 10 * log10(max(p, 1e-20)) }
         let absolute = powers.filter { lufs($0) > -70 }
@@ -81,6 +86,46 @@ public enum Loudness {
         guard let lufs = integrated(samples) else { return nil }
         let peak = samples.reduce(Float(0)) { max($0, abs($1)) }
         return Measurement(integrated: lufs, peak: Double(peak))
+    }
+
+    /// Hela ljudmixen i en komposition (eller ett utsnitt), som den låter i den färdiga filmen:
+    /// stereo, 48 kHz.
+    public static func measureMix(_ composition: AVComposition, audioMix: AVAudioMix,
+                                  range: CMTimeRange? = nil) async throws -> Measurement? {
+        let tracks = try await composition.loadTracks(withMediaType: .audio)
+        guard !tracks.isEmpty else { return nil }
+        let reader = try AVAssetReader(asset: composition)
+        if let range { reader.timeRange = range }
+        let out = AVAssetReaderAudioMixOutput(audioTracks: tracks, audioSettings: [
+            AVFormatIDKey: kAudioFormatLinearPCM, AVLinearPCMBitDepthKey: 32, AVLinearPCMIsFloatKey: true,
+            AVLinearPCMIsBigEndianKey: false, AVLinearPCMIsNonInterleaved: false,
+            AVNumberOfChannelsKey: 2, AVSampleRateKey: 48_000,
+        ])
+        out.audioMix = audioMix
+        reader.add(out)
+        guard reader.startReading() else { throw reader.error ?? WhisperError.noAudio }
+        var left: [Float] = [], right: [Float] = []
+        var peak: Float = 0
+        while let buffer = out.copyNextSampleBuffer() {
+            guard let block = CMSampleBufferGetDataBuffer(buffer) else { continue }
+            let length = CMBlockBufferGetDataLength(block)
+            var chunk = [Float](repeating: 0, count: length / 4)
+            CMBlockBufferCopyDataBytes(block, atOffset: 0, dataLength: length, destination: &chunk)
+            for i in stride(from: 0, to: chunk.count - 1, by: 2) {
+                left.append(chunk[i]); right.append(chunk[i + 1])
+                peak = max(peak, abs(chunk[i]), abs(chunk[i + 1]))
+            }
+        }
+        guard let lufs = integrated(channels: [left, right]) else { return nil }
+        return Measurement(integrated: lufs, peak: Double(peak))
+    }
+
+    /// Förstärkningen (dB) som tar en färdig stereomix till `target`, begränsad så att topparna
+    /// stannar under `peakCeiling`.
+    public static func mixGain(for m: Measurement, target: Double) -> (db: Double, limitedByPeaks: Bool) {
+        let wanted = target - m.integrated
+        let headroom = peakCeiling - 20 * log10(max(m.peak, 1e-9))
+        return (min(wanted, headroom), headroom < wanted)
     }
 
     /// Förstärkningen (linjär) som tar ett monospår till `target` i den färdiga stereofilmen,

@@ -17,6 +17,8 @@ struct ExportSheet: View {
     @State private var sharedURL: URL?
     /// Bara det markerade utsnittet (I–O), när det finns ett.
     @State private var onlyMarked = true
+    /// Hela ljudets ljudstyrka i filmen: 0 = som det är, annars målet i LUFS.
+    @AppStorage("exportLoudness") private var loudness = 0.0
 
     /// Längden som exporteras: utsnittet om det är valt, annars hela filmen.
     private var exportedDuration: Double {
@@ -73,6 +75,15 @@ struct ExportSheet: View {
                 Toggle("Bara det markerade, \(TransportTime.format(r.lowerBound))–\(TransportTime.format(r.upperBound)) (\(AppLocale.format("%.1f", r.upperBound - r.lowerBound)) s)",
                        isOn: $onlyMarked)
                     .disabled(progress != nil)
+            }
+            if presetID != "gif" {
+                Picker("Ljudnivå", selection: $loudness) {
+                    Text("Som den är").tag(0.0)
+                    Text("−14 LUFS (YouTube, sociala medier)").tag(-14.0)
+                    Text("−16 LUFS (podd, Apple)").tag(-16.0)
+                }
+                .disabled(progress != nil)
+                .help("Hela filmens ljud mäts (BS.1770) och jämnas ut till nivån, utan att topparna går över −1 dBFS.")
             }
             if model.plan.captions != nil && presetID != "gif" {
                 Toggle("Spara undertexter (.srt) bredvid filmen", isOn: $subtitles)
@@ -233,7 +244,8 @@ struct ExportSheet: View {
         model.player.pause()
         let fps = model.recording.meta.fps > 60 && fullFrameRate ? model.recording.meta.fps : nil
         let range = onlyMarked ? model.markedRange : nil
-        let exporter = Exporter(recording: model.recording, project: model.project, preset: preset, fps: fps, range: range)
+        let exporter = Exporter(recording: model.recording, project: model.project, preset: preset, fps: fps, range: range,
+                                loudnessTarget: loudness < 0 && presetID != "gif" ? loudness : nil)
         self.exporter = exporter
         Task {
             do {

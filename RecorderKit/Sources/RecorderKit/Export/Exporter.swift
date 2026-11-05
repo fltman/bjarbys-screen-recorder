@@ -101,9 +101,14 @@ public final class Exporter: @unchecked Sendable {
     public let fps: Int
     /// Bara ett utsnitt av filmen (utdatatid, s), eller nil = hela.
     public let range: ClosedRange<Double>?
+    /// Jämna ut hela ljudet till den här ljudstyrkan (LUFS), t.ex. −14 för YouTube, eller nil.
+    public let loudnessTarget: Double?
+    /// Vad mätningen gav och hur mycket ljudet ändrades (när `loudnessTarget` är satt).
+    public private(set) var loudnessReport: (measured: Double, gainDB: Double, limitedByPeaks: Bool)?
 
     public init(recording: LoadedRecording, project: EditProject, preset: ExportPreset, fps: Int? = nil,
-                range: ClosedRange<Double>? = nil) {
+                range: ClosedRange<Double>? = nil, loudnessTarget: Double? = nil) {
+        self.loudnessTarget = loudnessTarget
         self.recording = recording
         self.project = project
         self.preset = preset
@@ -152,6 +157,16 @@ public final class Exporter: @unchecked Sendable {
         videoOut.alwaysCopiesSampleData = false
         reader.add(videoOut)
         var audioOut: AVAssetReaderAudioMixOutput?
+        let mix = range == nil ? built.audioMix
+            : CompositionBuilder.audioMix(for: built.composition, plan: built.plan, appIDs: recording.apps.map(\.id), edges: span.seconds)
+        // Ljudstyrkan: hela mixen (eller utsnittet) mäts först, sedan skalas varje buffert.
+        var gain: Float = 1
+        if let target = loudnessTarget, !audioTracks.isEmpty,
+           let m = try await Loudness.measureMix(built.composition, audioMix: mix, range: span.time) {
+            let g = Loudness.mixGain(for: m, target: target)
+            gain = Float(pow(10, g.db / 20))
+            loudnessReport = (m.integrated, g.db, g.limitedByPeaks)
+        }
         if !audioTracks.isEmpty {
             let out = AVAssetReaderAudioMixOutput(audioTracks: audioTracks, audioSettings: [
                 AVFormatIDKey: kAudioFormatLinearPCM,
@@ -161,8 +176,7 @@ public final class Exporter: @unchecked Sendable {
                 AVLinearPCMIsFloatKey: true,
                 AVLinearPCMIsNonInterleaved: false,
             ])
-            out.audioMix = range == nil ? built.audioMix
-                : CompositionBuilder.audioMix(for: built.composition, plan: built.plan, appIDs: recording.apps.map(\.id), edges: span.seconds)
+            out.audioMix = mix
             out.audioTimePitchAlgorithm = .spectral
             reader.add(out)
             audioOut = out
@@ -209,7 +223,7 @@ public final class Exporter: @unchecked Sendable {
             }
             if let audioOut, let audioIn {
                 group.addTask {
-                    await Self.pump(audioOut, into: audioIn, queue: "skarminspelare.export.audio") { _ in }
+                    await Self.pump(audioOut, into: audioIn, queue: "skarminspelare.export.audio", gain: gain) { _ in }
                 }
             }
         }
@@ -276,7 +290,7 @@ public final class Exporter: @unchecked Sendable {
 
     /// Flyttar buffertar från läsare till skrivare tills läsaren är slut.
     private static func pump(_ output: AVAssetReaderOutput, into input: AVAssetWriterInput, queue label: String,
-                             progress: @escaping (Double) -> Void) async {
+                             gain: Float = 1, progress: @escaping (Double) -> Void) async {
         await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
             let queue = DispatchQueue(label: label)
             var finished = false
@@ -290,6 +304,17 @@ public final class Exporter: @unchecked Sendable {
                         return
                     }
                     progress(CMSampleBufferGetPresentationTimeStamp(buffer).seconds)
+                    // Ljudstyrkan: 32-bitars flyttal från läsaren, skalas på plats.
+                    if gain != 1, let block = CMSampleBufferGetDataBuffer(buffer) {
+                        var length = 0, total = 0
+                        var pointer: UnsafeMutablePointer<CChar>?
+                        if CMBlockBufferGetDataPointer(block, atOffset: 0, lengthAtOffsetOut: &length, totalLengthOut: &total,
+                                                       dataPointerOut: &pointer) == noErr, let pointer, length == total {
+                            pointer.withMemoryRebound(to: Float.self, capacity: total / 4) { p in
+                                for i in 0..<(total / 4) { p[i] *= gain }
+                            }
+                        }
+                    }
                     // Core Image ritar förmultiplicerad alfa; säg det till kodaren (ProRes 4444).
                     if let image = CMSampleBufferGetImageBuffer(buffer) {
                         CVBufferSetAttachment(image, kCVImageBufferAlphaChannelModeKey,
