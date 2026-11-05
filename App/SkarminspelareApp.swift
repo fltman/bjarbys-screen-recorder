@@ -71,10 +71,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             let app = AppModel.shared
             let hk = HotKeys.shared
-            hk.register(15, id: HotKeyID.toggleRecording) { app.recorder.toggleFromHotKey() } // R
-            hk.register(35, id: HotKeyID.pause) { app.recorder.togglePause() }                // P
-            hk.register(0, id: HotKeyID.area) { app.recorder.recordArea() }                   // A
-            hk.register(1, id: HotKeyID.flashback) { app.flashback.save() }                   // S
+            hk.register(.toggleRecording) { app.recorder.toggleFromHotKey() }
+            hk.register(.pause) { app.recorder.togglePause() }
+            hk.register(.area) { app.recorder.recordArea() }
+            hk.register(.flashback) { app.flashback.save() }
             app.flashback.apply()
             Task {
                 _ = await app.library.recoverUnfinished(excluding: nil)

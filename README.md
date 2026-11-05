@@ -19,7 +19,8 @@ is included; to have the app follow your system language instead, run
 - A whole display, a window or an app through the system picker, or an area you drag out.
 - A 3-2-1 countdown, then a floating panel with time, level meters, pause, stop and
   discard. It warns about a silent microphone, a disk running full and tracks that stop.
-- Global shortcuts: ⌃⌥⌘R start/stop, ⌃⌥⌘P pause, ⌃⌥⌘A record an area.
+- Global shortcuts: ⌃⌥⌘R start/stop, ⌃⌥⌘P pause, ⌃⌥⌘A record an area, ⌃⌥⌘S save the
+  flashback — all changeable under Settings › Keyboard Shortcuts.
 - The app's own windows never end up in the recording.
 - HDR on HDR displays: 10-bit BT.2020 PQ, exported as HDR (HLG, HEVC 10-bit) or as SDR with
   white kept white.

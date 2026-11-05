@@ -389,6 +389,7 @@ enum TestMode {
             try await shot("hud", NSSize(width: 360, height: 140), HUDView(controller: app.recorder).padding(10), dark: true)
             try await shot("manus", NSSize(width: 560, height: 460), ScriptEditorView(settings: app.settings))
             try await shot("delning", NSSize(width: 520, height: 520), SharingSettingsView())
+            try await shot("kortkommandon", NSSize(width: 520, height: 300), HotKeySettingsView())
             let model = EditorModel(recording: try LoadedRecording.load(RecordingBundle(url: bundle)))
             for _ in 0..<40 where model.thumbnails.isEmpty || model.player.currentItem == nil {
                 try await Task.sleep(for: .milliseconds(100))

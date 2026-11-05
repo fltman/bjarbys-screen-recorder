@@ -6,6 +6,7 @@ struct MenuBarContent: View {
     @ObservedObject private var flashback = AppModel.shared.flashback
     @ObservedObject var recorder: RecordingController
     @ObservedObject var settings: AppSettings
+    @ObservedObject private var hotKeys = HotKeys.shared
 
     var body: some View {
         if recorder.phase == .recording {
@@ -17,14 +18,14 @@ struct MenuBarContent: View {
         } else {
             // Kortkommandona visas i menyn (de globala gäller också när menyn är stängd).
             Button("Spela in skärmen") { recorder.recordDisplayUnderMouse() }
-                .keyboardShortcut("r", modifiers: [.control, .option, .command])
+                .keyboardShortcut(hotKeys.binding(.toggleRecording).keyboardShortcut)
                 .disabled(recorder.isBusy)
             Button("Spela in fönster …") { recorder.recordWindow() }
                 .disabled(recorder.isBusy)
             Button("Spela in program …") { recorder.recordApplication() }
                 .disabled(recorder.isBusy)
             Button("Spela in område …") { recorder.recordArea() }
-                .keyboardShortcut("a", modifiers: [.control, .option, .command])
+                .keyboardShortcut(hotKeys.binding(.area).keyboardShortcut)
                 .disabled(recorder.isBusy)
             Divider()
             Picker("Mikrofon", selection: $settings.micID) {
@@ -88,6 +89,7 @@ struct MenuBarContent: View {
         Button("Bibliotek …") { app.showLibrary() }
         Menu("Inställningar") {
             Button("Delning …") { app.showSharingSettings() }
+            Button("Kortkommandon …") { app.showHotKeySettings() }
             Button("Behörigheter …") { app.showPermissions() }
         }
         Divider()
@@ -98,7 +100,7 @@ struct MenuBarContent: View {
     @ViewBuilder private var flashbackMenu: some View {
         if flashback.isRunning {
             Button(flashback.isSaving ? String(localized: "Sparar …")
-                                      : String(localized: "Spara senaste \(settings.flashbackMinutes) min  (⌃⌥⌘S)")) {
+                                      : String(localized: "Spara senaste \(settings.flashbackMinutes) min  (\(hotKeys.binding(.flashback).display))")) {
                 flashback.save()
             }
             .disabled(flashback.isSaving)

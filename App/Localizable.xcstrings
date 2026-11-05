@@ -953,6 +953,23 @@
         }
       }
     },
+    "Dra upp ett område (%@)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag out an area (%@)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dra upp ett område (%@)"
+          }
+        }
+      }
+    },
     "Dra upp ett område (⌃⌥⌘A)": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1446,6 +1463,23 @@
         }
       }
     },
+    "Fortsätt (%@)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume (%@)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortsätt (%@)"
+          }
+        }
+      }
+    },
     "Fortsätt (⌃⌥⌘P)": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1718,6 +1752,23 @@
         }
       }
     },
+    "Gäller överallt, också när appen inte är framme. Klicka på ett kortkommando och tryck det nya (med ⌘, ⌃ eller ⌥). Esc avbryter.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Works everywhere, also when the app is not in front. Click a shortcut and press the new one (with ⌘, ⌃ or ⌥). Esc cancels."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gäller överallt, också när appen inte är framme. Klicka på ett kortkommando och tryck det nya (med ⌘, ⌃ eller ⌥). Esc avbryter."
+          }
+        }
+      }
+    },
     "Gör om (⇧⌘Z)": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1816,6 +1867,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hela skärmen"
+          }
+        }
+      }
+    },
+    "Hela skärmen under pekaren (%@)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The whole screen under the pointer (%@)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hela skärmen under pekaren (%@)"
           }
         }
       }
@@ -2721,6 +2789,23 @@
         }
       }
     },
+    "Kortkommandon …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keyboard Shortcuts…"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kortkommandon …"
+          }
+        }
+      }
+    },
     "Kortnummer": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3125,6 +3210,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Med mikrofon"
+          }
+        }
+      }
+    },
+    "Mellanslag": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Space"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mellanslag"
           }
         }
       }
@@ -3554,6 +3656,23 @@
         }
       }
     },
+    "Pausa (%@)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause (%@)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausa (%@)"
+          }
+        }
+      }
+    },
     "Pausa (⌃⌥⌘P)": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3584,6 +3703,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pausa eller fortsätt inspelningen"
+          }
+        }
+      }
+    },
+    "Pausa och fortsätt": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause and resume"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausa och fortsätt"
           }
         }
       }
@@ -4115,6 +4251,23 @@
         }
       }
     },
+    "Spara senaste %lld min  (%@)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save last %lld min  (%@)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spara senaste %lld min  (%@)"
+          }
+        }
+      }
+    },
     "Spara senaste %lld min  (⌃⌥⌘S)": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4285,6 +4438,23 @@
         }
       }
     },
+    "Spela in område": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record area"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spela in område"
+          }
+        }
+      }
+    },
     "Spela in område …": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4404,6 +4574,23 @@
         }
       }
     },
+    "Starta och stoppa inspelningen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start and stop recording"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starta och stoppa inspelningen"
+          }
+        }
+      }
+    },
     "Steg %lld": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4485,6 +4672,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stoppa"
+          }
+        }
+      }
+    },
+    "Stoppa (%@)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop (%@)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stoppa (%@)"
           }
         }
       }
@@ -4795,6 +4999,23 @@
         }
       }
     },
+    "Ta med ⌘, ⌃ eller ⌥ (eller välj en F-tangent).": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include ⌘, ⌃ or ⌥ (or pick a function key)."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta med ⌘, ⌃ eller ⌥ (eller välj en F-tangent)."
+          }
+        }
+      }
+    },
     "Ta tillbaka": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -5067,6 +5288,23 @@
         }
       }
     },
+    "Tryck %@ för att spela in skärmen under pekaren.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press %@ to record the screen under the pointer."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tryck %@ för att spela in skärmen under pekaren."
+          }
+        }
+      }
+    },
     "Tryck %@.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -5080,6 +5318,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tryck %@."
+          }
+        }
+      }
+    },
+    "Tryck kombinationen …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press the combination…"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tryck kombinationen …"
           }
         }
       }
@@ -5233,6 +5488,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Uppladdningen misslyckades (%lld): %@"
+          }
+        }
+      }
+    },
+    "Upptaget av ett annat program — välj ett annat.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taken by another app — choose another."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upptaget av ett annat program — välj ett annat."
           }
         }
       }

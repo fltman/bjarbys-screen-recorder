@@ -28,11 +28,11 @@ private struct RecordBar: View {
                 Button { recorder.recordDisplayUnderMouse() } label: {
                     Label("Skärm", systemImage: "display")
                 }
-                .help("Hela skärmen under pekaren (⌃⌥⌘R)")
+                .help("Hela skärmen under pekaren (\(HotKeys.shared.binding(.toggleRecording).display))")
                 Button { recorder.recordWindow() } label: { Label("Fönster", systemImage: "macwindow") }
                 Button { recorder.recordApplication() } label: { Label("Program", systemImage: "app.dashed") }
                 Button { recorder.recordArea() } label: { Label("Område", systemImage: "rectangle.dashed") }
-                    .help("Dra upp ett område (⌃⌥⌘A)")
+                    .help("Dra upp ett område (\(HotKeys.shared.binding(.area).display))")
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
@@ -86,7 +86,7 @@ private struct LibraryGrid: View {
                     .foregroundStyle(.secondary)
                 Text("Inga inspelningar än")
                     .font(.title3.weight(.medium))
-                Text("Tryck ⌃⌥⌘R för att spela in skärmen under pekaren.")
+                Text("Tryck \(HotKeys.shared.binding(.toggleRecording).display) för att spela in skärmen under pekaren.")
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

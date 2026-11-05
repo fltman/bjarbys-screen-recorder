@@ -63,11 +63,12 @@ struct HUDView: View {
                     Button { controller.togglePause() } label: {
                         Image(systemName: s.isPaused ? "play.fill" : "pause.fill")
                     }
-                    .help(s.isPaused ? "Fortsätt (⌃⌥⌘P)" : "Pausa (⌃⌥⌘P)")
+                    .help(s.isPaused ? "Fortsätt (\(HotKeys.shared.binding(.pause).display))"
+                                     : "Pausa (\(HotKeys.shared.binding(.pause).display))")
                     Button { Task { await controller.stop() } } label: {
                         Image(systemName: "stop.fill")
                     }
-                    .help("Stoppa (⌃⌥⌘R)")
+                    .help("Stoppa (\(HotKeys.shared.binding(.toggleRecording).display))")
                     Button { confirmDiscard = true } label: {
                         Image(systemName: "trash")
                     }
