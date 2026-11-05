@@ -326,6 +326,10 @@ final class EditorModel: ObservableObject {
         }
     }
 
+    func setCameraLayout(_ layout: EditProject.CameraLayout?, for id: UUID) {
+        update { p in if let i = p.segments.firstIndex(where: { $0.id == id }) { p.segments[i].cameraLayout = layout } }
+    }
+
     func setSpeed(_ speed: Double, for id: UUID) {
         update { p in
             if let i = p.segments.firstIndex(where: { $0.id == id }) { p.segments[i].speed = speed }

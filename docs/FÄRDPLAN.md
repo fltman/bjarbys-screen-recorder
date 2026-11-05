@@ -69,6 +69,11 @@ tagning, sedan redigerbar polish, sedan resten.
 
 - Kortkommandon i filmen (2026-11-05): bubbla nere eller uppe i mitten, räknar upp
   upprepningar ("⌘Z ×3"), visas i utdatatid så att 4×-delar inte blinkar förbi.
+- Kameralayout per del (2026-11-05): Markerad del › Kamera — bubbla, stor (fyller bilden; skärmen
+  tonas bort), sida vid sida (skärmen inpassad bredvid en kamerapanel; staplat i stående format)
+  eller dold. Bytet efter ett snitt glider på 0,5 s: skärmlagret (med markör och markeringar)
+  flyttas och skalas som helhet, kameran beskärs till layoutens proportioner. MCP: fjärde
+  elementet i `set_segments`.
 - Städad inspelning (2026-11-05): Inspelning › Dölj skrivbordssymboler / Dölj notiser och widgets
   (skärm och område; MCP `hide_desktop_icons`, `hide_notifications`). Ingenting på skärmen eller i
   systemet ändras: Finder och notisapparna utesluts ur filtret, Finders vanliga fönster tas med

@@ -197,6 +197,17 @@ struct TimelineView: View {
                          with: .color(.black.opacity(0.65)))
                 ctx.draw(label, at: CGPoint(x: rect.minX + 23, y: rect.minY + 15))
             }
+            if let layout = seg.cameraLayout, model.recording.hasCamera, rect.width > 60 {
+                let icon = switch layout {
+                case .bubble: "person.crop.circle"
+                case .large: "person.fill"
+                case .split: "rectangle.split.2x1"
+                case .hidden: "person.slash"
+                }
+                let x0 = rect.minX + (piece.speed != 1 ? 46 : 6)
+                ctx.fill(Capsule().path(in: CGRect(x: x0, y: rect.minY + 6, width: 26, height: 18)), with: .color(.black.opacity(0.65)))
+                ctx.draw(Image(systemName: icon), at: CGPoint(x: x0 + 13, y: rect.minY + 15))
+            }
             let selected = seg.id == model.selectedSegmentID
             ctx.stroke(shape, with: .color(selected ? .accentColor : .white.opacity(0.25)), lineWidth: selected ? 3 : 1)
             if selected {

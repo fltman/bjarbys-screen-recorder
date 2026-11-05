@@ -144,6 +144,8 @@ public struct EditProject: Codable, Equatable, Sendable {
         public var speed: Double
         /// Övergången in i den här delen från delen före; nil = projektets standard.
         public var transitionIn: Transition?
+        /// Hur kameran visas i den här delen; nil = projektets (bubblan, eller dold).
+        public var cameraLayout: CameraLayout?
 
         public init(id: UUID = UUID(), start: Double, end: Double, speed: Double = 1, transitionIn: Transition? = nil) {
             self.id = id; self.start = start; self.end = end; self.speed = speed; self.transitionIn = transitionIn
@@ -159,8 +161,12 @@ public struct EditProject: Codable, Equatable, Sendable {
             end = c.value(.end, 0)
             speed = c.value(.speed, 1)
             transitionIn = c.value(.transitionIn, nil)
+            cameraLayout = c.value(.cameraLayout, nil)
         }
     }
+
+    /// Kameran i en del: bubblan, stor (fyller bilden), sida vid sida med skärmen, eller dold.
+    public enum CameraLayout: String, Codable, Sendable, CaseIterable { case bubble, large, split, hidden }
 
     public struct ZoomSegment: Codable, Equatable, Hashable, Sendable, Identifiable {
         public var id: UUID

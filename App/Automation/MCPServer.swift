@@ -226,9 +226,9 @@ enum MCPServer {
                                     "banner": ["type": "boolean", "description": "Show the chapter banner in the video (default true)."]],
                                    required: ["recording", "chapters"])],
             ["name": "set_segments",
-             "description": "Set the parts of the recording to keep, in output order (an edit decision list): [[start, end, speed?], …] in SOURCE seconds. Cut at pauses between words, not inside them.",
+             "description": "Set the parts of the recording to keep, in output order (an edit decision list): [[start, end, speed?, camera?], …] in SOURCE seconds; camera is the camera layout for that part: \"bubble\", \"large\" (camera fills the frame, e.g. an intro), \"split\" (side by side with the screen) or \"hidden\". Cut at pauses between words, not inside them.",
              "inputSchema": schema(["recording": recordingArg,
-                                    "keep": ["type": "array", "items": ["type": "array", "items": ["type": "number"], "minItems": 2, "maxItems": 3]]],
+                                    "keep": ["type": "array", "items": ["type": "array", "minItems": 2, "maxItems": 4]]],
                                    required: ["recording", "keep"])],
             ["name": "add_audio",
              "description": "Add an audio file to the recording: narration (made with the elevenlabs-dialogue skill — never raw TTS; confirm voice and language with the user first, it costs money), music (ducked under speech and narration) or effect. The file is copied into the bundle.",
@@ -712,10 +712,14 @@ enum MCPServer {
     private static func setSegments(_ a: [String: Any]) throws -> String {
         let rec = try resolve(a)
         var p = rec.bundle.loadProject(duration: rec.meta.duration)
-        let rows = ((a["keep"] as? [[Any]]) ?? []).map { $0.compactMap(number) }
-        let segs = rows.compactMap { r -> EditProject.ClipSegment? in
+        let raw = (a["keep"] as? [[Any]]) ?? []
+        let segs = raw.compactMap { row -> EditProject.ClipSegment? in
+            let r = row.compactMap(number)
             guard r.count >= 2, r[1] > r[0] else { return nil }
-            return .init(start: max(0, r[0]), end: min(rec.meta.duration, r[1]), speed: r.count > 2 ? max(0.25, min(8, r[2])) : 1)
+            var seg = EditProject.ClipSegment(start: max(0, r[0]), end: min(rec.meta.duration, r[1]),
+                                              speed: r.count > 2 ? max(0.25, min(8, r[2])) : 1)
+            seg.cameraLayout = row.compactMap { $0 as? String }.first.flatMap(EditProject.CameraLayout.init(rawValue:))
+            return seg
         }
         guard !segs.isEmpty else { throw ToolError("keep needs at least one [start, end] with end > start.") }
         p.segments = segs

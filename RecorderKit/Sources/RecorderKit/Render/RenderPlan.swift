@@ -41,6 +41,11 @@ public final class RenderPlan: @unchecked Sendable {
     let cameraMask: CIImage?
     let cameraShadow: CIImage?
     let cameraRect: CGRect
+    let bubbleRadius: CGFloat
+    /// Inspelningen har en kamera (oavsett om bubblan visas som standard).
+    let hasCameraTrack: Bool
+    /// Kameralayouten per del, i filmens ordning (samma som `timeMap.pieces`).
+    let segmentLayouts: [EditProject.CameraLayout]
     /// Inspelningen fyller bildytan (Reel-läge) i stället för att ligga med marginal.
     let fills: Bool
     /// Ingen bakgrund: allt utanför skärmytan (och skuggan, bubblan, texterna) är genomskinligt.
@@ -178,8 +183,13 @@ public final class RenderPlan: @unchecked Sendable {
         self.sprites = sprites
         fallbackSprite = Self.arrowSprite()
 
-        // Kamerabubblan är fast i bildytan; den zoomar inte med skärmen.
-        if hasCamera && project.camera.visible {
+        // Kamerabubblan är fast i bildytan; den zoomar inte med skärmen. Räknas ut även när den är
+        // dold, eftersom en enskild del kan visa den.
+        self.hasCameraTrack = hasCamera
+        self.segmentLayouts = project.segments.filter { $0.duration > 0.001 }.map {
+            $0.cameraLayout ?? (project.camera.visible ? .bubble : .hidden)
+        }
+        if hasCamera {
             let d = (canvas.height * project.camera.size).rounded()
             let margin = (min(canvas.width, canvas.height) * 0.035).rounded()
             let x: CGFloat, y: CGFloat
@@ -191,6 +201,7 @@ public final class RenderPlan: @unchecked Sendable {
             }
             cameraRect = CGRect(x: x, y: y, width: d, height: d)
             let r = project.camera.shape == .circle ? d / 2 : d * 0.18
+            bubbleRadius = r
             cameraMask = Self.roundedRect(cameraRect, radius: r, color: .white)
             let sh = Self.roundedRect(cameraRect.offsetBy(dx: 0, dy: -d * 0.03), radius: r,
                                       color: CIColor(red: 0, green: 0, blue: 0, alpha: 0.45))
@@ -201,6 +212,7 @@ public final class RenderPlan: @unchecked Sendable {
             cameraRect = .zero
             cameraMask = nil
             cameraShadow = nil
+            bubbleRadius = 0
         }
 
         // Undertexter och tal i utdatatid.
@@ -337,47 +349,64 @@ public final class RenderPlan: @unchecked Sendable {
             layer = layer.transformed(by: transform)
         }
         if project.motionBlur { layer = motionBlurred(layer, t: t, s: s) }
+        if let move = layoutTransform(at: t) { layer = layer.transformed(by: move) }
+        let screenAlpha = layoutFrame(at: t).screenAlpha
+        if screenAlpha < 0.999 { layer = Self.withAlpha(layer, screenAlpha) }
 
         var out = layer.composited(over: backgroundImage(screen: screen))
 
-        if let camera, let cameraMask {
+        let lf = layoutFrame(at: t)
+        if let camera, hasCameraTrack, lf.cameraAlpha > 0.001 {
+            let rect = lf.camera
             let e = camera.extent
-            let side = min(e.width, e.height)
-            var cam = camera.cropped(to: CGRect(x: e.midX - side / 2, y: e.midY - side / 2, width: side, height: side))
-                .transformed(by: CGAffineTransform(translationX: -(e.midX - side / 2), y: -(e.midY - side / 2)))
+            // Utsnitt med layoutens proportioner (en kvadrat för bubblan), mitt i kamerabilden.
+            let aspect = rect.width / max(rect.height, 1)
+            let cw = e.width / e.height > aspect ? e.height * aspect : e.width
+            let ch = cw / aspect
+            var cam = camera.cropped(to: CGRect(x: e.midX - cw / 2, y: e.midY - ch / 2, width: cw, height: ch))
+                .transformed(by: CGAffineTransform(translationX: -(e.midX - cw / 2), y: -(e.midY - ch / 2)))
             if project.camera.mirror {
-                cam = cam.transformed(by: CGAffineTransform(scaleX: -1, y: 1).translatedBy(x: -side, y: 0))
+                cam = cam.transformed(by: CGAffineTransform(scaleX: -1, y: 1).translatedBy(x: -cw, y: 0))
             }
             if project.camera.backdrop != .original, let person = Self.personMask(cam) {
                 // Personen skarp, bakgrunden suddig eller utbytt mot filmens egen bakgrund.
                 let behind: CIImage
                 if project.camera.backdrop == .blur {
-                    behind = cam.clampedToExtent().applyingGaussianBlur(sigma: side * 0.035).cropped(to: cam.extent)
+                    behind = cam.clampedToExtent().applyingGaussianBlur(sigma: min(cw, ch) * 0.035).cropped(to: cam.extent)
                 } else {
                     let bg = backgroundImage(screen: screen)
-                    let toBubble = CGAffineTransform(translationX: -cameraRect.minX, y: -cameraRect.minY)
-                        .concatenating(CGAffineTransform(scaleX: side / cameraRect.width, y: side / cameraRect.height))
-                    behind = bg.transformed(by: toBubble).cropped(to: cam.extent)
+                    let toCam = CGAffineTransform(translationX: -rect.minX, y: -rect.minY)
+                        .concatenating(CGAffineTransform(scaleX: cw / rect.width, y: ch / rect.height))
+                    behind = bg.transformed(by: toCam).cropped(to: cam.extent)
                         .applyingFilter("CIExposureAdjust", parameters: [kCIInputEVKey: -0.35])
                 }
                 cam = cam.applyingFilter("CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: behind,
                                                                          kCIInputMaskImageKey: person])
             }
-            cam = cam.transformed(by: CGAffineTransform(scaleX: cameraRect.width / side, y: cameraRect.height / side))
-                .transformed(by: CGAffineTransform(translationX: cameraRect.minX, y: cameraRect.minY))
+            cam = cam.transformed(by: CGAffineTransform(scaleX: rect.width / cw, y: rect.height / ch))
+                .transformed(by: CGAffineTransform(translationX: rect.minX, y: rect.minY))
+            let isBubble = rect == cameraRect && abs(lf.cameraRadius - bubbleRadius) < 0.5
+            let mask = isBubble ? (cameraMask ?? Self.roundedRect(rect, radius: lf.cameraRadius, color: .white))
+                                : Self.roundedRect(rect, radius: lf.cameraRadius, color: .white)
             var bubble = cam.applyingFilter("CIBlendWithMask", parameters: [
                 kCIInputBackgroundImageKey: CIImage.empty(),
-                kCIInputMaskImageKey: cameraMask,
+                kCIInputMaskImageKey: mask,
             ])
+            var shadow: CIImage?
+            if isBubble { shadow = cameraShadow } else if lf.shadow {
+                let d = min(rect.width, rect.height)
+                shadow = Self.roundedRect(rect.offsetBy(dx: 0, dy: -d * 0.02), radius: lf.cameraRadius,
+                                          color: CIColor(red: 0, green: 0, blue: 0, alpha: 0.4))
+                    .applyingGaussianBlur(sigma: d * 0.035).cropped(to: rect.insetBy(dx: -d * 0.2, dy: -d * 0.2))
+            }
             // Kameran kommer igång en stund efter skärmen: bubblan tonas in och växer lite i stället
             // för att poppa fram.
-            let appear = Self.easeOut((s - cameraStart) / 0.3)
-            var shadow = cameraShadow
+            let appear = Self.easeOut((s - cameraStart) / 0.3) * lf.cameraAlpha
             if appear < 0.999 {
-                let k = 0.9 + 0.1 * appear
-                let grow = CGAffineTransform(translationX: -cameraRect.midX, y: -cameraRect.midY)
+                let k = 0.9 + 0.1 * Self.easeOut((s - cameraStart) / 0.3)
+                let grow = CGAffineTransform(translationX: -rect.midX, y: -rect.midY)
                     .concatenating(CGAffineTransform(scaleX: k, y: k))
-                    .concatenating(CGAffineTransform(translationX: cameraRect.midX, y: cameraRect.midY))
+                    .concatenating(CGAffineTransform(translationX: rect.midX, y: rect.midY))
                 bubble = Self.withAlpha(bubble.transformed(by: grow), appear)
                 shadow = shadow.map { Self.withAlpha($0.transformed(by: grow), appear) }
             }
@@ -760,7 +789,7 @@ public final class RenderPlan: @unchecked Sendable {
         var y = bottom ? m : canvas.height - m - e.height
         // Inte under undertexterna, och inte över kamerabubblan i samma hörn.
         if bottom && showsCaptions { y += Self.captionReserve(canvas: canvas, size: project.captions.size) }
-        if cameraMask != nil && Self.sameCorner(o.corner, project.camera.corner) {
+        if cameraMask != nil && project.camera.visible && Self.sameCorner(o.corner, project.camera.corner) {
             y += bottom ? cameraRect.height + m * 0.5 : -(cameraRect.height + m * 0.5)
         }
         return CGPoint(x: left ? m : canvas.width - m - e.width, y: y)
@@ -784,6 +813,86 @@ public final class RenderPlan: @unchecked Sendable {
         }
         let image = overlayImage(o)
         return CGRect(origin: placement(of: o, size: image.extent.size), size: image.extent.size)
+    }
+
+    // MARK: - Kameralayout per del
+
+    struct LayoutFrame: Equatable {
+        var screen: CGRect
+        var camera: CGRect
+        var cameraRadius: CGFloat
+        var cameraAlpha: Double
+        var screenAlpha: Double
+        var shadow: Bool
+    }
+
+    /// Hur lång tid ett byte av layout mellan två delar tar (efter snittet).
+    static let layoutChange = 0.5
+
+    func frame(for layout: EditProject.CameraLayout) -> LayoutFrame {
+        let full = CGRect(origin: .zero, size: canvas)
+        let bubble = LayoutFrame(screen: screenRect, camera: cameraRect, cameraRadius: bubbleRadius,
+                                 cameraAlpha: 1, screenAlpha: 1, shadow: true)
+        switch layout {
+        case .bubble: return bubble
+        case .hidden:
+            var f = bubble; f.cameraAlpha = 0; return f
+        case .large:
+            // Kameran fyller bilden; skärmen tonas bort bakom den.
+            return LayoutFrame(screen: screenRect, camera: full, cameraRadius: 0, cameraAlpha: 1, screenAlpha: 0, shadow: false)
+        case .split:
+            let pad = (min(canvas.width, canvas.height) * 0.04).rounded()
+            let area: CGRect, cam: CGRect
+            if canvas.width >= canvas.height {
+                let cw = ((canvas.width - 3 * pad) * 0.36).rounded()
+                cam = CGRect(x: canvas.width - pad - cw, y: pad, width: cw, height: canvas.height - 2 * pad)
+                area = CGRect(x: pad, y: pad, width: canvas.width - 3 * pad - cw, height: canvas.height - 2 * pad)
+            } else {
+                let chh = ((canvas.height - 3 * pad) * 0.4).rounded()
+                cam = CGRect(x: pad, y: pad, width: canvas.width - 2 * pad, height: chh)
+                area = CGRect(x: pad, y: 2 * pad + chh, width: canvas.width - 2 * pad, height: canvas.height - 3 * pad - chh)
+            }
+            let k = min(area.width / screenRect.width, area.height / screenRect.height)
+            let size = CGSize(width: screenRect.width * k, height: screenRect.height * k)
+            let screen = CGRect(x: area.midX - size.width / 2, y: area.midY - size.height / 2, width: size.width, height: size.height)
+            return LayoutFrame(screen: screen, camera: cam, cameraRadius: min(cam.width, cam.height) * 0.06,
+                               cameraAlpha: 1, screenAlpha: 1, shadow: true)
+        }
+    }
+
+    /// Layouten vid utdatatiden `t`: delens, och de första 0,5 s efter ett snitt på väg från den
+    /// förra delens.
+    func layoutFrame(at t: Double) -> LayoutFrame {
+        let pieces = timeMap.pieces
+        guard hasCameraTrack, !segmentLayouts.isEmpty, segmentLayouts.count == pieces.count,
+              let i = pieces.lastIndex(where: { $0.outputStart <= t }) ?? (pieces.isEmpty ? nil : 0) else {
+            return frame(for: hasCameraTrack && project.camera.visible ? .bubble : .hidden)
+        }
+        let current = frame(for: segmentLayouts[i])
+        guard i > 0, segmentLayouts[i - 1] != segmentLayouts[i] else { return current }
+        let p = (t - pieces[i].outputStart) / Self.layoutChange
+        guard p < 1 else { return current }
+        let previous = frame(for: segmentLayouts[i - 1])
+        let k = p < 0.5 ? 2 * p * p : 1 - pow(-2 * p + 2, 2) / 2
+        func mix(_ a: CGFloat, _ b: CGFloat) -> CGFloat { a + (b - a) * CGFloat(k) }
+        func mix(_ a: CGRect, _ b: CGRect) -> CGRect {
+            CGRect(x: mix(a.minX, b.minX), y: mix(a.minY, b.minY), width: mix(a.width, b.width), height: mix(a.height, b.height))
+        }
+        return LayoutFrame(screen: mix(previous.screen, current.screen), camera: mix(previous.camera, current.camera),
+                           cameraRadius: mix(previous.cameraRadius, current.cameraRadius),
+                           cameraAlpha: previous.cameraAlpha + (current.cameraAlpha - previous.cameraAlpha) * k,
+                           screenAlpha: previous.screenAlpha + (current.screenAlpha - previous.screenAlpha) * k,
+                           shadow: current.shadow || previous.shadow)
+    }
+
+    /// Hur skärmlagret flyttas och skalas av layouten (nil när det ligger som vanligt).
+    func layoutTransform(at t: Double) -> CGAffineTransform? {
+        let target = layoutFrame(at: t).screen
+        guard target != screenRect, screenRect.width > 0 else { return nil }
+        let k = target.width / screenRect.width
+        return CGAffineTransform(translationX: -screenRect.midX, y: -screenRect.midY)
+            .concatenating(CGAffineTransform(scaleX: k, y: k))
+            .concatenating(CGAffineTransform(translationX: target.midX, y: target.midY))
     }
 
     /// Videofilernas bildstorlek (med rotation), sparad per fil.
@@ -892,6 +1001,7 @@ public final class RenderPlan: @unchecked Sendable {
                 .concatenating(CGAffineTransform(scaleX: zoom, y: zoom))
                 .concatenating(CGAffineTransform(translationX: screenRect.midX, y: screenRect.midY)))
         }
+        if let t = timeMap.output(at: s), let move = layoutTransform(at: t) { rect = rect.applying(move) }
         return rect
     }
 

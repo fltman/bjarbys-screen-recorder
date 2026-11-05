@@ -60,6 +60,8 @@ is included; to have the app follow your system language instead, run
 - Save a project's look (background, frame, format, cursor, camera, captions, transitions) as
   the default, and every new recording starts with it.
 - Drag and resize layers directly in the preview; fact boxes and QR codes snap to a corner.
+- Camera layout per part: the bubble, the camera filling the frame (an intro), side by side with
+  the screen, or hidden — the change glides over half a second.
 - A camera bubble in any corner, round or rounded square, with the background behind you kept,
   blurred or replaced by the film's background (Apple's person segmentation, on device).
 

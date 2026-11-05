@@ -766,6 +766,23 @@
         }
       }
     },
+    "Bubbla": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bubble"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bubbla"
+          }
+        }
+      }
+    },
     "Bufferten är tom ännu.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1051,6 +1068,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Disken håller på att ta slut: %@ GB kvar"
+          }
+        }
+      }
+    },
+    "Dold": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dold"
           }
         }
       }
@@ -2156,6 +2190,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hittar inte whisper.cpp. Välj mappen med build/bin/whisper-cli och models/."
+          }
+        }
+      }
+    },
+    "Hur kameran visas i den här delen. Bytet mellan delar glider på en halv sekund.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How the camera is shown in this part. The change between parts glides over half a second."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hur kameran visas i den här delen. Bytet mellan delar glider på en halv sekund."
           }
         }
       }
@@ -4285,6 +4336,23 @@
         }
       }
     },
+    "Sida vid sida": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Side by side"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sida vid sida"
+          }
+        }
+      }
+    },
     "Sidled": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4519,6 +4587,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Som den är"
+          }
+        }
+      }
+    },
+    "Som standard": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Som standard"
           }
         }
       }
@@ -5097,6 +5182,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stoppar inspelningen och sparar den i biblioteket."
+          }
+        }
+      }
+    },
+    "Stor": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stor"
           }
         }
       }

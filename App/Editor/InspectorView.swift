@@ -127,6 +127,18 @@ struct InspectorView: View {
             Picker("Hastighet", selection: Binding(get: { seg.speed }, set: { model.setSpeed($0, for: seg.id) })) {
                 ForEach([0.25, 0.5, 1, 1.5, 2, 4, 8], id: \.self) { Text(AppLocale.format("%g×", $0)).tag($0) }
             }
+            if model.recording.hasCamera {
+                Picker("Kamera", selection: Binding(get: { seg.cameraLayout?.rawValue ?? "standard" }, set: { v in
+                    model.setCameraLayout(EditProject.CameraLayout(rawValue: v), for: seg.id)
+                })) {
+                    Text("Som standard").tag("standard")
+                    Text("Bubbla").tag(EditProject.CameraLayout.bubble.rawValue)
+                    Text("Stor").tag(EditProject.CameraLayout.large.rawValue)
+                    Text("Sida vid sida").tag(EditProject.CameraLayout.split.rawValue)
+                    Text("Dold").tag(EditProject.CameraLayout.hidden.rawValue)
+                }
+                .help("Hur kameran visas i den här delen. Bytet mellan delar glider på en halv sekund.")
+            }
             Text("\(AppLocale.format("%.1f", seg.duration)) s i inspelningen").font(.caption).foregroundStyle(.secondary)
             Text("Dra i ändarna i tidslinjen för att trimma (⌥ ändrar farten), dra delen för att flytta den. Q och W trimmar början och slutet till spelhuvudet.")
                 .font(.caption).foregroundStyle(.secondary)

@@ -95,3 +95,35 @@ import CoreVideo
         #expect(cut.cameraMotion(t: 2.005, s: cut.timeMap.source(at: 2.005)) == nil)
     }
 }
+
+@Suite struct CameraLayoutTests {
+    private func plan(_ layouts: [EditProject.CameraLayout?], visible: Bool = true) throws -> RenderPlan {
+        var meta = RecordingMeta(source: .init(kind: .display, title: "", displayID: 0, windowID: nil,
+                                               contentRect: Rect(x: 0, y: 0, width: 960, height: 540), pixelScale: 2,
+                                               pixelWidth: 1920, pixelHeight: 1080), fps: 60, appVersion: "t")
+        meta.duration = 6
+        var project = try BundleJSON.decoder.decode(EditProject.self, from: Data("{}".utf8))
+        project.camera.visible = visible
+        project.segments = layouts.enumerated().map { i, l in
+            var s = EditProject.ClipSegment(start: Double(i) * 2, end: Double(i) * 2 + 2); s.cameraLayout = l; return s
+        }
+        return RenderPlan(canvas: CGSize(width: 1920, height: 1080), project: project, meta: meta, events: [],
+                          cursors: CursorCatalog(), cursorsDir: FileManager.default.temporaryDirectory, hasCamera: true)
+    }
+
+    @Test func layoutsAndTransitions() throws {
+        let p = try plan([nil, .large, .split, .hidden])
+        #expect(p.layoutFrame(at: 1).camera == p.cameraRect)                       // standard = bubblan
+        #expect(p.layoutFrame(at: 3).camera == CGRect(x: 0, y: 0, width: 1920, height: 1080))
+        #expect(p.layoutFrame(at: 3).screenAlpha == 0)
+        let mid = p.layoutFrame(at: 2.25)                                           // halvvägs in i bytet
+        #expect(mid.camera.width > p.cameraRect.width && mid.camera.width < 1920)
+        let split = p.layoutFrame(at: 5)
+        #expect(split.camera.minX > split.screen.maxX && split.screenAlpha == 1)
+        #expect(p.layoutTransform(at: 5) != nil && p.layoutTransform(at: 1) == nil)
+        #expect(p.layoutFrame(at: 7).cameraAlpha == 0)
+        // Dold som standard, men en del kan visa bubblan.
+        let q = try plan([nil, .bubble], visible: false)
+        #expect(q.layoutFrame(at: 1).cameraAlpha == 0 && q.layoutFrame(at: 3).cameraAlpha == 1)
+    }
+}
