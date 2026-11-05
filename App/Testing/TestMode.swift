@@ -379,6 +379,12 @@ enum TestMode {
             for _ in 0..<40 where model.thumbnails.isEmpty || model.player.currentItem == nil {
                 try await Task.sleep(for: .milliseconds(100))
             }
+            // Ett lager som går att dra, markerat och synligt vid spelhuvudet.
+            if let o = model.project.overlays.first(where: { $0.kind != .title && !($0.kind == .video && $0.isFullFrame) }),
+               let t = model.timeMap.output(at: o.at) {
+                model.selectedOverlayID = o.id
+                await model.seek(to: t + 0.5)
+            }
             try await shot("redigerare", NSSize(width: 1400, height: 860), EditorView(model: model))
             try await shot("redigerare-mork", NSSize(width: 1400, height: 860), EditorView(model: model), dark: true)
             model.selectedOverlayID = model.project.overlays.first { $0.kind == .fact }?.id

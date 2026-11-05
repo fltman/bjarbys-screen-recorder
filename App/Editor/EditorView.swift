@@ -47,6 +47,7 @@ struct EditorView: View {
             VStack(spacing: 0) {
                 PlayerView(player: model.player)
                     .background(Color(nsColor: .underPageBackgroundColor))
+                    .overlay(CanvasEditOverlay(model: model))
                     .frame(minHeight: 300)
                 Divider()
                 TransportBar(model: model)

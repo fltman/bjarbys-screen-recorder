@@ -27,8 +27,8 @@ tagning, sedan redigerbar polish, sedan resten.
   från fil, övergångar i snitten (via svart, oskärpa med zoomstöt, blixt), toning in/ut, extra
   ljudklipp, videoinslag (eget videospår och ljud per inslag, bild-i-bild eller helbild).
   Övertoning mellan delar (skärmspår B med för- och efterrulle, filmens längd oförändrad) och
-  övergång per snitt (`transitionIn` på delen). Nästa: flytta och skala lager genom att dra i
-  bilden, ljudövertoning i snitten.
+  övergång per snitt (`transitionIn` på delen), ljudövertoning (B-spår för mik och datorljud)
+  och 20 ms toning i varje snitt, lager som dras och skalas direkt i förhandsvisningen.
 
 - Delning (fas 6, 2026-11-05): `RecorderKit/Share/S3.swift`, egen SigV4 (CryptoKit), PUT med
   `UNSIGNED-PAYLOAD` i sökvägsstil; inställningar under «Delning …», hemlig nyckel i nyckelringen.

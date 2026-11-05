@@ -44,8 +44,10 @@ is included; to have the app follow your system language instead, run
   text anywhere, images (logos, product shots), video inserts (picture-in-picture or full
   frame, with their sound), chapters with a banner, and extra audio
   (music ducked under speech, narration, effects).
-- Transitions at the cuts (through black, blur with a zoom punch, flash) and fades at the
-  start and end.
+- Transitions at the cuts (crossfade, through black, blur with a zoom punch, flash), set for
+  the whole video or per cut, with the sound crossfaded too and a short fade at every cut so
+  nothing clicks; fades at the start and end.
+- Drag and resize layers directly in the preview; fact boxes and QR codes snap to a corner.
 - A camera bubble in any corner, round or rounded square.
 
 **Speech** (with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), locally)
