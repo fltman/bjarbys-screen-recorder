@@ -69,6 +69,10 @@ tagning, sedan redigerbar polish, sedan resten.
 
 - Kortkommandon i filmen (2026-11-05): bubbla nere eller uppe i mitten, räknar upp
   upprepningar ("⌘Z ×3"), visas i utdatatid så att 4×-delar inte blinkar förbi.
+- Trimma delar i tidslinjen (2026-11-05): dra i en dels ände för att flytta början eller slutet
+  i inspelningen (inget tas bort, materialet går att dra fram igen; stannar vid grannarna, vid
+  inspelningens ändar och vid 0,1 s); ⌥-dra för att sträcka delen till en ny fart (0,25–8×).
+  Spelhuvudet hamnar på den nya kanten; tidslinjen ritas direkt ur delarna medan man drar.
 - Videoinslag med hastighet 0,25–4×, beskärning och mjuka kanter (2026-11-05), i lagrets
   inspektör och via MCP (`speed`, `crop`, `softness`). Delarna kan nu också gå i 0,25×.
 - GIF utan band (2026-11-05): ImageIOs palett per ruta bandade (uppmätt), så GIF:en får en

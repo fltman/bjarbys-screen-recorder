@@ -79,6 +79,24 @@ final class EditorModel: ObservableObject {
 
     var duration: Double { plan.outputDuration }
     var timeMap: TimeMap { plan.timeMap }
+    /// Tidsavbildningen direkt ur delarna, utan att vänta på att förhandsvisningen byggs om —
+    /// för tidslinjen medan en del trimmas.
+    var editTimeMap: TimeMap { TimeMap(segments: project.segments) }
+
+    /// Trimmar en del i källtid: början eller slutet flyttas utan att något tas bort ur
+    /// inspelningen. Hålls inom inspelningen, utanför grannarnas källtid och minst 0,1 s lång.
+    func trimSegment(_ id: UUID, start: Double? = nil, end: Double? = nil) {
+        update { p in
+            guard let i = p.segments.firstIndex(where: { $0.id == id }) else { return }
+            let seg = p.segments[i]
+            let others = p.segments.filter { $0.id != id }
+            let lo = others.map(\.end).filter { $0 <= seg.start + 1e-6 }.max() ?? 0
+            let hi = others.map(\.start).filter { $0 >= seg.end - 1e-6 }.min() ?? recording.meta.duration
+            if let start { p.segments[i].start = min(max(lo, start), seg.end - 0.1) }
+            if let end { p.segments[i].end = max(min(hi, end), seg.start + 0.1) }
+        }
+    }
+
     var canUndo: Bool { !undoStack.isEmpty }
     var canRedo: Bool { !redoStack.isEmpty }
 

@@ -103,6 +103,25 @@ enum TestMode {
                 print(m.map { String(format: #"{"lufs":%.2f,"topp_dbfs":%.2f,"forstarkning_db":%.2f}"#, $0.integrated,
                                      20 * log10($0.peak), 20 * log10(Loudness.gain(for: $0).gain)) } ?? #"{"fel":"tyst eller oläsbar"}"#)
                 code = m == nil ? 1 : 0
+            } else if let i = args.firstIndex(of: "--prov-trim"), args.count > i + 1 {
+                // Trimningens gränser på två delar [0–1] och [2–3] (sparas inte i paketet).
+                do {
+                    let model = EditorModel(recording: try LoadedRecording.load(RecordingBundle(url: URL(fileURLWithPath: args[i + 1]))))
+                    model.persists = false
+                    model.update { $0.segments = [.init(start: 0, end: 1), .init(start: 2, end: 3)] }
+                    let a = model.project.segments[0].id, b = model.project.segments[1].id
+                    @MainActor func state() -> String { model.project.segments.map { String(format: "[%.2f–%.2f %g×]", $0.start, $0.end, $0.speed) }.joined(separator: " ") }
+                    var lines: [String] = []
+                    model.trimSegment(a, end: 1.8); lines.append("A slut 1,8: \(state())")
+                    model.trimSegment(a, end: 2.5); lines.append("A slut 2,5 (grannen vid 2): \(state())")
+                    model.trimSegment(b, start: 0.5); lines.append("B start 0,5 (A slutar 2): \(state())")
+                    model.trimSegment(a, start: -1); lines.append("A start -1: \(state())")
+                    model.trimSegment(b, end: 99); lines.append("B slut 99 (inspelningen \(String(format: "%.2f", model.recording.meta.duration))): \(state())")
+                    model.trimSegment(b, start: 2.98); lines.append("B start 2,98 (minst 0,1 s): \(state())")
+                    model.selectedSegmentID = a
+                    print(lines.joined(separator: "\n"))
+                    code = 0
+                } catch { print(error.localizedDescription); code = 1 }
             } else if let i = args.firstIndex(of: "--prov-bildfrekvens"), args.count > i + 1 {
                 let fps = args.count > i + 2 ? Int(args[i + 2]) ?? 120 : 120
                 code = await FrameRateTest.run(out: URL(fileURLWithPath: args[i + 1]), fps: fps)
@@ -407,6 +426,7 @@ enum TestMode {
                 model.selectedOverlayID = o.id
                 await model.seek(to: t + 0.5)
             }
+            if model.selectedOverlayID == nil { model.selectedSegmentID = model.project.segments.first?.id }
             try await shot("redigerare", NSSize(width: 1400, height: 860), EditorView(model: model))
             try await shot("redigerare-mork", NSSize(width: 1400, height: 860), EditorView(model: model), dark: true)
             // En egen mask vid spelhuvudet, markerad. Sparas inte i paketet.

@@ -15,6 +15,31 @@ struct TimelineView: View {
         case resizeEnd(UUID)
         case moveOverlay(UUID, outStart: Double)
         case resizeOverlay(UUID, duration: Double)
+        /// Trimma en del (flytta början/slutet i inspelningen) från värdet när dragningen började.
+        case trimStart(UUID, start: Double, speed: Double)
+        case trimEnd(UUID, end: Double, speed: Double)
+        /// ⌥: sträck delen — samma innehåll, ny längd i filmen, alltså ny hastighet.
+        case stretch(UUID, sourceLength: Double, outLength: Double, fromStart: Bool)
+    }
+
+    /// Delens kant under punkten i klippfilen: vid en gräns mellan två delar den sida pekaren är på.
+    private func segmentEdge(at p: CGPoint, pps: Double) -> (seg: EditProject.ClipSegment, isStart: Bool)? {
+        guard p.y >= clipY && p.y <= clipY + clipH else { return nil }
+        let map = model.editTimeMap
+        let segments = model.project.segments.filter { $0.duration > 0.001 }
+        var best: (seg: EditProject.ClipSegment, isStart: Bool, d: CGFloat)?
+        for (seg, piece) in zip(segments, map.pieces) {
+            let x0 = x(piece.outputStart, pps), x1 = x(piece.outputEnd, pps)
+            for (isStart, ex) in [(true, x0), (false, x1)] {
+                let d = abs(p.x - ex)
+                guard d <= 7 else { continue }
+                // Inåt i delen räknas före utåt, så att gränsen mellan två delar går att ta i båda.
+                let inside = isStart ? p.x >= ex : p.x <= ex
+                let score = d - (inside ? 3 : 0)
+                if best == nil || score < best!.d { best = (seg, isStart, score) }
+            }
+        }
+        return best.map { ($0.seg, $0.isStart) }
     }
 
     // Filernas placering uppifrån. Undertexter och masker får egna filer när de finns.
@@ -93,7 +118,8 @@ struct TimelineView: View {
                     .contentShape(Rectangle())
                     .gesture(DragGesture(minimumDistance: 0)
                         .onChanged { handleDrag($0, pps: pps) }
-                        .onEnded { _ in drag = nil })
+                        .onEnded { _ in dragEnded() })
+                    .onContinuousHover { hover($0, pps: pps) }
                 }
                 }
                 HStack(spacing: 8) {
@@ -126,7 +152,7 @@ struct TimelineView: View {
     // MARK: - Rita
 
     private func draw(_ ctx: inout GraphicsContext, size: CGSize, pps: Double) {
-        let map = model.timeMap
+        let map = model.editTimeMap
         drawRuler(&ctx, size: size, pps: pps)
 
         // Delar med miniatyrer.
@@ -156,6 +182,23 @@ struct TimelineView: View {
             }
             let selected = seg.id == model.selectedSegmentID
             ctx.stroke(shape, with: .color(selected ? .accentColor : .white.opacity(0.25)), lineWidth: selected ? 3 : 1)
+            if selected {
+                // Handtag i ändarna: dra för att trimma, ⌥-dra för att ändra farten.
+                for hx in [rect.minX + 4, rect.maxX - 4] {
+                    ctx.fill(Capsule().path(in: CGRect(x: hx - 2.5, y: rect.minY + 14, width: 5, height: rect.height - 28)),
+                             with: .color(.white))
+                }
+            }
+            // Medan delen dras: längden i filmen (och farten när den sträcks).
+            if let id = draggedSegmentID, id == seg.id {
+                let len = piece.outputEnd - piece.outputStart
+                let text = piece.speed == 1 ? AppLocale.format("%.1f s", len) : AppLocale.format("%.1f s · %g×", len, (piece.speed * 100).rounded() / 100)
+                let label = Text(text).font(.caption.monospacedDigit().bold()).foregroundStyle(.white)
+                let w: CGFloat = piece.speed == 1 ? 52 : 92
+                ctx.fill(Capsule().path(in: CGRect(x: rect.midX - w / 2, y: rect.maxY - 24, width: w, height: 18)),
+                         with: .color(.accentColor))
+                ctx.draw(label, at: CGPoint(x: rect.midX, y: rect.maxY - 15))
+            }
         }
 
         // Zoomblock.
@@ -198,7 +241,7 @@ struct TimelineView: View {
         // Bildlager: block per ruta, färg efter sort.
         if let y = overlayY {
             for o in model.project.overlays {
-                guard let start = model.timeMap.output(at: o.at) else { continue }
+                guard let start = model.editTimeMap.output(at: o.at) else { continue }
                 let rect = CGRect(x: x(start, pps), y: y, width: max(4, CGFloat(o.duration * pps)), height: laneH)
                 let shape = RoundedRectangle(cornerRadius: 4).path(in: rect)
                 let color: Color = switch o.kind {
@@ -225,7 +268,7 @@ struct TimelineView: View {
         // Extra ljud: block per klipp.
         if let y = audioY {
             for c in model.project.audioClips {
-                guard let start = model.timeMap.output(at: c.at) else { continue }
+                guard let start = model.editTimeMap.output(at: c.at) else { continue }
                 let end = min(model.duration, start + c.duration)
                 let rect = CGRect(x: x(start, pps), y: y, width: max(4, CGFloat((end - start) * pps)), height: laneH)
                 let shape = RoundedRectangle(cornerRadius: 4).path(in: rect)
@@ -260,7 +303,7 @@ struct TimelineView: View {
 
         // Kapitel: flaggor på linjalen.
         for c in model.project.chapters {
-            guard let t = model.timeMap.output(at: c.at) else { continue }
+            guard let t = model.editTimeMap.output(at: c.at) else { continue }
             let px = x(t, pps)
             ctx.fill(Path(CGRect(x: px, y: 0, width: 1.5, height: clipY + clipH)), with: .color(.accentColor.opacity(0.8)))
             ctx.fill(Path(roundedRect: CGRect(x: px, y: 1, width: 9, height: 7), cornerRadius: 1.5), with: .color(.accentColor))
@@ -345,7 +388,7 @@ struct TimelineView: View {
 
     private func outputRange(start: Double, end: Double) -> ClosedRange<Double>? {
         var lo: Double?, hi: Double?
-        for p in model.timeMap.pieces {
+        for p in model.editTimeMap.pieces {
             let a = max(start, p.sourceStart), b = min(end, p.sourceEnd)
             guard b > a else { continue }
             let oa = p.outputStart + (a - p.sourceStart) / p.speed
@@ -358,12 +401,30 @@ struct TimelineView: View {
 
     // MARK: - Dra
 
+    /// Delen som trimmas eller sträcks just nu.
+    private var draggedSegmentID: UUID? {
+        switch drag {
+        case let .trimStart(id, _, _), let .trimEnd(id, _, _), let .stretch(id, _, _, _): id
+        default: nil
+        }
+    }
+
     private func handleDrag(_ value: DragGesture.Value, pps: Double) {
-        let map = model.timeMap
+        let map = model.editTimeMap
         if drag == nil {
             let p = value.startLocation
             drag = .scrub
-            if p.y >= zoomY && p.y <= zoomY + zoomH {
+            if let edge = segmentEdge(at: p, pps: pps) {
+                model.selectedSegmentID = edge.seg.id
+                model.selectedZoomID = nil
+                if NSEvent.modifierFlags.contains(.option) {
+                    drag = .stretch(edge.seg.id, sourceLength: edge.seg.duration, outLength: edge.seg.outputDuration,
+                                    fromStart: edge.isStart)
+                } else {
+                    drag = edge.isStart ? .trimStart(edge.seg.id, start: edge.seg.start, speed: edge.seg.speed)
+                                        : .trimEnd(edge.seg.id, end: edge.seg.end, speed: edge.seg.speed)
+                }
+            } else if p.y >= zoomY && p.y <= zoomY + zoomH {
                 model.selectedZoomID = nil
                 for zoom in model.project.zooms.reversed() {
                     guard let r = outputRange(of: zoom) else { continue }
@@ -378,11 +439,11 @@ struct TimelineView: View {
                 }
             } else if let y = overlayY, p.y >= y && p.y <= y + laneH {
                 let hit = model.project.overlays.last { o in
-                    guard let s = model.timeMap.output(at: o.at) else { return false }
+                    guard let s = model.editTimeMap.output(at: o.at) else { return false }
                     return p.x >= x(s, pps) - 4 && p.x <= x(s + o.duration, pps) + 4
                 }
                 model.selectedOverlayID = hit?.id
-                if let hit, let s = model.timeMap.output(at: hit.at) {
+                if let hit, let s = model.editTimeMap.output(at: hit.at) {
                     // Högra kanten ändrar längden, resten flyttar.
                     drag = abs(p.x - x(s + hit.duration, pps)) <= 7 ? .resizeOverlay(hit.id, duration: hit.duration)
                                                                     : .moveOverlay(hit.id, outStart: s)
@@ -421,6 +482,40 @@ struct TimelineView: View {
         case let .resizeOverlay(id, duration):
             let d = max(0.5, duration + Double(value.translation.width) / pps)
             model.updateOverlay(id) { $0.duration = d }
+        case let .trimStart(id, start, speed):
+            model.trimSegment(id, start: start + Double(value.translation.width) / pps * speed)
+        case let .trimEnd(id, end, speed):
+            model.trimSegment(id, end: end + Double(value.translation.width) / pps * speed)
+        case let .stretch(id, sourceLength, outLength, fromStart):
+            let dx = Double(value.translation.width) / pps
+            let length = max(0.05, outLength + (fromStart ? -dx : dx))
+            let speed = max(0.25, min(8, sourceLength / length))
+            model.setSpeed((speed * 100).rounded() / 100, for: id)
+        }
+    }
+
+    /// När en del trimmats: spelhuvudet till den nya kanten, så att den första (eller sista)
+    /// bilden syns.
+    private func dragEnded() {
+        if case let .trimStart(id, _, _) = drag, let piece = piece(for: id) { model.scrub(to: piece.outputStart) }
+        if case let .trimEnd(id, _, _) = drag, let piece = piece(for: id) { model.scrub(to: max(piece.outputStart, piece.outputEnd - 1.0 / 60)) }
+        drag = nil
+    }
+
+    private func piece(for id: UUID) -> TimeMap.Piece? {
+        let segments = model.project.segments.filter { $0.duration > 0.001 }
+        guard let i = segments.firstIndex(where: { $0.id == id }) else { return nil }
+        let pieces = model.editTimeMap.pieces
+        return i < pieces.count ? pieces[i] : nil
+    }
+
+    /// Pekaren visar att en kant går att dra.
+    private func hover(_ phase: HoverPhase, pps: Double) {
+        switch phase {
+        case .active(let p):
+            if segmentEdge(at: p, pps: pps) != nil { NSCursor.resizeLeftRight.set() } else { NSCursor.arrow.set() }
+        case .ended:
+            NSCursor.arrow.set()
         }
     }
 }

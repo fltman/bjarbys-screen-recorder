@@ -293,6 +293,13 @@ vänster kanal:
 - ⚠️ Första mätningen visade ingen övertoning: den kördes mot en appbinär byggd före ändringen
   (`test.sh` bygger bara paketet). Mät alltid efter xcodebuild.
 
+## Trimma delar (2026-11-05)
+
+`--prov-trim` på delarna [0–1] och [2–3] i en inspelning på 4,18 s: slutet till 1,8 → 1,8; till
+2,5 → 2,0 (nästa del börjar där); nästa dels början till 0,5 → 2,0 (förra slutar där); början
+till −1 → 0; slutet till 99 → 4,18; början till 2,98 → 2,98 (minst 0,1 s kvar). Med musen: inte
+provat av mig — dragningen räknar om med delens fart (källtid = förflyttning × fart).
+
 ## Videoinslag: hastighet, beskärning, mjuka kanter (2026-11-05)
 
 - Hastighet: en provvideo med rutans nummer binärt i åtta fält (30 bilder/s), inlagd vid 0,5 s med
