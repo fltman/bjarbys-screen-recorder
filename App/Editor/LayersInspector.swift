@@ -72,6 +72,7 @@ struct LayersInspector: View {
         case .qr: "qrcode"
         case .text: "textformat"
         case .image: "photo"
+        case .video: "film"
         }
     }
 
@@ -83,6 +84,7 @@ struct LayersInspector: View {
         case .qr: "QR-kod"
         case .text: "Text"
         case .image: "Bild"
+        case .video: "Video"
         }
     }
 
@@ -92,7 +94,7 @@ struct LayersInspector: View {
             Menu {
                 ForEach(Overlay.Kind.allCases, id: \.self) { k in
                     Button {
-                        if k == .image { pickImage() } else { model.addOverlay(k) }
+                        if k == .image { pickImage() } else if k == .video { pickVideo() } else { model.addOverlay(k) }
                     } label: { Label(Self.name(k), systemImage: Self.icon(k)) }
                 }
             } label: { Label("Lägg till vid spelhuvudet", systemImage: "plus") }
@@ -139,14 +141,21 @@ struct LayersInspector: View {
                                   range: 0.5...2.5, format: "%.0f %%", scale: 100)
                     Toggle("På en platta", isOn: Binding(get: { o.background }, set: { v in model.updateOverlay(o.id) { $0.background = v } }))
                 }
-                if o.kind == .text || o.kind == .image {
+                if o.kind == .video {
+                    Toggle("Helbild", isOn: Binding(get: { o.isFullFrame }, set: { v in
+                        model.updateOverlay(o.id) { $0.frame = v ? Rect(x: 0, y: 0, width: 1, height: 1) : Rect(x: 0.6, y: 0.08, width: 0.34, height: 0.34) }
+                    }))
+                    LabeledSlider("Ljud", value: Binding(get: { o.volume }, set: { v in model.updateOverlay(o.id) { $0.volume = v } }),
+                                  range: 0...1.5, format: "%.0f %%", scale: 100)
+                }
+                if o.kind == .text || o.kind == .image || (o.kind == .video && !o.isFullFrame) {
                     let f = o.frame ?? Rect(x: 0.5, y: 0.5, width: 0.5, height: 0.3)
                     LabeledSlider("Sidled", value: frameBinding(o.id, \.x, f), range: 0...1, format: "%.2f")
                     LabeledSlider("Höjdled", value: frameBinding(o.id, \.y, f), range: 0...1, format: "%.2f")
                     LabeledSlider(o.kind == .text ? "Största bredd" : "Storlek", value: Binding(get: { f.width }, set: { v in
                         model.updateOverlay(o.id) { ov in
                             var r = ov.frame ?? f
-                            if ov.kind == .image { r.height *= v / max(r.width, 0.01) }
+                            if ov.kind != .text { r.height *= v / max(r.width, 0.01) }
                             r.width = v
                             ov.frame = r
                         }
@@ -205,6 +214,12 @@ struct LayersInspector: View {
 
     private func frameBinding(_ id: UUID, _ key: WritableKeyPath<Rect, Double>, _ f: Rect) -> Binding<Double> {
         Binding(get: { f[keyPath: key] }, set: { v in model.updateOverlay(id) { o in var r = o.frame ?? f; r[keyPath: key] = v; o.frame = r } })
+    }
+
+    private func pickVideo() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.movie]
+        if panel.runModal() == .OK, let url = panel.url { model.addVideoOverlay(from: url) }
     }
 
     private func pickImage() {

@@ -244,3 +244,13 @@ största bredden), utan platta (skuggad), bildlager med appikonen (⚠️ skugga
 rektangel av hela bildytan och syntes som en grå fyrkant runt en PNG med genomskinlig marginal;
 nu efter bildens alfa), oskärpeövergång 0,1 s från snittet (kortkommandot läsbart ovanpå —
 lagren ritas efter övergången), intoning från svart vid 0,15 s.
+
+## Videoinslag (2026-11-05)
+
+Testklipp (ffmpeg `testsrc2` med tidskod + 880 Hz) via MCP: bild-i-bild vid källtid 2,0 och helbild
+med `offset` 2 s vid 7,0. Rutorna visar klippets tidskod 00:00:01.100 vid utdatatid 2,5 (inslaget
+börjar 1,4) och 00:00:02.600 vid 7,0 (2 + 0,6) — exakt. Inslagets ljud i exporten: −22,9 dB i
+880 Hz-bandet under inslaget mot −40,6 dB utanför. Spår-id: bild 200+, ljud 300+ i videolagrens
+ordning; kompositören skickar rutorna till renderaren via `PolishInstruction.mediaTrackIDs`.
+Preflight räknar bild-i-bild-ramen i täckningskontrollen (fångade att inslaget låg över
+exportknappen).

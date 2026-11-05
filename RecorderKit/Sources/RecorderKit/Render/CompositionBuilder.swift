@@ -126,6 +126,29 @@ public enum CompositionBuilder {
             try? track.insertTimeRange(CMTimeRange(start: range.start, duration: length), of: source, at: start)
         }
 
+        // Videoinslag: eget videospår (och ljud) per lager, i normal hastighet från sin startpunkt.
+        let videos = plan.project.overlays.filter { $0.kind == .video }
+        for (i, o) in videos.enumerated() {
+            guard let at = plan.timeMap.output(at: o.at), at < cursor.seconds else { continue }
+            let asset = AVURLAsset(url: rec.bundle.mediaDir.appendingPathComponent(o.file))
+            guard let source = try? await asset.loadTracks(withMediaType: .video).first,
+                  let available = try? await source.load(.timeRange),
+                  let track = composition.addMutableTrack(withMediaType: .video,
+                                                          preferredTrackID: videoOverlayTrackBase + CMPersistentTrackID(i)) else { continue }
+            let start = CMTime(seconds: at, preferredTimescale: timescale)
+            let from = available.start + CMTime(seconds: max(0, o.offset), preferredTimescale: timescale)
+            let length = CMTimeMinimum(CMTimeMinimum(CMTime(seconds: o.duration, preferredTimescale: timescale),
+                                                     available.end - from), cursor - start)
+            guard length > .zero else { continue }
+            let range = CMTimeRange(start: from, duration: length)
+            try? track.insertTimeRange(range, of: source, at: start)
+            if o.volume > 0, let sound = try? await asset.loadTracks(withMediaType: .audio).first,
+               let audioTrack = composition.addMutableTrack(withMediaType: .audio,
+                                                            preferredTrackID: videoAudioTrackBase + CMPersistentTrackID(i)) {
+                try? audioTrack.insertTimeRange(range, of: sound, at: start)
+            }
+        }
+
         let video = videoComposition(plan: plan, duration: cursor, fps: fps, hasCamera: hasCamera)
         let mix = audioMix(for: composition, plan: plan)
         return Result(composition: composition, videoComposition: video, audioMix: mix, duration: cursor)
@@ -138,10 +161,14 @@ public enum CompositionBuilder {
     static let systemTrackID: CMPersistentTrackID = 4
     /// Ljudklipp får id 100, 101 … i projektets ordning, så att mixen hittar dem igen.
     static let audioClipTrackBase: CMPersistentTrackID = 100
+    /// Videoinslag: bild 200, 201 …, ljud 300, 301 … i videolagrens ordning.
+    static let videoOverlayTrackBase: CMPersistentTrackID = 200
+    static let videoAudioTrackBase: CMPersistentTrackID = 300
 
     public static func videoComposition(plan: RenderPlan, duration: CMTime, fps: Int, hasCamera: Bool) -> AVVideoComposition {
         let instruction = PolishInstruction(timeRange: CMTimeRange(start: .zero, duration: duration), plan: plan,
-                                            screenTrackID: screenTrackID, cameraTrackID: hasCamera ? cameraTrackID : nil)
+                                            screenTrackID: screenTrackID, cameraTrackID: hasCamera ? cameraTrackID : nil,
+                                            mediaTrackIDs: plan.videoOverlayIDs.indices.map { videoOverlayTrackBase + CMPersistentTrackID($0) })
         return AVVideoComposition(configuration: .init(
             colorPrimaries: AVVideoColorPrimaries_ITU_R_709_2,
             colorTransferFunction: AVVideoTransferFunction_ITU_R_709_2,
@@ -181,6 +208,10 @@ public enum CompositionBuilder {
                 if !isMic && mix.duckSystem { under += plan.speech }
                 let ramps = volume > 0 ? Ducking.ramps(speech: under, level: volume * mix.duckLevel, normal: volume) : []
                 apply(p, base: volume, ramps: ramps)
+            case videoAudioTrackBase...:
+                let index = Int(track.trackID - videoAudioTrackBase)
+                let videos = plan.project.overlays.filter { $0.kind == .video }
+                apply(p, base: videos.indices.contains(index) ? videos[index].volume : 0, ramps: [])
             default:
                 let index = Int(track.trackID - audioClipTrackBase)
                 guard plan.project.audioClips.indices.contains(index),

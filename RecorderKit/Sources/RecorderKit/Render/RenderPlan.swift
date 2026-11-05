@@ -56,6 +56,8 @@ public final class RenderPlan: @unchecked Sendable {
     let overlayImages = CaptionImageCache()
     /// Paketets media/, för bildlager.
     let mediaDir: URL?
+    /// Videolagren i den ordning deras spår ligger i kompositionen.
+    public var videoOverlayIDs: [UUID] { project.overlays.filter { $0.kind == .video }.map(\.id) }
 
     struct Sprite {
         let image: CIImage
@@ -203,7 +205,7 @@ public final class RenderPlan: @unchecked Sendable {
     // MARK: - Rita en ruta
 
     /// Den färdiga rutan vid utdatatiden `t`.
-    public func render(outputTime t: Double, screen: CIImage?, camera: CIImage?) -> CIImage {
+    public func render(outputTime t: Double, screen: CIImage?, camera: CIImage?, media: [UUID: CIImage] = [:]) -> CIImage {
         let s = timeMap.source(at: t)
         let canvasRect = CGRect(origin: .zero, size: canvas)
         var layer = CIImage.empty()
@@ -319,6 +321,10 @@ public final class RenderPlan: @unchecked Sendable {
         // Bildlagret som ligger fast i bildytan: rubrikkort, faktarutor, QR-kort, text, bilder.
         for shown in overlayTrack.visible(at: t) where shown.overlay.kind != .callout {
             let o = shown.overlay
+            if o.kind == .video {
+                if let frame = media[o.id] { out = Self.withAlpha(videoLayer(frame, o), shown.opacity).composited(over: out) }
+                continue
+            }
             let key = "\(o.kind.rawValue)|\(o.id)|\(o.title)|\(o.lines.joined(separator: "¦"))|\(o.url)"
             let key2 = key + "|\(o.file)|\(o.size)|\(o.background)|\(o.frame.map { "\($0.width)x\($0.height)" } ?? "")"
             let image = overlayImages.image(for: key2) { overlayImage(o) }
@@ -610,6 +616,36 @@ public final class RenderPlan: @unchecked Sendable {
         return prerender(ci, extent: ci.extent)
     }
 
+    /// En videoruta i sin ram: helbild fyller bildytan; bild-i-bild passas in med hörn och skugga.
+    func videoLayer(_ frame: CIImage, _ o: Overlay) -> CIImage {
+        let e = frame.extent
+        let moved = frame.transformed(by: CGAffineTransform(translationX: -e.minX, y: -e.minY))
+        let canvasRect = CGRect(origin: .zero, size: canvas)
+        if o.isFullFrame {
+            let k = max(canvas.width / e.width, canvas.height / e.height)
+            return moved.transformed(by: CGAffineTransform(scaleX: k, y: k))
+                .transformed(by: CGAffineTransform(translationX: (canvas.width - e.width * k) / 2, y: (canvas.height - e.height * k) / 2))
+                .cropped(to: canvasRect)
+        }
+        let f = o.frame ?? Rect(x: 0.6, y: 0.08, width: 0.34, height: 0.34)
+        let box = CGRect(x: canvas.width * f.x, y: canvas.height * (1 - f.y - f.height), width: canvas.width * f.width, height: canvas.height * f.height)
+        let k = min(box.width / e.width, box.height / e.height)
+        let size = CGSize(width: e.width * k, height: e.height * k)
+        let rect = CGRect(x: box.midX - size.width / 2, y: box.midY - size.height / 2, width: size.width, height: size.height)
+        let radius = min(size.width, size.height) * 0.05
+        let placed = moved.transformed(by: CGAffineTransform(scaleX: k, y: k))
+            .transformed(by: CGAffineTransform(translationX: rect.minX, y: rect.minY))
+            .applyingFilter("CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: CIImage.empty(),
+                                                            kCIInputMaskImageKey: Self.roundedRect(rect, radius: radius, color: .white)])
+        let u = OverlayRenderer.unit(canvas)
+        let shadow = overlayImages.image(for: "videoshadow|\(Int(rect.minX))|\(Int(rect.minY))|\(Int(rect.width))|\(Int(rect.height))") {
+            let s = Self.roundedRect(rect.offsetBy(dx: 0, dy: -u * 0.008), radius: radius, color: CIColor(red: 0, green: 0, blue: 0, alpha: 0.5))
+                .applyingGaussianBlur(sigma: u * 0.014).cropped(to: rect.insetBy(dx: -u * 0.05, dy: -u * 0.05))
+            return Self.prerender(s, extent: s.extent.integral)
+        }
+        return placed.composited(over: shadow)
+    }
+
     func overlayImage(_ o: Overlay) -> CIImage {
         switch o.kind {
         case .title: OverlayRenderer.title(o, canvas: canvas)
@@ -649,6 +685,12 @@ public final class RenderPlan: @unchecked Sendable {
     /// Rutans ram i bildytan (för preflight: täcker den något viktigt?).
     public func frame(of o: Overlay) -> CGRect? {
         guard o.kind != .callout else { return nil }
+        if o.kind == .video {
+            // Helbild täcker allt med avsikt; bild-i-bild räknas med sin ram.
+            guard !o.isFullFrame, let f = o.frame else { return nil }
+            return CGRect(x: canvas.width * f.x, y: canvas.height * (1 - f.y - f.height),
+                          width: canvas.width * f.width, height: canvas.height * f.height)
+        }
         let image = overlayImage(o)
         return CGRect(origin: placement(of: o, size: image.extent.size), size: image.extent.size)
     }

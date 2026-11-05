@@ -124,6 +124,8 @@ public enum Producer {
             case .image:
                 if o.file.isEmpty || !mediaExists(o.file) { error("\(name): image \(o.file) is missing in media/.") }
                 if o.frame == nil { error("\(name) has no frame.") }
+            case .video:
+                if o.file.isEmpty || !mediaExists(o.file) { error("\(name): video \(o.file) is missing in media/.") }
             }
         }
         // Två rutor i samma hörn samtidigt.

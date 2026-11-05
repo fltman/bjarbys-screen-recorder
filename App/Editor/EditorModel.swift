@@ -37,6 +37,11 @@ final class EditorModel: ObservableObject {
     private var builtSegments: [EditProject.ClipSegment] = []
     private var builtIsolation = false
     private var builtClips: [String] = []
+    private var builtVideos: [String] = []
+    /// Videoinslagen ligger i kompositionen: ändras de byggs den om.
+    private var videoSignature: [String] {
+        project.overlays.filter { $0.kind == .video }.map { "\($0.id)\($0.at)\($0.file)\($0.offset)\($0.duration)\($0.volume > 0)" }
+    }
     private var rebuildTask: Task<Void, Never>?
     private var saveTask: Task<Void, Never>?
     private var timeObserver: Any?
@@ -114,6 +119,7 @@ final class EditorModel: ObservableObject {
         rebuildTask?.cancel()
         let full = project.segments != builtSegments || project.audio.voiceIsolation != builtIsolation
             || project.audioClips.map { "\($0.id)\($0.at)\($0.file)" } != builtClips
+            || videoSignature != builtVideos
         rebuildTask = Task {
             try? await Task.sleep(for: .milliseconds(full ? 120 : 30))
             guard !Task.isCancelled else { return }
@@ -147,6 +153,7 @@ final class EditorModel: ObservableObject {
                 builtSegments = project.segments
                 builtIsolation = project.audio.voiceIsolation
                 builtClips = project.audioClips.map { "\($0.id)\($0.at)\($0.file)" }
+                builtVideos = videoSignature
                 plan = newPlan
                 let item = AVPlayerItem(asset: result.composition)
                 item.videoComposition = result.videoComposition
@@ -409,6 +416,7 @@ final class EditorModel: ObservableObject {
         case .qr: o.title = String(localized: "Läs mer"); o.url = "https://"; o.corner = .bottomRight
         case .text: o.title = String(localized: "Text"); o.frame = Rect(x: 0.5, y: 0.2, width: 0.6, height: 0)
         case .image: o.frame = Rect(x: 0.62, y: 0.08, width: 0.3, height: 0.3)
+        case .video: o.frame = Rect(x: 0.6, y: 0.08, width: 0.34, height: 0.34)
         case .callout:
             if let hit = Producer.clickTarget(recording, near: s) {
                 o.target = Rect(hit.rect)
@@ -433,6 +441,24 @@ final class EditorModel: ObservableObject {
                         frame: Rect(x: 0.62, y: 0.08, width: 0.3, height: 0.3), file: name)
         update { $0.overlays.append(o); $0.overlays.sort { $0.at < $1.at } }
         selectedOverlayID = o.id
+    }
+
+    /// Ett videoinslag från fil vid spelhuvudet: bild-i-bild uppe till höger, lika långt som filen.
+    func addVideoOverlay(from url: URL) {
+        let at = sourceTimeAtPlayhead
+        let bundle = recording.bundle
+        Task {
+            guard let range = try? await AVURLAsset(url: url).loadTracks(withMediaType: .video).first?.load(.timeRange) else { return }
+            let name = "video-\(UUID().uuidString.prefix(6)).\(url.pathExtension.isEmpty ? "mov" : url.pathExtension.lowercased())"
+            do {
+                try FileManager.default.createDirectory(at: bundle.mediaDir, withIntermediateDirectories: true)
+                try FileManager.default.copyItem(at: url, to: bundle.mediaDir.appendingPathComponent(name))
+            } catch { return }
+            let o = Overlay(kind: .video, at: at, duration: range.duration.seconds, title: url.deletingPathExtension().lastPathComponent,
+                            frame: Rect(x: 0.6, y: 0.08, width: 0.34, height: 0.34), file: name)
+            update { $0.overlays.append(o); $0.overlays.sort { $0.at < $1.at } }
+            selectedOverlayID = o.id
+        }
     }
 
     func updateOverlay(_ id: UUID, _ change: (inout Overlay) -> Void) {

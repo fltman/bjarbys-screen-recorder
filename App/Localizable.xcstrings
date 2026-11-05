@@ -1803,6 +1803,23 @@
         }
       }
     },
+    "Helbild": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full frame"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helbild"
+          }
+        }
+      }
+    },
     "Hemlig nyckel": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -5165,6 +5182,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Via svart"
+          }
+        }
+      }
+    },
+    "Video": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video"
           }
         }
       }

@@ -18,6 +18,8 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
         case text
         /// En bild ur `media/` (logotyp, produktbild), placerad fritt (`frame`, 0–1 av bildytan).
         case image
+        /// Ett videoinslag ur `media/`: bild-i-bild eller helbild (`frame` [0,0,1,1]), med ljud.
+        case video
     }
 
     public enum Corner: String, Codable, Sendable, CaseIterable { case topLeft, topRight, bottomLeft, bottomRight }
@@ -41,6 +43,10 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
     public var size: Double
     /// Text på en mörk platta (annars skuggad text direkt på bilden).
     public var background: Bool
+    /// Video: var i filen inslaget börjar (s).
+    public var offset: Double
+    /// Video: ljudets volym (0 = tyst).
+    public var volume: Double
 
     public init(id: UUID = UUID(), kind: Kind, at: Double, duration: Double = 4, title: String = "",
                 lines: [String] = [], url: String = "", target: Rect? = nil, corner: Corner = .topRight,
@@ -48,6 +54,13 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
         self.id = id; self.kind = kind; self.at = at; self.duration = duration; self.title = title
         self.lines = lines; self.url = url; self.target = target; self.corner = corner
         self.frame = frame; self.file = file; self.size = size; self.background = background
+        self.offset = 0; self.volume = 1
+    }
+
+    /// Täcker hela bildytan (helbild): ritas utan hörn och skugga, och fyller.
+    public var isFullFrame: Bool {
+        guard let f = frame else { return false }
+        return f.x <= 0.01 && f.y <= 0.01 && f.width >= 0.98 && f.height >= 0.98
     }
 
     public init(from decoder: Decoder) throws {
@@ -65,6 +78,8 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
         file = c.value(.file, "")
         size = c.value(.size, 1)
         background = c.value(.background, true)
+        offset = c.value(.offset, 0)
+        volume = c.value(.volume, 1)
     }
 }
 

@@ -208,6 +208,7 @@ struct TimelineView: View {
                 case .qr: .brown
                 case .text: .purple
                 case .image: .cyan
+                case .video: .orange
                 }
                 let selected = o.id == model.selectedOverlayID
                 ctx.fill(shape, with: .color(color.opacity(selected ? 0.5 : 0.25)))

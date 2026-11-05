@@ -184,7 +184,9 @@ enum MCPServer {
              "inputSchema": schema(["recording": recordingArg,
                                     "append": ["type": "boolean"],
                                     "overlays": ["type": "array", "items": ["type": "object", "properties": [
-                                        "kind": ["type": "string", "enum": ["title", "callout", "fact", "qr", "text", "image"]],
+                                        "kind": ["type": "string", "enum": ["title", "callout", "fact", "qr", "text", "image", "video"]],
+                                        "offset": ["type": "number", "description": "video: where in the file to start (s)."],
+                                        "volume": ["type": "number", "description": "video: its audio volume (0 = silent)."],
                                         "frame": ["type": "array", "items": ["type": "number"], "minItems": 3, "maxItems": 4,
                                                   "description": "text: [centerX, centerY, maxWidth]; image: [x, y, width, height] — 0–1 of the frame, origin top-left."],
                                         "file": ["type": "string", "description": "image: path to the image (copied into the bundle)."],
@@ -579,6 +581,21 @@ enum MCPServer {
             if let size = number(o["size"]) { overlay.size = size }
             if let bg = o["background"] as? Bool { overlay.background = bg }
             if kind == .text && overlay.frame == nil { overlay.frame = Rect(x: 0.5, y: 0.2, width: 0.6, height: 0) }
+            if kind == .video {
+                guard let path = o["file"] as? String,
+                      FileManager.default.fileExists(atPath: NSString(string: path).expandingTildeInPath) else {
+                    throw ToolError("video overlays need file = path to an existing video.")
+                }
+                let src = URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
+                let name = "video-\(UUID().uuidString.prefix(6)).\(src.pathExtension.isEmpty ? "mov" : src.pathExtension.lowercased())"
+                try FileManager.default.createDirectory(at: rec.bundle.mediaDir, withIntermediateDirectories: true)
+                try FileManager.default.copyItem(at: src, to: rec.bundle.mediaDir.appendingPathComponent(name))
+                overlay.file = name
+                overlay.offset = number(o["offset"]) ?? 0
+                overlay.volume = number(o["volume"]) ?? 1
+                if overlay.frame == nil { overlay.frame = Rect(x: 0, y: 0, width: 1, height: 1) }
+                if o["duration"] == nil, let length = videoLength(src) { overlay.duration = max(0.5, length - overlay.offset) }
+            }
             if kind == .image {
                 guard let path = o["file"] as? String,
                       FileManager.default.fileExists(atPath: NSString(string: path).expandingTildeInPath) else {
@@ -612,6 +629,16 @@ enum MCPServer {
             .filter { $0.message.contains("@") }
         return (["Saved \(made.count) overlay(s); \(p.overlays.count) in total."] + notes
                 + (issues.isEmpty ? [] : [Producer.report(issues)])).joined(separator: "\n")
+    }
+
+    /// En videofils längd (s), synkront — det här körs i verktygets egen tråd.
+    private static func videoLength(_ url: URL) -> Double? {
+        let asset = AVURLAsset(url: url)
+        let semaphore = DispatchSemaphore(value: 0)
+        let box = UncheckedResult()
+        Task.detached { box.value = try? await asset.load(.duration).seconds; semaphore.signal() }
+        semaphore.wait()
+        return box.value
     }
 
     private static func setChapters(_ a: [String: Any]) throws -> String {
@@ -741,3 +768,5 @@ enum MCPServer {
         return text
     }
 }
+
+private final class UncheckedResult: @unchecked Sendable { var value: Double? }

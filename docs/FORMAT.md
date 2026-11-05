@@ -83,7 +83,7 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 | `masks[]` | `start`, `end`, `keyframes[]` (`t`, `rect` normaliserat), `style` (`blur`, `pixelate`, `solid`), `kind`, `hint` (aldrig själva texten), `enabled` |
 | `camera` | `visible`, `shape`, `size`, `corner`, `mirror` |
 | `transition`, `fadeInOut` | övergång i snitten (`kind`: `none`, `dip`, `blur`, `flash`; `duration`) och toning i början/slutet |
-| `overlays[]` | bildlagret: `kind` (`title`, `callout`, `fact`, `qr`, `text`, `image`), `frame` (fri placering 0–1), `file` (bild i `media/`), `size`, `background`, `at` (källtid), `duration` (s i filmen), `title`, `lines`, `url`, `target` (0–1, markeringens mål), `corner` |
+| `overlays[]` | bildlagret: `kind` (`title`, `callout`, `fact`, `qr`, `text`, `image`, `video` — video med `offset` i filen och `volume`, helbild = `frame` [0,0,1,1]), `frame` (fri placering 0–1), `file` (bild i `media/`), `size`, `background`, `at` (källtid), `duration` (s i filmen), `title`, `lines`, `url`, `target` (0–1, markeringens mål), `corner` |
 | `chapters[]`, `showsChapterBanner` | kapitel (`at`, `title`) och om kapitelraden visas |
 | `audioClips[]` | extra ljud i `media/`: `role` (`narration`, `music`, `effect`), `at`, `file`, `text`, `duration`, `volume`, `fadeIn`, `fadeOut` |
 | `audio` | volym och tystning per spår; `duckSystem`, `duckLevel` sänker datorljudet under tal; `voiceIsolation` använder `derived/mic-isolated.caf` |
