@@ -154,7 +154,8 @@ the screen recording permission of the terminal it runs from.
 
 The recording engine, the editor, export, speech, masking of sensitive text, the flashback
 buffer and control from agents are done (see [`docs/FÄRDPLAN.md`](docs/FÄRDPLAN.md)). Next are
-HDR, 120 fps and per-app audio.
+HDR and per-app audio. Recording at 120 fps (on ProMotion displays) and exporting at 120 are in,
+but the recording side has not been measured yet.
 
 Built and tested on macOS 26.1 on an Apple M5 only. Not yet tried with a real camera or
 with a window that moves during recording. Transcription has been measured on synthetic

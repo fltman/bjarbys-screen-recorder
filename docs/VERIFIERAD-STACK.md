@@ -216,3 +216,12 @@ tal, film 0,57 MB, guide, 42 rader `log show` för Finder, zip 1,1 MB (`ditto -c
 - Uppladdning mot en lokal PUT-server med påhittade provnycklar: sökvägsstil
   `/hink/prefix/ÅÅÅÅ-MM-DD-namn-slump.mp4` (å→a), hela kroppen (300 000 byte), `UNSIGNED-PAYLOAD`,
   publik länk tillbaka. Inte provat mot riktig R2/S3 (kräver användarens nycklar).
+
+## 120 bilder/s (2026-11-05)
+
+- Export: syntetisk 120-fps-källa (ffmpeg `testsrc2`, 3 s) → MP4 1080p med `--fps 120`:
+  `120/1`, 360 rutor, 360 unika (framemd5); med 60: 180 rutor, 180 unika. Fjädrarna är
+  analytiska, så rörelsen är lika jämn i 120 som i 60.
+- Inspelning i 120: valet finns bara om en skärm har `maximumFramesPerSecond ≥ 120`.
+  **Inte uppmätt**: ScreenCaptureKit skickar bara rutor när bilden ändras, och det fanns ingen
+  rörelse att mäta mot (prova med en video eller scroll på en ProMotion-skärm).

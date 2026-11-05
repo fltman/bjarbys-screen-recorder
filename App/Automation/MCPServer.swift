@@ -184,6 +184,7 @@ enum MCPServer {
                                     "preset": ["type": "string", "enum": ExportPreset.all.map(\.id)],
                                     "path": ["type": "string", "description": "Output file (default: ~/Movies/<name>.<ext>)."],
                                     "subtitles": ["type": "boolean", "description": "Also write an .srt next to the video (default true if transcribed)."],
+                                    "fps": ["type": "integer", "description": "Frame rate of the file (default: the preset's, 60; use 120 for a 120 fps recording)."],
                                     "upload": ["type": "boolean", "description": "Upload to the S3/R2 bucket set up under Sharing in the app and return the public link."]],
                                    required: ["recording"])],
         ]
@@ -492,7 +493,7 @@ enum MCPServer {
         let url = (a["path"] as? String).map { URL(fileURLWithPath: NSString(string: $0).expandingTildeInPath) }
             ?? movies.appendingPathComponent(rec.bundle.name).appendingPathExtension(preset.fileExtension)
         let started = Date()
-        try await Exporter(recording: rec, project: project, preset: preset).run(to: url) { _ in }
+        try await Exporter(recording: rec, project: project, preset: preset, fps: a["fps"] as? Int).run(to: url) { _ in }
         var text = String(format: "Exported %@ in %.1f s: %@", preset.name, Date().timeIntervalSince(started), url.path)
         if a["subtitles"] as? Bool ?? true, preset.id != "gif", let words = rec.transcript?.words, !words.isEmpty {
             let srt = url.deletingPathExtension().appendingPathExtension("srt")

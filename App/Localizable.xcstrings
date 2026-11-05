@@ -86,6 +86,23 @@
         }
       }
     },
+    "%lld bilder/s, som inspelningen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld frames/s, like the recording"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld bilder/s, som inspelningen"
+          }
+        }
+      }
+    },
     "%lld föreslagna, %lld egna. Dra blocken i tidslinjen för att flytta dem, dra i kanterna för att ändra längd.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -201,6 +218,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld×%lld, %lld bilder/s"
+          }
+        }
+      }
+    },
+    "120 bilder/s": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "120 frames/s"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "120 bilder/s"
           }
         }
       }

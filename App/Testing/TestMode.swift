@@ -357,7 +357,8 @@ enum TestMode {
                                                    duration: rec.meta.duration, scale: project.zoomScale)
             }
             let started = Date()
-            let exporter = Exporter(recording: rec, project: project, preset: preset)
+            let exporter = Exporter(recording: rec, project: project, preset: preset,
+                                    fps: value(after: "--fps", in: CommandLine.arguments).flatMap { Int($0) })
             try await exporter.run(to: out) { _ in }
             let size = (try? FileManager.default.attributesOfItem(atPath: out.path)[.size] as? Int) ?? 0
             print(String(format: "{\"fil\":\"%@\",\"sekunder\":%.2f,\"byte\":%d,\"langd\":%.3f}",

@@ -39,8 +39,9 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
     public var transparentBackground: Bool { codec == .proresAlpha }
 
     /// Bitrate i bit/s för en bildyta.
-    public func bitrate(for canvas: CGSize) -> Int {
+    public func bitrate(for canvas: CGSize, fps override: Int? = nil) -> Int {
         let pixels = Double(canvas.width * canvas.height)
+        let fps = override ?? self.fps
         switch codec {
         case .h264: return Int(pixels * Double(fps) * 0.09)
         case .hevc: return Int(pixels * Double(fps) * 0.06)
@@ -87,10 +88,14 @@ public final class Exporter: @unchecked Sendable {
     private var cancelled = false
     private let lock = NSLock()
 
-    public init(recording: LoadedRecording, project: EditProject, preset: ExportPreset) {
+    /// Bildfrekvensen i filen: förvalets, eller (för en 120-fps-inspelning) inspelningens.
+    public let fps: Int
+
+    public init(recording: LoadedRecording, project: EditProject, preset: ExportPreset, fps: Int? = nil) {
         self.recording = recording
         self.project = project
         self.preset = preset
+        self.fps = preset.codec == .gif ? preset.fps : min(240, max(1, fps ?? preset.fps))
     }
 
     public func cancel() {
@@ -105,7 +110,7 @@ public final class Exporter: @unchecked Sendable {
     public func run(to url: URL, progress: @escaping @Sendable (Double) -> Void) async throws {
         let canvas = preset.canvas(aspect: project.aspect, source: recording.sourceSize)
         let plan = recording.makePlan(project: project, canvas: canvas, transparentBackground: preset.transparentBackground)
-        let built = try await CompositionBuilder.build(recording, plan: plan, fps: preset.fps)
+        let built = try await CompositionBuilder.build(recording, plan: plan, fps: fps)
         try? FileManager.default.removeItem(at: url)
         if preset.codec == .gif {
             try await exportGIF(built, canvas: canvas, to: url, progress: progress)
@@ -221,16 +226,16 @@ public final class Exporter: @unchecked Sendable {
             return [AVVideoCodecKey: AVVideoCodecType.hevc, AVVideoWidthKey: canvas.width,
                     AVVideoHeightKey: canvas.height, AVVideoColorPropertiesKey: color,
                     AVVideoCompressionPropertiesKey: [
-                        AVVideoAverageBitRateKey: preset.bitrate(for: canvas),
-                        AVVideoExpectedSourceFrameRateKey: preset.fps,
+                        AVVideoAverageBitRateKey: preset.bitrate(for: canvas, fps: fps),
+                        AVVideoExpectedSourceFrameRateKey: fps,
                         AVVideoProfileLevelKey: kVTProfileLevel_HEVC_Main_AutoLevel as String,
                     ]]
         default:
             return [AVVideoCodecKey: AVVideoCodecType.h264, AVVideoWidthKey: canvas.width,
                     AVVideoHeightKey: canvas.height, AVVideoColorPropertiesKey: color,
                     AVVideoCompressionPropertiesKey: [
-                        AVVideoAverageBitRateKey: preset.bitrate(for: canvas),
-                        AVVideoExpectedSourceFrameRateKey: preset.fps,
+                        AVVideoAverageBitRateKey: preset.bitrate(for: canvas, fps: fps),
+                        AVVideoExpectedSourceFrameRateKey: fps,
                         AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
                     ]]
         }

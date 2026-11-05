@@ -13,6 +13,7 @@ struct ExportSheet: View {
     @State private var error: String?
     @AppStorage("exportSubtitles") private var subtitles = true
     @State private var uploading: Double?
+    @State private var fullFrameRate = true
     @State private var sharedURL: URL?
 
     private var preset: ExportPreset { ExportPreset.all.first { $0.id == presetID } ?? ExportPreset.all[0] }
@@ -45,6 +46,10 @@ struct ExportSheet: View {
                 }
             }
 
+            if model.recording.meta.fps > 60 && presetID != "gif" {
+                Toggle("\(model.recording.meta.fps) bilder/s, som inspelningen", isOn: $fullFrameRate)
+                    .disabled(progress != nil)
+            }
             if model.plan.captions != nil && presetID != "gif" {
                 Toggle("Spara undertexter (.srt) bredvid filmen", isOn: $subtitles)
                     .disabled(progress != nil)
@@ -163,7 +168,8 @@ struct ExportSheet: View {
         error = nil
         progress = 0
         model.player.pause()
-        let exporter = Exporter(recording: model.recording, project: model.project, preset: preset)
+        let fps = model.recording.meta.fps > 60 && fullFrameRate ? model.recording.meta.fps : nil
+        let exporter = Exporter(recording: model.recording, project: model.project, preset: preset, fps: fps)
         self.exporter = exporter
         Task {
             do {

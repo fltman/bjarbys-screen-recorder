@@ -41,6 +41,10 @@ struct MenuBarContent: View {
             Picker("Bildfrekvens", selection: $settings.fps) {
                 Text("30 bilder/s").tag(30)
                 Text("60 bilder/s").tag(60)
+                // Bara om någon skärm visar 120 Hz (ProMotion): annars finns inga fler rutor att få.
+                if NSScreen.screens.contains(where: { $0.maximumFramesPerSecond >= 120 }) {
+                    Text("120 bilder/s").tag(120)
+                }
             }
             Divider()
         }
