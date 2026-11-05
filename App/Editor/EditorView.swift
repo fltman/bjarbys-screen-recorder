@@ -47,7 +47,16 @@ struct EditorView: View {
                 Divider()
             }
             VStack(spacing: 0) {
-                PlayerView(player: model.player)
+                Group {
+                    // Provläget `--prov-vyer`: videolagret ritas inte utanför skärmen, så rutan
+                    // visas som bild.
+                    if let frame = model.snapshotFrame {
+                        Image(nsImage: frame).resizable().aspectRatio(contentMode: .fit)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        PlayerView(player: model.player)
+                    }
+                }
                     .background(Color(nsColor: .underPageBackgroundColor))
                     .overlay(CanvasEditOverlay(model: model))
                     .frame(minHeight: 300)

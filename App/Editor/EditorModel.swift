@@ -58,6 +58,8 @@ final class EditorModel: ObservableObject {
     @Published var wordSelection: ClosedRange<Int>?
     @Published var transcriptShown = true
     private var transcriptionTask: Task<Void, Never>?
+    /// Rutan vid spelhuvudet som bild, bara i provläget `--prov-vyer`.
+    @Published var snapshotFrame: NSImage?
     @Published private(set) var translating: Double?
     @Published private(set) var translationError: String?
     private var translationTask: Task<Void, Never>?

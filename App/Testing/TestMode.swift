@@ -104,7 +104,8 @@ enum TestMode {
                     print(#"{"fel":"\#(error.localizedDescription)"}"#); code = 1
                 }
             } else if let i = args.firstIndex(of: "--prov-vyer"), args.count > i + 2 {
-                code = await viewSnapshots(out: URL(fileURLWithPath: args[i + 1]), bundle: URL(fileURLWithPath: args[i + 2]))
+                code = await viewSnapshots(out: URL(fileURLWithPath: args[i + 1]), bundle: URL(fileURLWithPath: args[i + 2]),
+                                           time: value(after: "--tid", in: args).flatMap(Double.init))
             } else if let i = args.firstIndex(of: "--prov-ljudstyrka"), args.count > i + 1 {
                 let m = try? await Loudness.measure(AVURLAsset(url: URL(fileURLWithPath: args[i + 1])))
                 print(m.map { String(format: #"{"lufs":%.2f,"topp_dbfs":%.2f,"forstarkning_db":%.2f}"#, $0.integrated,
@@ -565,7 +566,7 @@ enum TestMode {
     }
 
     /// Ritar appens fönster och paneler utanför skärmen, för att granska utseendet.
-    static func viewSnapshots(out: URL, bundle: URL) async -> Int32 {
+    static func viewSnapshots(out: URL, bundle: URL, time: Double? = nil) async -> Int32 {
         do {
             try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
             func shot<V: View>(_ name: String, _ size: NSSize, _ view: V, dark: Bool = false) async throws {
@@ -606,6 +607,17 @@ enum TestMode {
                 await model.seek(to: t + 0.5)
             }
             if model.selectedOverlayID == nil { model.selectedSegmentID = model.project.segments.first?.id }
+            if let t = time { await model.seek(to: min(t, model.duration)) }
+            // Rutan vid spelhuvudet som bild i förhandsvisningen (videolagret ritas inte här).
+            if let item = model.player.currentItem {
+                let generator = AVAssetImageGenerator(asset: item.asset)
+                generator.videoComposition = item.videoComposition
+                generator.requestedTimeToleranceBefore = .zero
+                generator.requestedTimeToleranceAfter = .zero
+                if let (image, _) = try? await generator.image(at: CMTime(seconds: model.currentTime, preferredTimescale: 600)) {
+                    model.snapshotFrame = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
+                }
+            }
             try await shot("redigerare", NSSize(width: 1400, height: 860), EditorView(model: model))
             try await shot("redigerare-mork", NSSize(width: 1400, height: 860), EditorView(model: model), dark: true)
             // En egen mask vid spelhuvudet, markerad. Sparas inte i paketet.

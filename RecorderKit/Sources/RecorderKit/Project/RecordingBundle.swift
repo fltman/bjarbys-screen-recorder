@@ -82,6 +82,10 @@ public struct RecordingBundle: Hashable, Identifiable, Sendable {
 /// Mappen där inspelningarna bor och genomsökningen av den.
 public enum RecordingLibrary {
     public static var defaultDirectory: URL {
+        // Ett annat bibliotek för demo- och produktbilder (aldrig användarens inspelningar i bild).
+        if let custom = ProcessInfo.processInfo.environment["SKARMINSPELARE_BIBLIOTEK"], !custom.isEmpty {
+            return URL(fileURLWithPath: NSString(string: custom).expandingTildeInPath, isDirectory: true)
+        }
         let movies = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first
             ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Movies")
         return movies.appendingPathComponent("Bjarbys skärminspelare", isDirectory: true)

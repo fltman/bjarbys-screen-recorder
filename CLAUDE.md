@@ -37,8 +37,9 @@ open Skarminspelare.xcodeproj
   - `--prov-rostisolering <ljudfil> <ut.caf>` — Apples röstisolering offline
   - `--prov-flashback <del-s> <buffert-s> <kör-s> <spara-s> <mapp>` — bufferten i drift, mäter skarvarna
   - `--prov-teleprompter <png>` — teleprompterrutan efter 6 s rullning, utanför skärmen
-  - `--prov-vyer <mapp> <paket>` — alla fönster och paneler (ljust och mörkt, inspektörens flikar)
-    som PNG; material och videolager ritas inte utanför skärmen
+  - `--prov-vyer <mapp> <paket> [--tid <s>]` — alla fönster och paneler (ljust och mörkt,
+    inspektörens flikar) som PNG; förhandsvisningen visar den renderade rutan vid `--tid` (videolager
+    och material ritas annars inte utanför skärmen)
   - `--prov-bildfrekvens <mapp> [bilder/s]` — verklig bildtakt: eget fönster rör sig varje bildruta
   - `--prov-trim <paket>` — trimningens gränser (grannar, inspelningens ändar, minsta längd)
   - `--prov-fonsterflytt <mapp>` — fönsterinspelning där fönstret flyttas mitt i
@@ -59,6 +60,8 @@ open Skarminspelare.xcodeproj
   - `--prov-moln <fil> <http://127.0.0.1:port>` — OAuth (PKCE, lokal mottagare) och uppladdning
     till YouTube och Dropbox mot en lokal provserver med påhittade nycklar (aldrig riktiga konton)
   Startad från terminalen lånar binären terminalens skärminspelningsbehörighet.
+  `SKARMINSPELARE_BIBLIOTEK=<mapp>` byter biblioteket (för produktbilder: `--prov-vyer` visar
+  annars användarens riktiga inspelningar i biblioteksvyn).
 - `./scripts/sync-check.sh` mäter A/V-synk mot en blixt+pip-referens i QuickTime.
 - `swift scripts/make-icon.swift <png>` ritar appikonen (skalas in i `App/Assets.xcassets`).
 - `python3 scripts/strings.py check` efter ett bygge: hittar gränssnittstexter som saknas i

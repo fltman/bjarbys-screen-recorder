@@ -18,3 +18,6 @@ Skarminspelare.xcodeproj/project.xcworkspace/xcuserdata/
 prov/
 
 .DS_Store
+
+# Produktvideons arbetsfiler (stora, genereras)
+marketing/
