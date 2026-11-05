@@ -306,6 +306,14 @@ växer fram. ⚠️ Först förstorades den råa skärmbilden — en mask hade s
 den maskade (provat med ifylld och pixlad mask: ingen läsbar text i luppen). ⚠️ En svart ruta
 som bakgrund i `CIBlendWithMask` gav svarta hörn runt cirkeln; bakgrunden ska vara `.empty()`.
 
+## Översättning av undertexter (2026-11-05)
+
+- `LanguageAvailability().status(from: sv, to: en)` = `unsupported` på macOS 26.1: Apples
+  översättning på datorn har ingen svenska.
+- whisper.cpp `-l sv -tr` på svenskt tal (macOS `say -v Alva`): `ggml-large-v3-turbo` och
+  `kb_whisper_ggml_medium` gav båda svensk text, ingen översättning (turbo är tränad utan
+  översättningsdata; KB-Whisper är finjusterad för svensk transkribering).
+
 ## Flera skärmar (2026-11-05)
 
 - Påhittat paket (A 960×540 pt + B 640×360 pt till höger, 100 pt ned): skrivbordet 3200×1080 px

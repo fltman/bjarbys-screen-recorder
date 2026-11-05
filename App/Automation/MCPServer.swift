@@ -142,6 +142,16 @@ enum MCPServer {
              "inputSchema": schema([:])],
             ["name": "stop_recording", "description": "Stop the recording started with start_recording.",
              "inputSchema": schema([:])],
+            ["name": "get_caption_cues",
+             "description": "The caption lines of a transcribed recording, numbered, with SOURCE times — to translate them (set_caption_translation).",
+             "inputSchema": schema(["recording": recordingArg], required: ["recording"])],
+            ["name": "set_caption_translation",
+             "description": "Save captions in another language: one translated text per line from get_caption_cues, same order and count. Keep each line short and natural for on-screen reading. show = burn this language into the film (default true); every language is written as its own .srt on export.",
+             "inputSchema": schema(["recording": recordingArg,
+                                    "language": ["type": "string", "description": "Language code, e.g. en, de, fi."],
+                                    "texts": ["type": "array", "items": ["type": "string"]],
+                                    "show": ["type": "boolean"]],
+                                   required: ["recording", "language", "texts"])],
             ["name": "list_plugins", "description": "Plugins installed in ~/Library/Application Support/Bjarbys skärminspelare/Plugins: name, whether the user has enabled them, hooks and actions.",
              "inputSchema": schema([:])],
             ["name": "run_plugin_action",
@@ -348,6 +358,31 @@ enum MCPServer {
             active = nil
             let meta = await s.stop()
             return describe(s.bundle, meta: meta)
+        case "get_caption_cues":
+            let rec = try resolve(a)
+            guard let words = rec.transcript?.words, !words.isEmpty else { throw ToolError("Not transcribed yet — run transcribe first.") }
+            let cues = CaptionTranslation.sourceCues(words, duration: rec.meta.duration)
+            return "\(cues.count) caption lines (SOURCE seconds, language \(rec.transcript?.language ?? "?")). Translate each line and call set_caption_translation with texts in the same order:\n"
+                + cues.enumerated().map { i, c in "\(i)\t\(Producer.fmt(c.start))–\(Producer.fmt(c.end))\t\(c.text)" }.joined(separator: "\n")
+        case "set_caption_translation":
+            let rec = try resolve(a)
+            guard let words = rec.transcript?.words, !words.isEmpty else { throw ToolError("Not transcribed yet.") }
+            guard let language = (a["language"] as? String)?.lowercased(), language.count >= 2, language.count <= 8,
+                  language.allSatisfy({ $0.isLetter || $0 == "-" }) else { throw ToolError("Give language as a code, e.g. en.") }
+            let texts = a["texts"] as? [String] ?? []
+            let cues = CaptionTranslation.sourceCues(words, duration: rec.meta.duration)
+            guard texts.count == cues.count else {
+                throw ToolError("Got \(texts.count) texts for \(cues.count) lines — call get_caption_cues and translate every line, in order.")
+            }
+            let translation = CaptionTranslation(language: language, cues: zip(cues, texts).map {
+                .init(start: $0.start, end: $0.end, text: $1.trimmingCharacters(in: .whitespacesAndNewlines)) })
+            try rec.bundle.saveTranslation(translation)
+            if a["show"] as? Bool ?? true {
+                var p = rec.bundle.loadProject(duration: rec.meta.duration)
+                p.captions.language = language
+                try rec.bundle.saveProject(p)
+            }
+            return "Saved \(texts.count) lines in \(language). The film's captions now show \(a["show"] as? Bool ?? true ? language : "the original"); exports write an .srt per language."
         case "list_plugins":
             let enabled = Set(UserDefaults.standard.stringArray(forKey: "enabledPlugins") ?? [])
             let plugins = Plugins.discover()
@@ -964,11 +999,9 @@ enum MCPServer {
             text += String(format: "\nLoudness: measured %.1f LUFS, gain %+.1f dB%@.", l.measured, l.gainDB,
                            l.limitedByPeaks ? " (limited by peaks, under the target)" : "")
         }
-        if a["subtitles"] as? Bool ?? true, preset.id != "gif", let words = rec.transcript?.words, !words.isEmpty {
-            let srt = url.deletingPathExtension().appendingPathExtension("srt")
-            let captions = Captions(words: words, timeMap: TimeMap(segments: project.segments))
-            try (range.map { captions.srt(in: $0) } ?? captions.srt).write(to: srt, atomically: true, encoding: .utf8)
-            text += "\nSubtitles: \(srt.path)"
+        if a["subtitles"] as? Bool ?? true, preset.id != "gif", !(rec.transcript?.words.isEmpty ?? true) {
+            let files = SubtitleFiles.write(rec, project: project, range: range, nextTo: url)
+            if !files.isEmpty { text += "\nSubtitles: " + files.map(\.path).joined(separator: ", ") }
         }
         if let target = a["upload_to"] as? String, target == "youtube" || target == "dropbox" {
             guard !preset.fileExtension.isEmpty else { throw ToolError(text + "\nNot uploaded: a folder can't be uploaded; export a single file.") }

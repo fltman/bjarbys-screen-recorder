@@ -27,6 +27,8 @@ public struct Captions: Equatable, Sendable {
 
     public let cues: [Cue]
 
+    init(cues: [Cue]) { self.cues = cues }
+
     public init(words: [Transcript.Word], timeMap: TimeMap) {
         // Orden i utdatatid; bortklippta ord faller bort.
         struct Placed { var start: Double; var end: Double; var text: String; var newSentence: Bool }

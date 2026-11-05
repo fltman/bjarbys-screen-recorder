@@ -136,7 +136,7 @@ public final class RenderPlan: @unchecked Sendable {
                 cursors: CursorCatalog, cursorsDir: URL, hasCamera: Bool, words: [Transcript.Word] = [],
                 transparentBackground: Bool = false, mediaDir: URL? = nil,
                 cursorPath: CursorPath? = nil, cameraPath: CameraPath? = nil, outputHDR: Bool = false,
-                faceTrack: FaceTrack? = nil) {
+                faceTrack: FaceTrack? = nil, translation: CaptionTranslation? = nil) {
         self.faceTrack = faceTrack
         displayRects = Self.displayRects(meta)
         self.transparent = transparentBackground
@@ -249,8 +249,9 @@ public final class RenderPlan: @unchecked Sendable {
             captions = nil
             speech = []
         } else {
-            captions = Captions(words: words, timeMap: timeMap)
+            // Översatta undertexter ersätter originalets (samma rader, ingen ordmarkering).
             let map = timeMap
+            if let translation { captions = Captions(translation: translation, timeMap: map) } else { captions = Captions(words: words, timeMap: map) }
             speech = Transcript(words: words).speech().compactMap { r in
                 guard let a = map.output(at: r.lowerBound) ?? map.output(at: r.upperBound),
                       let b = map.output(at: r.upperBound) ?? map.output(at: r.lowerBound), b >= a else { return nil }

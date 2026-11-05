@@ -115,6 +115,13 @@ Filer som räknas fram ur inspelningen och alltid går att göra om.
 | `mic-isolated.caf` | mikrofonen efter Apples röstisolering, 48 kHz mono, börjar vid tidslinjens nollpunkt |
 | `camera-faces.json` | ansiktet i kamerabilden: `samples[]` med `t` (källtid), `x`, `y` (mitt, 0–1, origo nere till vänster), `h` (höjd), fyra per sekund, utjämnade — för `camera.followFace` |
 
+## captions-<språk>.json
+
+Undertexterna på ett annat språk (`language`, `cues[]` med `start`, `end` i källtid och `text`),
+samma rader som originalet. Görs av producenten via MCP (`get_caption_cues` →
+`set_caption_translation`). `captions.language` i `project.json` väljer vilket språk som bränns
+in; exporten skriver `<namn>.srt` på det språket och `<namn>.<språk>.srt` för de andra.
+
 ## transcript.json
 
 Härlett ur inspelningen och går alltid att göra om (`Transkribera om`). Bortklippta ord är inte

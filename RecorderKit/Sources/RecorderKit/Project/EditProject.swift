@@ -544,11 +544,13 @@ public struct EditProject: Codable, Equatable, Sendable {
         /// Vit text på en mörk platta, eller fet text med svart kontur utan platta.
         public enum Look: String, Codable, Sendable, CaseIterable { case box, outline }
         public var look: Look
+        /// Språket som bränns in: "" = originalet, annars en översättning (`captions-<språk>.json`).
+        public var language: String
 
         public init(visible: Bool = true, size: Double = 1, highlightWord: Bool = false,
                     position: Position = .bottom, look: Look = .box) {
             self.visible = visible; self.size = size; self.highlightWord = highlightWord
-            self.position = position; self.look = look
+            self.position = position; self.look = look; self.language = ""
         }
 
         public init(from decoder: Decoder) throws {
@@ -559,6 +561,7 @@ public struct EditProject: Codable, Equatable, Sendable {
             highlightWord = c.value(.highlightWord, d.highlightWord)
             position = c.value(.position, d.position)
             look = c.value(.look, d.look)
+            language = c.value(.language, d.language)
         }
     }
 

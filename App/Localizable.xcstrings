@@ -5560,6 +5560,23 @@
         }
       }
     },
+    "Originalet": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Originalet"
+          }
+        }
+      }
+    },
     "Oskärpa": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -7005,6 +7022,23 @@
         }
       }
     },
+    "Språk i bild": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language on screen"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Språk i bild"
+          }
+        }
+      }
+    },
     "Spår som slutat fungera: %@": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -8106,6 +8140,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Undertexter i filmen"
+          }
+        }
+      }
+    },
+    "Undertexter på fler språk: be producenten i Claude Code att översätta dem (till exempel «översätt undertexterna till engelska»).": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captions in more languages: ask the producer in Claude Code to translate them (for example «translate the captions to English»)."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undertexter på fler språk: be producenten i Claude Code att översätta dem (till exempel «översätt undertexterna till engelska»)."
           }
         }
       }

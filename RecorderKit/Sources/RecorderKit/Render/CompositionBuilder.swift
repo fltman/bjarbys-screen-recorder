@@ -75,7 +75,8 @@ public struct LoadedRecording: @unchecked Sendable {
                    cursorsDir: bundle.cursorsDir, hasCamera: hasCamera, words: transcript?.words ?? [],
                    transparentBackground: transparentBackground, mediaDir: bundle.mediaDir,
                    cursorPath: cursorPath, cameraPath: cameraPath, outputHDR: hdr && meta.hdr,
-                   faceTrack: project.camera.followFace ? faceTrack : nil)
+                   faceTrack: project.camera.followFace ? faceTrack : nil,
+                   translation: project.captions.language.isEmpty ? nil : bundle.readTranslation(project.captions.language))
     }
 
     public var isHDR: Bool { meta.hdr }

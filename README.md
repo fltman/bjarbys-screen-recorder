@@ -99,6 +99,8 @@ is included; to have the app follow your system language instead, run
 **Speech** (with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), locally)
 - Transcribe the recording and edit the video by striking out words in the text. Cut words
   stay visible, struck through, and can be restored.
+- Captions in other languages: the AI producer translates the caption lines (Claude Code via MCP)
+  and you pick which language is burned in; every language is written as its own `.srt`.
 - Captions burned into the video — at the bottom, in the middle (for vertical Reels) or at the
   top, on a dark box or as bold outlined text — optionally with the spoken word highlighted, and
   an `.srt` file next to the export.

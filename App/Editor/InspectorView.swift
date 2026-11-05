@@ -485,6 +485,19 @@ struct InspectorView: View {
                 Toggle("Undertexter i filmen", isOn: binding(\.captions.visible))
                 LabeledSlider("Textstorlek", value: binding(\.captions.size), range: 0.6...1.6, format: "%.0f %%", scale: 100)
                     .disabled(!model.project.captions.visible)
+                let languages = model.recording.bundle.translationLanguages
+                if !languages.isEmpty {
+                    Picker("Språk i bild", selection: binding(\.captions.language)) {
+                        Text("Originalet").tag("")
+                        ForEach(languages, id: \.self) { lang in
+                            Text(verbatim: AppLocale.locale.localizedString(forLanguageCode: lang)?.capitalized ?? lang).tag(lang)
+                        }
+                    }
+                    .disabled(!model.project.captions.visible)
+                } else {
+                    Text("Undertexter på fler språk: be producenten i Claude Code att översätta dem (till exempel «översätt undertexterna till engelska»).")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 Toggle("Markera ordet som sägs", isOn: binding(\.captions.highlightWord))
                     .disabled(!model.project.captions.visible)
                     .help("Ordet som sägs just nu lyser gult, som i undertexter på sociala medier.")

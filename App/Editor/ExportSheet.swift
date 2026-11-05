@@ -451,9 +451,9 @@ struct ExportSheet: View {
                     try await exporter.run(to: job.url) { p in
                         Task { @MainActor in progress = (Double(i) + p) / Double(jobs.count) }
                     }
-                    if subtitles, !isGIF, let captions = model.plan.captions {
-                        let srt = range.map { captions.srt(in: $0) } ?? captions.srt
-                        try? srt.write(to: job.url.deletingPathExtension().appendingPathExtension("srt"), atomically: true, encoding: .utf8)
+                    if subtitles, !isGIF, model.plan.captions != nil {
+                        // Det visade språket som <namn>.srt, övriga (original, översättningar) som <namn>.<språk>.srt.
+                        SubtitleFiles.write(model.recording, project: model.project, range: range, nextTo: job.url)
                     }
                     done.append(job.url)
                 } catch Exporter.ExportError.cancelled {
