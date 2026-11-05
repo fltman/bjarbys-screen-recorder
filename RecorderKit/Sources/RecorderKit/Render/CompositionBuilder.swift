@@ -111,8 +111,22 @@ public enum CompositionBuilder {
             }
         }
 
+        // Extra ljud (berättarröst, musik, effekter) på sina utdatatider, i normal hastighet.
+        for (i, clip) in plan.project.audioClips.enumerated() {
+            guard let at = plan.timeMap.output(at: clip.at), at < cursor.seconds else { continue }
+            let asset = AVURLAsset(url: rec.bundle.mediaDir.appendingPathComponent(clip.file))
+            guard let source = try? await asset.loadTracks(withMediaType: .audio).first,
+                  let range = try? await source.load(.timeRange),
+                  let track = composition.addMutableTrack(withMediaType: .audio,
+                                                          preferredTrackID: audioClipTrackBase + CMPersistentTrackID(i)) else { continue }
+            let start = CMTime(seconds: at, preferredTimescale: timescale)
+            let room = cursor - start
+            let length = CMTimeMinimum(range.duration, room)
+            try? track.insertTimeRange(CMTimeRange(start: range.start, duration: length), of: source, at: start)
+        }
+
         let video = videoComposition(plan: plan, duration: cursor, fps: fps, hasCamera: hasCamera)
-        let mix = audioMix(for: composition, audio: plan.project.audio, speech: plan.speech)
+        let mix = audioMix(for: composition, plan: plan)
         return Result(composition: composition, videoComposition: video, audioMix: mix, duration: cursor)
     }
 
@@ -121,6 +135,8 @@ public enum CompositionBuilder {
     static let cameraTrackID: CMPersistentTrackID = 2
     static let microphoneTrackID: CMPersistentTrackID = 3
     static let systemTrackID: CMPersistentTrackID = 4
+    /// Ljudklipp får id 100, 101 … i projektets ordning, så att mixen hittar dem igen.
+    static let audioClipTrackBase: CMPersistentTrackID = 100
 
     public static func videoComposition(plan: RenderPlan, duration: CMTime, fps: Int, hasCamera: Bool) -> AVVideoComposition {
         let instruction = PolishInstruction(timeRange: CMTimeRange(start: .zero, duration: duration), plan: plan,
@@ -135,26 +151,54 @@ public enum CompositionBuilder {
             renderSize: plan.canvas))
     }
 
-    /// `speech` är talet i utdatatid; med `duckSystem` sänks datorljudet under det.
-    public static func audioMix(for composition: AVComposition, audio mix: EditProject.AudioMix,
-                                speech: [ClosedRange<Double>] = []) -> AVMutableAudioMix {
+    /// Ljudmixen: volym och tystning per spår, datorljudet under tal (om valt), mikrofon och
+    /// datorljud under berättarröst, musik under tal och berättarröst, och klippens toningar.
+    public static func audioMix(for composition: AVComposition, plan: RenderPlan) -> AVMutableAudioMix {
+        let mix = plan.project.audio
+        let map = plan.timeMap
+        // Berättarrösten i utdatatid.
+        let narration: [ClosedRange<Double>] = plan.project.audioClips.filter { $0.role == .narration }.compactMap { c in
+            map.output(at: c.at).map { $0...($0 + c.duration) }
+        }
         var params: [AVMutableAudioMixInputParameters] = []
+        func time(_ s: Double) -> CMTime { CMTime(seconds: max(0, s), preferredTimescale: 600) }
+        func apply(_ p: AVMutableAudioMixInputParameters, base: Double, ramps: [Ducking.Ramp]) {
+            if ramps.first.map({ $0.start > 0.001 }) ?? true { p.setVolume(Float(base), at: .zero) }
+            for r in ramps {
+                p.setVolumeRamp(fromStartVolume: Float(r.from), toEndVolume: Float(r.to),
+                                timeRange: CMTimeRange(start: time(r.start), end: time(r.end)))
+            }
+        }
         for track in composition.tracks(withMediaType: .audio) {
             let p = AVMutableAudioMixInputParameters(track: track)
-            let isMic = track.trackID == microphoneTrackID
-            let volume = isMic ? (mix.microphoneMuted ? 0 : mix.microphoneVolume) : (mix.systemMuted ? 0 : mix.systemVolume)
-            let ramps = !isMic && mix.duckSystem && volume > 0
-                ? Ducking.ramps(speech: speech, level: volume * mix.duckLevel, normal: volume) : []
-            // En punkt och en ramp får inte överlappa; börjar en ramp direkt bär den nivån.
-            if ramps.first.map({ $0.start > 0.001 }) ?? true { p.setVolume(Float(volume), at: .zero) }
-            do {
-                for ramp in ramps {
-                    p.setVolumeRamp(fromStartVolume: Float(ramp.from), toEndVolume: Float(ramp.to),
-                                    timeRange: CMTimeRange(start: CMTime(seconds: ramp.start, preferredTimescale: 600),
-                                                           end: CMTime(seconds: ramp.end, preferredTimescale: 600)))
-                }
-            }
             p.audioTimePitchAlgorithm = .spectral
+            switch track.trackID {
+            case microphoneTrackID, systemTrackID:
+                let isMic = track.trackID == microphoneTrackID
+                let volume = isMic ? (mix.microphoneMuted ? 0 : mix.microphoneVolume) : (mix.systemMuted ? 0 : mix.systemVolume)
+                var under = narration
+                if !isMic && mix.duckSystem { under += plan.speech }
+                let ramps = volume > 0 ? Ducking.ramps(speech: under, level: volume * mix.duckLevel, normal: volume) : []
+                apply(p, base: volume, ramps: ramps)
+            default:
+                let index = Int(track.trackID - audioClipTrackBase)
+                guard plan.project.audioClips.indices.contains(index),
+                      let at = map.output(at: plan.project.audioClips[index].at) else { apply(p, base: 0, ramps: []); break }
+                let clip = plan.project.audioClips[index]
+                let end = at + clip.duration
+                var ramps: [Ducking.Ramp] = []
+                if clip.fadeIn > 0.01 { ramps.append(.init(start: at, end: at + clip.fadeIn, from: 0, to: clip.volume)) }
+                if clip.role == .music {
+                    // Musiken sänks under tal och berättarröst, mellan toningarna.
+                    let inside = (plan.speech + narration).compactMap { r -> ClosedRange<Double>? in
+                        let a = max(r.lowerBound, at + clip.fadeIn + 0.3), b = min(r.upperBound, end - clip.fadeOut - 0.6)
+                        return b > a ? a...b : nil
+                    }
+                    ramps += Ducking.ramps(speech: inside, level: clip.volume * 0.3, normal: clip.volume)
+                }
+                if clip.fadeOut > 0.01 { ramps.append(.init(start: end - clip.fadeOut, end: end, from: clip.volume, to: 0)) }
+                apply(p, base: clip.fadeIn > 0.01 ? 0 : clip.volume, ramps: ramps.sorted { $0.start < $1.start })
+            }
             params.append(p)
         }
         let m = AVMutableAudioMix()

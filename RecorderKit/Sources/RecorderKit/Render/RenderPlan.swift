@@ -51,6 +51,9 @@ public final class RenderPlan: @unchecked Sendable {
     let captionImages = CaptionImageCache()
     /// Talet i utdatatid, för att sänka datorljudet under det.
     public let speech: [ClosedRange<Double>]
+    /// Bildlagret och kapitlen i utdatatid.
+    public let overlayTrack: OverlayTrack
+    let overlayImages = CaptionImageCache()
 
     struct Sprite {
         let image: CIImage
@@ -176,6 +179,7 @@ public final class RenderPlan: @unchecked Sendable {
             }
         }
         showsCaptions = project.captions.visible && !(captions?.cues.isEmpty ?? true)
+        overlayTrack = OverlayTrack(overlays: project.overlays, chapters: project.chapters, timeMap: timeMap)
 
         // Kortkommandon: bara de texter som faktiskt förekommer ritas, en gång var.
         let track = ShortcutTrack(events: events, timeMap: timeMap)
@@ -245,6 +249,32 @@ public final class RenderPlan: @unchecked Sendable {
             }
         }
 
+        // Markeringar: i innehållet, så att de följer knappen när bilden zoomas.
+        for shown in overlayTrack.visible(at: t) where shown.overlay.kind == .callout {
+            guard let target = shown.overlay.target else { continue }
+            let a = point(CGPoint(x: target.x, y: target.y))
+            let b = point(CGPoint(x: target.x + target.width, y: target.y + target.height))
+            var rect = CGRect(x: min(a.x, b.x), y: min(a.y, b.y), width: abs(b.x - a.x), height: abs(b.y - a.y))
+            rect = rect.insetBy(dx: -max(5, rect.height * 0.25), dy: -max(5, rect.height * 0.25))
+            // Dyker upp något större och drar ihop sig om målet.
+            let grow = 0.18 * (1 - Self.easeOut(shown.entrance))
+            rect = rect.insetBy(dx: -rect.width * grow / 2, dy: -rect.height * grow / 2)
+            layer = Self.withAlpha(OverlayRenderer.calloutFrame(rect, canvas: canvas), shown.opacity).composited(over: layer)
+            let text = shown.overlay.title
+            if !text.isEmpty {
+                let label = overlayImages.image(for: "callout|\(shown.overlay.id)|\(text)") {
+                    OverlayRenderer.calloutLabel(text, canvas: canvas)
+                }
+                let e = label.extent
+                let gap = OverlayRenderer.unit(canvas) * 0.012
+                var y = rect.maxY + gap
+                if y + e.height > screenRect.maxY { y = rect.minY - gap - e.height }
+                let x = min(max(rect.midX - e.width / 2, screenRect.minX + gap), screenRect.maxX - e.width - gap)
+                let placed = label.transformed(by: CGAffineTransform(translationX: x.rounded() - e.minX, y: y.rounded() - e.minY))
+                layer = Self.withAlpha(placed, shown.opacity).composited(over: layer)
+            }
+        }
+
         if let shadow { layer = layer.composited(over: shadow) }
 
         // Zoomen: punkten `center` i innehållet hamnar mitt i skärmytan, förstorad `zoom` gånger.
@@ -276,6 +306,41 @@ public final class RenderPlan: @unchecked Sendable {
             ])
             if let cameraShadow { out = cameraShadow.composited(over: out) }
             out = bubble.composited(over: out)
+        }
+
+        // Bildlagret som ligger fast i bildytan: rubrikkort, faktarutor, QR-kort.
+        let u = OverlayRenderer.unit(canvas)
+        for shown in overlayTrack.visible(at: t) where shown.overlay.kind != .callout {
+            let o = shown.overlay
+            let key = "\(o.kind.rawValue)|\(o.id)|\(o.title)|\(o.lines.joined(separator: "¦"))|\(o.url)"
+            let image = overlayImages.image(for: key) {
+                switch o.kind {
+                case .title: OverlayRenderer.title(o, canvas: canvas)
+                case .qr: OverlayRenderer.qr(o, canvas: canvas)
+                default: OverlayRenderer.fact(o, canvas: canvas)
+                }
+            }
+            let e = image.extent
+            let slide = (1 - Self.easeOut(shown.entrance)) * u * 0.02
+            if o.kind == .title {
+                out = Self.withAlpha(CIImage(color: CIColor(red: 0, green: 0, blue: 0, alpha: 0.38)).cropped(to: canvasRect),
+                                     shown.opacity).composited(over: out)
+            }
+            var origin = placement(of: o, size: e.size)
+            origin.y -= slide
+            let placed = image.transformed(by: CGAffineTransform(translationX: origin.x.rounded() - e.minX, y: origin.y.rounded() - e.minY))
+            out = Self.withAlpha(placed, shown.opacity).composited(over: out)
+        }
+
+        // Kapitelraden, uppe till vänster när ett kapitel börjar.
+        if project.showsChapterBanner, let banner = overlayTrack.chapterBanner(at: t) {
+            let image = overlayImages.image(for: "chapter|\(banner.number)|\(banner.of)|\(banner.title)") {
+                OverlayRenderer.chapterBanner(banner.title, number: banner.number, of: banner.of, canvas: canvas)
+            }
+            let e = image.extent
+            let m = (u * 0.04).rounded()
+            let placed = image.transformed(by: CGAffineTransform(translationX: m - e.minX, y: canvas.height - m - e.height - e.minY))
+            out = Self.withAlpha(placed, banner.opacity).composited(over: out)
         }
 
         // Undertexten: fast i bildytan, nere i mitten.
@@ -504,6 +569,55 @@ public final class RenderPlan: @unchecked Sendable {
         guard let img = ctx.makeImage() else { return CIImage.empty() }
         let ci = CIImage(cgImage: img)
         return prerender(ci, extent: ci.extent)
+    }
+
+    /// Var en fast ruta (rubrikkort, faktaruta, QR) hamnar i bildytan, givet dess storlek.
+    func placement(of o: Overlay, size e: CGSize) -> CGPoint {
+        let m = (OverlayRenderer.unit(canvas) * 0.045).rounded()
+        if o.kind == .title { return CGPoint(x: (canvas.width - e.width) / 2, y: (canvas.height - e.height) / 2) }
+        let left = o.corner == .topLeft || o.corner == .bottomLeft
+        let bottom = o.corner == .bottomLeft || o.corner == .bottomRight
+        var y = bottom ? m : canvas.height - m - e.height
+        // Inte under undertexterna, och inte över kamerabubblan i samma hörn.
+        if bottom && showsCaptions { y += Self.captionReserve(canvas: canvas, size: project.captions.size) }
+        if cameraMask != nil && Self.sameCorner(o.corner, project.camera.corner) {
+            y += bottom ? cameraRect.height + m * 0.5 : -(cameraRect.height + m * 0.5)
+        }
+        return CGPoint(x: left ? m : canvas.width - m - e.width, y: y)
+    }
+
+    /// Rutans ram i bildytan (för preflight: täcker den något viktigt?).
+    public func frame(of o: Overlay) -> CGRect? {
+        guard o.kind != .callout else { return nil }
+        let image: CIImage = switch o.kind {
+        case .title: OverlayRenderer.title(o, canvas: canvas)
+        case .qr: OverlayRenderer.qr(o, canvas: canvas)
+        default: OverlayRenderer.fact(o, canvas: canvas)
+        }
+        return CGRect(origin: placement(of: o, size: image.extent.size), size: image.extent.size)
+    }
+
+    /// Var en innehållsrektangel (0–1) syns i bildytan vid källtiden `s`, med zoomen.
+    public func canvasRect(content r: CGRect, at s: Double) -> CGRect {
+        let a = point(CGPoint(x: r.minX, y: r.minY)), b = point(CGPoint(x: r.maxX, y: r.maxY))
+        var rect = CGRect(x: min(a.x, b.x), y: min(a.y, b.y), width: abs(b.x - a.x), height: abs(b.y - a.y))
+        let (zoom, raw) = cameraPath.viewport(at: s)
+        if zoom > 1.0005 || fills {
+            let c = point(coverageClamped(raw, zoom: zoom))
+            rect = rect.applying(CGAffineTransform(translationX: -c.x, y: -c.y)
+                .concatenating(CGAffineTransform(scaleX: zoom, y: zoom))
+                .concatenating(CGAffineTransform(translationX: screenRect.midX, y: screenRect.midY)))
+        }
+        return rect
+    }
+
+    static func easeOut(_ x: Double) -> Double { 1 - pow(1 - min(max(x, 0), 1), 3) }
+
+    static func sameCorner(_ a: Overlay.Corner, _ b: EditProject.CameraStyle.Corner) -> Bool {
+        switch (a, b) {
+        case (.topLeft, .topLeft), (.topRight, .topRight), (.bottomLeft, .bottomLeft), (.bottomRight, .bottomRight): true
+        default: false
+        }
     }
 
     /// Undertextens radhöjd i pixlar.

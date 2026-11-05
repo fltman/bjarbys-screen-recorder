@@ -30,6 +30,13 @@ public struct EditProject: Codable, Equatable, Sendable {
     public var captions: CaptionStyle
     /// Dolda områden: känslig text som hittats automatiskt, och egna.
     public var masks: [Mask]
+    /// Bildlagret: rubrikkort, markeringar, faktarutor, QR-kort.
+    public var overlays: [Overlay]
+    public var chapters: [Chapter]
+    /// Visa en kort kapitelrad i bild när ett kapitel börjar.
+    public var showsChapterBanner: Bool
+    /// Extra ljud: berättarröst, musik och effekter, lagda på källtider.
+    public var audioClips: [AudioClip]
 
     public init() {
         schemaVersion = RecorderKit.formatVersion
@@ -49,6 +56,10 @@ public struct EditProject: Codable, Equatable, Sendable {
         shortcuts = ShortcutStyle()
         captions = CaptionStyle()
         masks = []
+        overlays = []
+        chapters = []
+        showsChapterBanner = true
+        audioClips = []
     }
 
     /// Ett nytt projekt för en inspelning: allt med, i normal hastighet.
@@ -78,6 +89,10 @@ public struct EditProject: Codable, Equatable, Sendable {
         shortcuts = c.value(.shortcuts, d.shortcuts)
         captions = c.value(.captions, d.captions)
         masks = c.value(.masks, d.masks)
+        overlays = c.value(.overlays, d.overlays)
+        chapters = c.value(.chapters, d.chapters)
+        showsChapterBanner = c.value(.showsChapterBanner, d.showsChapterBanner)
+        audioClips = c.value(.audioClips, d.audioClips)
     }
 
     // MARK: - Delar

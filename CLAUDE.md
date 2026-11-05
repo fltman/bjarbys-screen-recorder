@@ -68,6 +68,16 @@ i appens egen domän före första lokaliserade text (den här Macen har en-US f
 finns kvar i katalogen; `defaults write com.brattoo.skarminspelare followSystemLanguage -bool true`
 låter appen följa systemspråket.
 
+## Producenten (AI-redigering)
+
+Som i Generativet-studion: AI:n (Claude Code via MCP, prompten `producera`) fattar besluten,
+verktygen renderar dem. `RecorderKit/Guide/Producer.swift`: `overview` (underlaget i källtid:
+tal, klick med elementnamn och ram, dödtid), `preflight` (regler) och `coverage` (täcker en ruta
+det som klickas — räknat i färdig bild med zoom). Bildlagret: `Project/Overlays.swift`,
+ritas i `Render/OverlayRenderer.swift`. Regeln från demo-creator: det som sägs ska synas —
+producenten renderar och läser varje ruta med lager/berättarröst innan leverans. Berättarröst
+görs med elevenlabs-dialogue-skillen (kostar pengar, fråga om röst och språk först).
+
 ## Styrning utifrån
 
 - `Skarminspelare --mcp` — MCP-server över stdio (`App/Automation/MCPServer.swift`). stdout är

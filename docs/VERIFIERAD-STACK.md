@@ -225,3 +225,14 @@ tal, film 0,57 MB, guide, 42 rader `log show` för Finder, zip 1,1 MB (`ditto -c
 - Inspelning i 120: valet finns bara om en skärm har `maximumFramesPerSecond ≥ 120`.
   **Inte uppmätt**: ScreenCaptureKit skickar bara rutor när bilden ändras, och det fanns ingen
   rörelse att mäta mot (prova med en video eller scroll på en ProMotion-skärm).
+
+## Producenten via MCP (2026-11-05)
+
+Ett helt varv på ett demopaket (syntetisk skärm, tal med `say`, klick på «Exportera» med
+elementram): prompts/list → `producera`; `get_overview` gav tal med tider, klicket med namn och
+ram [0.781,0.013,0.083,0.039] och ⌘S; `set_segments`, `set_chapters` (YouTube 0:00/0:04),
+`set_overlays` där markeringen fick ram och etikett ur klicket, `add_audio` (musik), preflight.
+Renderade rutor: rubrikkort med dämpad bakgrund, kapitelrad, QR-kort ovanför undertexterna,
+markering runt knappen. ⚠️ Faktarutan uppe till höger täckte knappen som just klickats — syntes
+bara i bilden. Preflight har nu `coverage` (rutans ram mot klickade elements ram i färdig bild,
+med zoom, ±2,5 s) och fångar det som fel.

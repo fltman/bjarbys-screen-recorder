@@ -53,13 +53,21 @@ enum MCPServer {
         case "initialize":
             let requested = params["protocolVersion"] as? String
             reply(id, ["protocolVersion": requested ?? protocolVersion,
-                       "capabilities": ["tools": [String: Any]()],
+                       "capabilities": ["tools": [String: Any](), "prompts": [String: Any]()],
                        "serverInfo": ["name": "skarminspelare", "version": appVersion],
                        "instructions": instructions])
         case "ping":
             reply(id, [String: Any]())
         case "tools/list":
             reply(id, ["tools": tools])
+        case "prompts/list":
+            reply(id, ["prompts": [["name": "producera",
+                                    "description": "Produce a screen recording like a producer: cut, zoom, chapters, overlays, captions, optional narration, checked frame by frame, with a delivery note.",
+                                    "arguments": [["name": "recording", "description": "Path, name or \"latest\"", "required": false]]]]])
+        case "prompts/get":
+            let ref = (params["arguments"] as? [String: Any])?["recording"] as? String ?? "latest"
+            reply(id, ["description": "Producera en skärminspelning",
+                       "messages": [["role": "user", "content": ["type": "text", "text": producerPrompt(ref)]]]])
         case "tools/call":
             let name = params["name"] as? String ?? ""
             let args = params["arguments"] as? [String: Any] ?? [:]
@@ -165,6 +173,50 @@ enum MCPServer {
                                     "polish": ["type": "boolean", "description": "Background, padding and shadow (default true)."],
                                     "background_preset": ["type": "integer", "minimum": 0, "maximum": 7],
                                     "path": ["type": "string"]])],
+            ["name": "get_overview",
+             "description": "Everything a producer needs about a recording, in source time: current decisions, what is said, every click with the element's name and frame, shortcuts, dead time.",
+             "inputSchema": schema(["recording": recordingArg], required: ["recording"])],
+            ["name": "set_overlays",
+             "description": "Set the overlay layer (replaces all overlays unless append is true). Kinds: title (centered card; lines[0] = subtitle), callout (outline around a UI element with a label; give target [x,y,w,h] 0–1, or target_click_at = time of a click to use that element's frame), fact (box with title + up to 3 lines, in a corner), qr (QR code card with title, url, lines[0] = label, in a corner). at = SOURCE seconds, duration = seconds on screen.",
+             "inputSchema": schema(["recording": recordingArg,
+                                    "append": ["type": "boolean"],
+                                    "overlays": ["type": "array", "items": ["type": "object", "properties": [
+                                        "kind": ["type": "string", "enum": ["title", "callout", "fact", "qr"]],
+                                        "at": ["type": "number"], "duration": ["type": "number"],
+                                        "title": ["type": "string"], "lines": ["type": "array", "items": ["type": "string"]],
+                                        "url": ["type": "string"],
+                                        "target": ["type": "array", "items": ["type": "number"], "minItems": 4, "maxItems": 4],
+                                        "target_click_at": ["type": "number"],
+                                        "corner": ["type": "string", "enum": ["topLeft", "topRight", "bottomLeft", "bottomRight"]]],
+                                        "required": ["kind", "at"]]]],
+                                   required: ["recording", "overlays"])],
+            ["name": "set_chapters",
+             "description": "Set the chapters (replaces all). Each {at: SOURCE seconds, title}. A short chapter banner shows in the video; YouTube timestamps are returned.",
+             "inputSchema": schema(["recording": recordingArg,
+                                    "chapters": ["type": "array", "items": ["type": "object", "properties": [
+                                        "at": ["type": "number"], "title": ["type": "string"]], "required": ["at", "title"]]],
+                                    "banner": ["type": "boolean", "description": "Show the chapter banner in the video (default true)."]],
+                                   required: ["recording", "chapters"])],
+            ["name": "set_segments",
+             "description": "Set the parts of the recording to keep, in output order (an edit decision list): [[start, end, speed?], …] in SOURCE seconds. Cut at pauses between words, not inside them.",
+             "inputSchema": schema(["recording": recordingArg,
+                                    "keep": ["type": "array", "items": ["type": "array", "items": ["type": "number"], "minItems": 2, "maxItems": 3]]],
+                                   required: ["recording", "keep"])],
+            ["name": "add_audio",
+             "description": "Add an audio file to the recording: narration (made with the elevenlabs-dialogue skill — never raw TTS; confirm voice and language with the user first, it costs money), music (ducked under speech and narration) or effect. The file is copied into the bundle.",
+             "inputSchema": schema(["recording": recordingArg,
+                                    "file": ["type": "string"], "role": ["type": "string", "enum": ["narration", "music", "effect"]],
+                                    "at": ["type": "number", "description": "SOURCE seconds."],
+                                    "text": ["type": "string", "description": "What the narration says (for the say == show check)."],
+                                    "volume": ["type": "number"], "fade_in": ["type": "number"], "fade_out": ["type": "number"],
+                                    "replace": ["type": "boolean", "description": "Remove all existing clips of this role first."]],
+                                   required: ["recording", "file", "role", "at"])],
+            ["name": "preflight",
+             "description": "Check the decisions against the rules. Errors block delivery; warnings must be justified in the delivery note.",
+             "inputSchema": schema(["recording": recordingArg], required: ["recording"])],
+            ["name": "save_delivery_note",
+             "description": "Save the producer's letter to the human (leverans.md in the bundle, shown in the editor): what you chose and why, what you cut, 2–3 things for them to decide, next steps.",
+             "inputSchema": schema(["recording": recordingArg, "markdown": ["type": "string"]], required: ["recording", "markdown"])],
             ["name": "make_bug_report",
              "description": "Make a bug report from a recording: rapport.md (what was said, environment, steps to reproduce), the video, a step-by-step guide with images and the app's system log for the recording's time. Returns the folder and a zip.",
              "inputSchema": schema(["recording": recordingArg,
@@ -218,6 +270,27 @@ enum MCPServer {
         case "render_frames": return try await renderFrames(a)
         case "export": return try await export(a)
         case "make_guide": return try await makeGuide(a)
+        case "get_overview":
+            let rec = try resolve(a)
+            return Producer.overview(rec, project: rec.bundle.loadProject(duration: rec.meta.duration))
+        case "set_overlays": return try setOverlays(a)
+        case "set_chapters": return try setChapters(a)
+        case "set_segments": return try setSegments(a)
+        case "add_audio": return try await addAudio(a)
+        case "preflight":
+            let rec = try resolve(a)
+            let project = rec.bundle.loadProject(duration: rec.meta.duration)
+            let canvas = RenderPlan.canvasSize(aspect: project.aspect, source: rec.sourceSize, shortSide: 1080)
+            let plan = rec.makePlan(project: project, canvas: canvas)
+            return Producer.report(Producer.preflight(project: project, words: rec.transcript?.words ?? [],
+                                                      duration: rec.meta.duration) { name in
+                FileManager.default.fileExists(atPath: rec.bundle.mediaDir.appendingPathComponent(name).path)
+            } + Producer.coverage(plan: plan, events: rec.events, mapping: rec.mapping))
+        case "save_delivery_note":
+            let rec = try resolve(a)
+            guard let md = a["markdown"] as? String, !md.isEmpty else { throw ToolError("markdown is empty.") }
+            try md.write(to: rec.bundle.deliveryNoteURL, atomically: true, encoding: .utf8)
+            return "Saved: \(rec.bundle.deliveryNoteURL.path)"
         case "screenshot": return try await screenshot(a)
         case "make_bug_report":
             let rec = try resolve(a)
@@ -469,6 +542,135 @@ enum MCPServer {
             ?? Screenshot.newURL(name: name)
         try Screenshot.writePNG(image, to: url)
         return "Screenshot (\(image.width)×\(image.height)): \(url.path)"
+    }
+
+    // MARK: - Producentens verktyg
+
+    private static func number(_ v: Any?) -> Double? { (v as? Double) ?? (v as? NSNumber)?.doubleValue ?? (v as? Int).map(Double.init) }
+
+    private static func setOverlays(_ a: [String: Any]) throws -> String {
+        let rec = try resolve(a)
+        var p = rec.bundle.loadProject(duration: rec.meta.duration)
+        guard let list = a["overlays"] as? [[String: Any]] else { throw ToolError("overlays must be an array of objects.") }
+        var made: [Overlay] = []
+        var notes: [String] = []
+        for o in list {
+            guard let kind = Overlay.Kind(rawValue: o["kind"] as? String ?? ""), let at = number(o["at"]) else {
+                throw ToolError("Each overlay needs kind (title|callout|fact|qr) and at.")
+            }
+            var overlay = Overlay(kind: kind, at: at, duration: number(o["duration"]) ?? (kind == .title ? 2.5 : 4),
+                                  title: o["title"] as? String ?? "", lines: o["lines"] as? [String] ?? [],
+                                  url: o["url"] as? String ?? "",
+                                  corner: Overlay.Corner(rawValue: o["corner"] as? String ?? "") ?? (kind == .qr ? .bottomRight : .topRight))
+            if let t = (o["target"] as? [Any])?.compactMap(number), t.count == 4 {
+                overlay.target = Rect(x: t[0], y: t[1], width: t[2], height: t[3])
+            } else if kind == .callout, let click = number(o["target_click_at"]) ?? Optional(at) {
+                if let found = Producer.clickTarget(rec, near: click) {
+                    overlay.target = Rect(found.rect)
+                    if overlay.title.isEmpty, let label = found.label {
+                        // «knapp «Exportera»» → «Exportera»
+                        overlay.title = label.split(separator: "«").last.map { String($0).replacingOccurrences(of: "»", with: "") } ?? label
+                    }
+                } else {
+                    notes.append("No click near \(Producer.fmt(click)) s for the callout «\(overlay.title)» — give target explicitly.")
+                }
+            }
+            made.append(overlay)
+        }
+        p.overlays = (a["append"] as? Bool == true ? p.overlays : []) + made
+        try rec.bundle.saveProject(p)
+        let issues = Producer.preflight(project: p, words: rec.transcript?.words ?? [], duration: rec.meta.duration)
+            .filter { $0.message.contains("@") }
+        return (["Saved \(made.count) overlay(s); \(p.overlays.count) in total."] + notes
+                + (issues.isEmpty ? [] : [Producer.report(issues)])).joined(separator: "\n")
+    }
+
+    private static func setChapters(_ a: [String: Any]) throws -> String {
+        let rec = try resolve(a)
+        var p = rec.bundle.loadProject(duration: rec.meta.duration)
+        let list = (a["chapters"] as? [[String: Any]]) ?? []
+        p.chapters = list.compactMap { c in number(c["at"]).map { Chapter(at: $0, title: c["title"] as? String ?? "") } }
+            .sorted { $0.at < $1.at }
+        if let banner = a["banner"] as? Bool { p.showsChapterBanner = banner }
+        try rec.bundle.saveProject(p)
+        let track = OverlayTrack(overlays: [], chapters: p.chapters, timeMap: TimeMap(segments: p.segments))
+        return "Saved \(p.chapters.count) chapter(s). YouTube timestamps (output time):\n" + track.youtubeChapters
+    }
+
+    private static func setSegments(_ a: [String: Any]) throws -> String {
+        let rec = try resolve(a)
+        var p = rec.bundle.loadProject(duration: rec.meta.duration)
+        let rows = ((a["keep"] as? [[Any]]) ?? []).map { $0.compactMap(number) }
+        let segs = rows.compactMap { r -> EditProject.ClipSegment? in
+            guard r.count >= 2, r[1] > r[0] else { return nil }
+            return .init(start: max(0, r[0]), end: min(rec.meta.duration, r[1]), speed: r.count > 2 ? max(0.25, min(8, r[2])) : 1)
+        }
+        guard !segs.isEmpty else { throw ToolError("keep needs at least one [start, end] with end > start.") }
+        p.segments = segs
+        try rec.bundle.saveProject(p)
+        let issues = Producer.preflight(project: p, words: rec.transcript?.words ?? [], duration: rec.meta.duration)
+            .filter { $0.message.hasPrefix("Cut at") }
+        return "Saved \(segs.count) part(s); output \(Producer.fmt(TimeMap(segments: segs).outputDuration)) s."
+            + (issues.isEmpty ? "" : "\n" + Producer.report(issues))
+    }
+
+    private static func addAudio(_ a: [String: Any]) async throws -> String {
+        let rec = try resolve(a)
+        guard let path = a["file"] as? String, let role = AudioClip.Role(rawValue: a["role"] as? String ?? ""),
+              let at = number(a["at"]) else { throw ToolError("file, role (narration|music|effect) and at are required.") }
+        let source = URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
+        guard FileManager.default.fileExists(atPath: source.path) else { throw ToolError("No file at \(source.path).") }
+        guard let track = try? await AVURLAsset(url: source).loadTracks(withMediaType: .audio).first,
+              let range = try? await track.load(.timeRange) else { throw ToolError("Not an audio file AVFoundation can read.") }
+        try FileManager.default.createDirectory(at: rec.bundle.mediaDir, withIntermediateDirectories: true)
+        let name = "\(role.rawValue)-\(UUID().uuidString.prefix(6)).\(source.pathExtension.isEmpty ? "m4a" : source.pathExtension)"
+        try FileManager.default.copyItem(at: source, to: rec.bundle.mediaDir.appendingPathComponent(name))
+        var p = rec.bundle.loadProject(duration: rec.meta.duration)
+        if a["replace"] as? Bool == true { p.audioClips.removeAll { $0.role == role } }
+        p.audioClips.append(AudioClip(role: role, at: at, file: name, text: a["text"] as? String ?? "",
+                                      duration: range.duration.seconds, volume: number(a["volume"]) ?? (role == .music ? 0.35 : 1),
+                                      fadeIn: number(a["fade_in"]) ?? (role == .music ? 1.5 : 0),
+                                      fadeOut: number(a["fade_out"]) ?? (role == .music ? 2.5 : 0)))
+        p.audioClips.sort { $0.at < $1.at }
+        try rec.bundle.saveProject(p)
+        return "Added \(role.rawValue) \(name) (\(Producer.fmt(range.duration.seconds)) s) at \(Producer.fmt(at)) s."
+    }
+
+    private static func producerPrompt(_ ref: String) -> String {
+        """
+        Du är producent för en skärminspelning i Bjarbys skärminspelare (MCP-servern "skarminspelare").
+        Inspelning: \(ref). Människan som spelat in är slutredaktör; räkna med 2–4 varv.
+        Verktygen renderar besluten — de fattar dem inte. Du fattar dem.
+
+        1. Underlag: kör `get_overview`. Finns tal men inget transkript: `transcribe` först.
+           Skriv EN fokusmening: vad ska tittaren kunna efteråt? Den är facit för vad som får plats.
+        2. Klipp (`set_segments` eller `edit_recording` med remove_dead_time): bort med dödtid,
+           felstarter, upprepningar och väntan; kvar med det som visar hur det görs. Snitt i
+           pauserna mellan ord, aldrig mitt i ett ord. Snabba hellre upp väntan (×2–×4) än att
+           klippa bort något tittaren behöver se hända.
+        3. Rörelse: `edit_recording` med auto_zoom (zoomar ur klicken) och rimlig zoom_scale.
+           Stående format för sociala medier: aspect vertical + framing fill.
+        4. Kapitel (`set_chapters`): över 90 s → 3–7 kapitel, korta rubriker (2–4 ord).
+        5. Bildlager (`set_overlays`): ett rubrikkort (title, ≤ 2,5 s) i början; markeringar
+           (callout med target_click_at = klickets tid) på de klick som är själva poängen — inte på
+           varje klick; faktarutor för det som sägs och är värt att minnas; QR för varje adress
+           som nämns (kontrollera att adressen svarar). Högst ungefär en ruta per 6 s. Inget i
+           bild får vara nödvändigt för den som bara lyssnar.
+        6. Undertexter: på om det finns tal (`edit_recording` captions true). Brus: voice_isolation;
+           nivå: normalize_loudness.
+        7. Berättarröst bara om människan vill ha det. Fråga först om RÖST och SPRÅK — det kostar
+           pengar. Använd elevenlabs-dialogue-skillen (Text to Dialogue, aldrig rå TTS), en fil per
+           steg, sedan `add_audio` role narration med texten. Låt varje rad andas (~1 s paus).
+           Klonad röst: säg i första repliken att det är en AI med den personens röst.
+        8. `preflight`: åtgärda alla fel; varningar ska du kunna motivera.
+        9. DET SOM SÄGS SKA SYNAS: kör `render_frames` vid varje overlay, kapitel och varje
+           berättarrad, och LÄS bilderna. Stämmer inte bilden med texten — ändra besluten (tid,
+           mål, text), inte verkligheten. Kolla också att markeringen sitter på rätt knapp och att
+           inget täcker det viktiga.
+        10. `save_delivery_note`: brevet till människan — Vad jag valde och varför → 2–3 saker jag
+            vill att du tar ställning till → vad jag strök → nästa gång. Exportera bara om du blir
+            ombedd (`export`); ladda aldrig upp eller publicera utan uttryckligt ja.
+        """
     }
 
     private static func makeGuide(_ a: [String: Any]) async throws -> String {

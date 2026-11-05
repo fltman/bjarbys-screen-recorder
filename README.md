@@ -69,6 +69,14 @@ is included; to have the app follow your system language instead, run
   you said as the text (or "Click button «Export»" from the accessibility name). Markdown and a
   self-contained HTML file.
 
+**An AI producer (via Claude Code)**
+- Like the AI in the Generativet podcast studio: ask Claude Code to *produce* a recording
+  and it cuts dead time and false starts at word pauses, sets zooms, chapters, a title card,
+  callouts that circle the exact button you clicked (from the accessibility frame), fact
+  boxes, QR codes and captions, optionally adds music or narration, checks everything
+  against rules (including "nothing covers what is being clicked"), looks at the finished
+  frames, and leaves you a delivery note. The decisions are data you can change.
+
 **Control from agents, scripts and Shortcuts**
 - An MCP server built into the app: `--mcp` gives agents such as Claude Code tools to record
   the screen, transcribe, edit (format, Reel, captions, cuts, dead time, noise, loudness,

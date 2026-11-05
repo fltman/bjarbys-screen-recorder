@@ -36,6 +36,7 @@ final class EditorModel: ObservableObject {
     private var built: CompositionBuilder.Result?
     private var builtSegments: [EditProject.ClipSegment] = []
     private var builtIsolation = false
+    private var builtClips: [String] = []
     private var rebuildTask: Task<Void, Never>?
     private var saveTask: Task<Void, Never>?
     private var timeObserver: Any?
@@ -112,6 +113,7 @@ final class EditorModel: ObservableObject {
     private func projectChanged() {
         rebuildTask?.cancel()
         let full = project.segments != builtSegments || project.audio.voiceIsolation != builtIsolation
+            || project.audioClips.map { "\($0.id)\($0.at)\($0.file)" } != builtClips
         rebuildTask = Task {
             try? await Task.sleep(for: .milliseconds(full ? 120 : 30))
             guard !Task.isCancelled else { return }
@@ -144,6 +146,7 @@ final class EditorModel: ObservableObject {
                 built = result
                 builtSegments = project.segments
                 builtIsolation = project.audio.voiceIsolation
+                builtClips = project.audioClips.map { "\($0.id)\($0.at)\($0.file)" }
                 plan = newPlan
                 let item = AVPlayerItem(asset: result.composition)
                 item.videoComposition = result.videoComposition
@@ -161,7 +164,7 @@ final class EditorModel: ObservableObject {
             plan = newPlan
             item.videoComposition = CompositionBuilder.videoComposition(
                 plan: newPlan, duration: built.duration, fps: Self.previewFPS, hasCamera: recording.hasCamera)
-            item.audioMix = CompositionBuilder.audioMix(for: built.composition, audio: project.audio, speech: newPlan.speech)
+            item.audioMix = CompositionBuilder.audioMix(for: built.composition, plan: newPlan)
             if !isPlaying { await seek(to: currentTime) }
         }
     }

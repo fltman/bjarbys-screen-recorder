@@ -82,7 +82,15 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 | `captions` | `visible`, `size` — undertexter ur `transcript.json` |
 | `masks[]` | `start`, `end`, `keyframes[]` (`t`, `rect` normaliserat), `style` (`blur`, `pixelate`, `solid`), `kind`, `hint` (aldrig själva texten), `enabled` |
 | `camera` | `visible`, `shape`, `size`, `corner`, `mirror` |
+| `overlays[]` | bildlagret: `kind` (`title`, `callout`, `fact`, `qr`), `at` (källtid), `duration` (s i filmen), `title`, `lines`, `url`, `target` (0–1, markeringens mål), `corner` |
+| `chapters[]`, `showsChapterBanner` | kapitel (`at`, `title`) och om kapitelraden visas |
+| `audioClips[]` | extra ljud i `media/`: `role` (`narration`, `music`, `effect`), `at`, `file`, `text`, `duration`, `volume`, `fadeIn`, `fadeOut` |
 | `audio` | volym och tystning per spår; `duckSystem`, `duckLevel` sänker datorljudet under tal; `voiceIsolation` använder `derived/mic-isolated.caf` |
+
+## media/ och leverans.md
+
+`media/` håller extra ljud (berättarröst, musik, effekter) som lagts till med MCP-verktyget
+`add_audio`. `leverans.md` är producentens brev till människan (vad som valdes och varför).
 
 ## derived/
 
