@@ -274,11 +274,15 @@ public struct EditProject: Codable, Equatable, Sendable {
         public var smoothing: Double
         public var hideWhenIdle: Bool
         public var clickEffect: Bool
+        /// Ett kort klickljud vid varje musklick i filmen, och dess volym.
+        public var clickSound: Bool
+        public var clickVolume: Double
 
         public init(visible: Bool = true, scale: Double = 1.6, smoothing: Double = 0.6,
-                    hideWhenIdle: Bool = true, clickEffect: Bool = true) {
+                    hideWhenIdle: Bool = true, clickEffect: Bool = true, clickSound: Bool = false, clickVolume: Double = 0.5) {
             self.visible = visible; self.scale = scale; self.smoothing = smoothing
             self.hideWhenIdle = hideWhenIdle; self.clickEffect = clickEffect
+            self.clickSound = clickSound; self.clickVolume = clickVolume
         }
 
         public init(from decoder: Decoder) throws {
@@ -289,6 +293,8 @@ public struct EditProject: Codable, Equatable, Sendable {
             smoothing = c.value(.smoothing, d.smoothing)
             hideWhenIdle = c.value(.hideWhenIdle, d.hideWhenIdle)
             clickEffect = c.value(.clickEffect, d.clickEffect)
+            clickSound = c.value(.clickSound, d.clickSound)
+            clickVolume = c.value(.clickVolume, d.clickVolume)
         }
     }
 

@@ -2,6 +2,7 @@ import Testing
 import Foundation
 import CoreImage
 import CoreVideo
+import AVFoundation
 @testable import RecorderKit
 
 @Suite struct HDRTests {
@@ -125,5 +126,25 @@ import CoreVideo
         // Dold som standard, men en del kan visa bubblan.
         let q = try plan([nil, .bubble], visible: false)
         #expect(q.layoutFrame(at: 1).cameraAlpha == 0 && q.layoutFrame(at: 3).cameraAlpha == 1)
+    }
+}
+
+@Suite struct ClickSoundTests {
+    @Test func clickIsShortAndClear() throws {
+        let url = try #require(ClickSound.url())
+        let file = try AVAudioFile(forReading: url)
+        #expect(abs(Double(file.length) / file.fileFormat.sampleRate - ClickSound.length) < 0.002)
+        let buffer = try #require(AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(file.length)))
+        try file.read(into: buffer)
+        let p = buffer.floatChannelData![0]
+        let peak = (0..<Int(buffer.frameLength)).map { abs(p[$0]) }.max() ?? 0
+        #expect(peak > 0.3 && peak < 1)
+    }
+
+    @Test func clickSoundDefaultsOff() throws {
+        let c = try BundleJSON.decoder.decode(EditProject.CursorStyle.self, from: Data("{}".utf8))
+        #expect(!c.clickSound && c.clickVolume == 0.5)
+        let on = try BundleJSON.decoder.decode(EditProject.CursorStyle.self, from: Data(#"{"clickSound":true,"clickVolume":0.3}"#.utf8))
+        #expect(on.clickSound && on.clickVolume == 0.3)
     }
 }

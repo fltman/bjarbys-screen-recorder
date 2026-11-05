@@ -66,6 +66,7 @@ final class EditorModel: ObservableObject {
     private var builtVideos: [String] = []
     private var builtStandardCrossfade = false
     private var builtStandardDuration = 0.0
+    private var builtClickSound = false
     /// Videoinslagen ligger i kompositionen: ändras de byggs den om.
     private var videoSignature: [String] {
         project.overlays.filter { $0.kind == .video }.map { "\($0.id)\($0.at)\($0.file)\($0.offset)\($0.duration)\($0.volume > 0)" }
@@ -169,6 +170,7 @@ final class EditorModel: ObservableObject {
             || videoSignature != builtVideos
             || (project.transition.kind == .crossfade) != builtStandardCrossfade
             || (project.transition.kind == .crossfade && project.transition.duration != builtStandardDuration)
+            || project.cursor.clickSound != builtClickSound
         rebuildTask = Task {
             try? await Task.sleep(for: .milliseconds(full ? 120 : 30))
             guard !Task.isCancelled else { return }
@@ -207,6 +209,7 @@ final class EditorModel: ObservableObject {
                 builtVideos = videoSignature
                 builtStandardCrossfade = project.transition.kind == .crossfade
                 builtStandardDuration = project.transition.duration
+                builtClickSound = project.cursor.clickSound
                 plan = newPlan
                 let item = AVPlayerItem(asset: result.composition)
                 item.videoComposition = result.videoComposition

@@ -1395,6 +1395,23 @@
         }
       }
     },
+    "Ett kort, mjukt klick vid varje musklick i filmen.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A short, soft click at every mouse click in the film."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ett kort, mjukt klick vid varje musklick i filmen."
+          }
+        }
+      }
+    },
     "Exportera": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2938,6 +2955,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Klicka på %@."
+          }
+        }
+      }
+    },
+    "Klickljud": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click sounds"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klickljud"
+          }
+        }
+      }
+    },
+    "Klickljudets volym": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click volume"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klickljudets volym"
           }
         }
       }

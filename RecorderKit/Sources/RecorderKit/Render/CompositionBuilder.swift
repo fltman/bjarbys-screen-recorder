@@ -155,6 +155,34 @@ public enum CompositionBuilder {
             try? track.insertTimeRange(CMTimeRange(start: range.start, duration: length), of: source, at: start)
         }
 
+        // Klickljud: samma korta klick vid varje musklick som finns kvar i filmen, på ett eget spår.
+        // Tillgången hålls i en egen variabel: släpps den medan spåret läggs in misslyckas
+        // insättningen (−11800/−12780, uppmätt).
+        let clickAsset = ClickSound.url().map { AVURLAsset(url: $0) }
+        if plan.project.cursor.clickSound, plan.project.cursor.clickVolume > 0, let clickAsset,
+           let click = try? await clickAsset.loadTracks(withMediaType: .audio).first,
+           let clickRange = try? await click.load(.timeRange),
+           let track = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: clickTrackID) {
+            let times = plan.cursorPath.clicks.compactMap { plan.timeMap.output(at: $0.t) }.sorted()
+            var free = 0.0
+            var trackEnd = CMTime.zero
+            for (n, at) in times.enumerated() where at >= free && at < cursor.seconds {
+                let next = n + 1 < times.count ? times[n + 1] : cursor.seconds
+                let length = min(clickRange.duration.seconds, next - at, cursor.seconds - at)
+                guard length > 0.005 else { continue }
+                let start = CMTime(seconds: at, preferredTimescale: 48_000)
+                // Luckan före klicket uttryckligen (spårets längd är ogiltig så länge det är tomt).
+                if start > trackEnd { track.insertEmptyTimeRange(CMTimeRange(start: trackEnd, end: start)) }
+                do {
+                    try track.insertTimeRange(CMTimeRange(start: clickRange.start, duration: CMTime(seconds: length, preferredTimescale: 48_000)),
+                                              of: click, at: start)
+                    trackEnd = start + CMTime(seconds: length, preferredTimescale: 48_000)
+                } catch { continue }
+                free = at + length
+            }
+            if track.segments.isEmpty { composition.removeTrack(track) }
+        }
+
         // Övertoningar: skärmspår B med nästa dels förrulle före snittet och förra delens
         // efterrulle efter, i delarnas hastighet. Filmens tidslinje ändras inte.
         var hasAlternate = false
@@ -271,6 +299,8 @@ public enum CompositionBuilder {
     /// Apparnas egna ljudspår 400, 401 … och deras B-spår 500, 501 … i inspelningens ordning.
     static let appTrackBase: CMPersistentTrackID = 400
     static let alternateAppTrackBase: CMPersistentTrackID = 500
+    /// Klickljuden.
+    static let clickTrackID: CMPersistentTrackID = 600
 
     public static func videoComposition(plan: RenderPlan, duration: CMTime, fps: Int, hasCamera: Bool,
                                         hasAlternate: Bool = false) -> AVVideoComposition {
@@ -331,6 +361,8 @@ public enum CompositionBuilder {
                 let isAlternate = track.trackID == alternateMicTrackID || track.trackID == alternateSystemTrackID
                 parts.append(isAlternate ? GainEnvelope.alternate(plan.cutPlan.cuts) : cutPart)
                 apply(p, GainEnvelope(base: volume, parts: parts))
+            case clickTrackID:
+                apply(p, GainEnvelope(base: plan.project.cursor.clickVolume))
             case appTrackBase..<(alternateAppTrackBase + 100):
                 // En app: som datorljudet (sänks under berättarröst, och under tal om valt).
                 let isAlternate = track.trackID >= alternateAppTrackBase

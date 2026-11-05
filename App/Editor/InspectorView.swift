@@ -283,6 +283,11 @@ struct InspectorView: View {
             LabeledSlider("Utjämning", value: binding(\.cursor.smoothing), range: 0...1, format: "%.0f %%", scale: 100)
             Toggle("Dölj när den står still", isOn: binding(\.cursor.hideWhenIdle))
             Toggle("Visa klick", isOn: binding(\.cursor.clickEffect))
+            Toggle("Klickljud", isOn: binding(\.cursor.clickSound))
+                .help("Ett kort, mjukt klick vid varje musklick i filmen.")
+            if model.project.cursor.clickSound {
+                LabeledSlider("Klickljudets volym", value: binding(\.cursor.clickVolume), range: 0.05...1, format: "%.0f %%", scale: 100)
+            }
             if !model.plan.cursorPath.hasData {
                 Text("Ingen markördata i den här inspelningen.").font(.caption).foregroundStyle(.secondary)
             }

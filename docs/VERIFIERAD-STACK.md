@@ -293,6 +293,14 @@ vänster kanal:
 - ⚠️ Första mätningen visade ingen övertoning: den kördes mot en appbinär byggd före ändringen
   (`test.sh` bygger bara paketet). Mät alltid efter xcodebuild.
 
+## Klickljud (2026-11-05)
+
+Provinspelning med tre påhittade klick (1,0, 2,5 och 3,2 s; delen 0–3 s behålls), ProRes-export:
+klicken hörs vid 1,00–1,02 och 2,50–2,52 s (topp 0,47 vid volym 50 %), inte vid 3,2 (bortklippt).
+- ⚠️ Insättningen misslyckades först med −11800/−12780: `AVURLAsset` skapades inne i uttrycket
+  (`try await AVURLAsset(url:).loadTracks(…)`) och släpptes innan spåret lades in. Håll tillgången
+  i en egen variabel så länge kompositionen byggs.
+
 ## Städad inspelning (2026-11-05)
 
 - Fönsterlistan: skrivbordssymbolerna är ett helskärmsfönster från Finder på

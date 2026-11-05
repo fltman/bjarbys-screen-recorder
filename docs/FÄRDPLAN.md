@@ -69,6 +69,9 @@ tagning, sedan redigerbar polish, sedan resten.
 
 - Kortkommandon i filmen (2026-11-05): bubbla nere eller uppe i mitten, räknar upp
   upprepningar ("⌘Z ×3"), visas i utdatatid så att 4×-delar inte blinkar förbi.
+- Klickljud (2026-11-05): Rörelse › Markör › Klickljud och volym; ett syntetiserat mjukt klick
+  (60 ms, i appens cache) på ett eget ljudspår vid varje musklick som finns kvar i filmen. Följer
+  med i standardutseendet. MCP: `click_sound`.
 - Kameralayout per del (2026-11-05): Markerad del › Kamera — bubbla, stor (fyller bilden; skärmen
   tonas bort), sida vid sida (skärmen inpassad bredvid en kamerapanel; staplat i stående format)
   eller dold. Bytet efter ett snitt glider på 0,5 s: skärmlagret (med markör och markeringar)
