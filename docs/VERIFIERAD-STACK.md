@@ -324,8 +324,9 @@ Inbyggd XDR-skärm (`maximumPotentialExtendedDynamicRangeColorComponentValue` 16
 - **Syntetiskt paket** (`--prov-hdr-syntetisk`, HEVC Main10 PQ med 20/100/400 nits): HLG-export
   0,455 / 0,749 / 0,904 (Core Image: 0,456 / 0,750 / tonmappat 2,64 → 0,905); SDR-export 123 / 253
   / 253 (klippt); miniatyr 124 / 255 / 255 (generatorns egen SDR: 89 / 186 / 250).
-- **Live** (`--prov-hdr`, eget fönster med 1,0 och 4,0 linjärt via `preferredDynamicRange = .high`):
-  inspelningen 100 respektive 398 nits — 4× även när skärmens huvudrum just då var 2,3 (canonical
+- **Live** (`--prov-hdr`, eget fönster med 0,2, 1,0 och 4,0 linjärt via `preferredDynamicRange =
+  .high`), efter rättningarna: inspelningen 20 / 100 / 398 nits, HLG-export 0,453 / 0,749 / 0,903,
+  SDR-export 121 / 253 / 253 — som det syntetiska. Fältet 4,0 spelades in som 398 nits — 4× även när skärmens huvudrum just då var 2,3 (canonical
   följer innehållet, inte skärmens ljusstyrka).
 - Exportfart, syntetiskt paket i full storlek (3024×1964, 60 bilder/s, 6 s, stillastående
   innehåll): "MP4 4K HDR" (3326×2160, HLG) 2,0× realtid; "MP4 1080p" från HDR, med den linjära

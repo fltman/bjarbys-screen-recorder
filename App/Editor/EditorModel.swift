@@ -15,6 +15,8 @@ final class EditorModel: ObservableObject {
     static let previewFPS = 60
 
     @Published private(set) var project: EditProject
+    /// Ändringar sparas i paketet (av för provlägenas ögonblicksbilder).
+    var persists = true
     @Published var currentTime: Double = 0
     @Published private(set) var isPlaying = false
     @Published var selectedZoomID: UUID? { didSet { if selectedZoomID != nil { wordSelection = nil } } }
@@ -155,6 +157,7 @@ final class EditorModel: ObservableObject {
             await rebuild(full: full)
         }
         saveTask?.cancel()
+        guard persists else { return }
         saveTask = Task {
             try? await Task.sleep(for: .milliseconds(600))
             guard !Task.isCancelled else { return }
@@ -165,6 +168,7 @@ final class EditorModel: ObservableObject {
     /// Sparar direkt (när fönstret stängs).
     func saveNow() {
         saveTask?.cancel()
+        guard persists else { return }
         try? recording.bundle.saveProject(project)
     }
 
@@ -443,7 +447,7 @@ final class EditorModel: ObservableObject {
     // MARK: - Lager, kapitel och ljudklipp
 
     @Published var selectedOverlayID: UUID? {
-        didSet { if selectedOverlayID != nil { selectedZoomID = nil; selectedSegmentID = nil; wordSelection = nil } }
+        didSet { if selectedOverlayID != nil { selectedZoomID = nil; selectedSegmentID = nil; wordSelection = nil; selectedMaskID = nil } }
     }
 
     /// Producentens brev (leverans.md), om det finns.
@@ -554,7 +558,7 @@ final class EditorModel: ObservableObject {
 
     @Published private(set) var scanning: Double?
     @Published private(set) var scanNote: String?
-    @Published var selectedMaskID: UUID?
+    @Published var selectedMaskID: UUID? { didSet { if selectedMaskID != nil { selectedOverlayID = nil } } }
     private var scanTask: Task<Void, Never>?
 
     /// Läser all text i inspelningen och lägger masker över det känsliga. Tidigare automatiska

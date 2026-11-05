@@ -401,6 +401,10 @@ enum TestMode {
             }
             try await shot("redigerare", NSSize(width: 1400, height: 860), EditorView(model: model))
             try await shot("redigerare-mork", NSSize(width: 1400, height: 860), EditorView(model: model), dark: true)
+            // En egen mask vid spelhuvudet, markerad. Sparas inte i paketet.
+            model.persists = false
+            model.addMaskAtPlayhead()
+            try await shot("redigerare-mask", NSSize(width: 1400, height: 860), EditorView(model: model))
             model.selectedOverlayID = model.project.overlays.first { $0.kind == .fact }?.id
             for tab in InspectorView.Tab.allCases {
                 UserDefaults.standard.set(tab.rawValue, forKey: "inspectorTab")
