@@ -54,6 +54,9 @@ struct ExportSheet: View {
     @State private var onlyMarked = true
     /// Hela ljudets ljudstyrka i filmen: 0 = som det är, annars målet i LUFS.
     @AppStorage("exportLoudness") private var loudness = 0.0
+    /// Kvaliteten för MP4 (bitraten): liten fil, normal eller hög.
+    @AppStorage("exportQuality") private var qualityRaw = Exporter.Quality.normal.rawValue
+    private var quality: Exporter.Quality { Exporter.Quality(rawValue: qualityRaw) ?? .normal }
 
     /// Längden som exporteras: utsnittet om det är valt, annars hela filmen.
     private var exportedDuration: Double {
@@ -83,7 +86,7 @@ struct ExportSheet: View {
                         Spacer(minLength: 8)
                         VStack(alignment: .trailing, spacing: 2) {
                             Text(verbatim: "\(Int(canvas.width))×\(Int(canvas.height))")
-                            Text("≈ " + ByteCountFormatter.string(fromByteCount: p.estimatedBytes(canvas: canvas, duration: exportedDuration),
+                            Text("≈ " + ByteCountFormatter.string(fromByteCount: p.estimatedBytes(canvas: canvas, duration: exportedDuration, quality: quality),
                                                                  countStyle: .file))
                         }
                         .font(.caption.monospacedDigit())
@@ -150,6 +153,16 @@ struct ExportSheet: View {
                 Toggle("Bara det markerade, \(TransportTime.format(r.lowerBound))–\(TransportTime.format(r.upperBound)) (\(AppLocale.format("%.1f", r.upperBound - r.lowerBound)) s)",
                        isOn: $onlyMarked)
                     .disabled(progress != nil)
+            }
+            if selectedPresets.contains(where: \.usesQuality) {
+                Picker("Kvalitet", selection: $qualityRaw) {
+                    Text("Liten fil").tag(Exporter.Quality.small.rawValue)
+                    Text("Normal").tag(Exporter.Quality.normal.rawValue)
+                    Text("Hög").tag(Exporter.Quality.high.rawValue)
+                }
+                .pickerStyle(.segmented)
+                .disabled(progress != nil)
+                .help("Bitraten för MP4: halva (för mejl och chatt) eller nästan dubbla (snabb rörelse, mycket text).")
             }
             if presetID != "gif" {
                 Picker("Ljudnivå", selection: $loudness) {
@@ -367,7 +380,7 @@ struct ExportSheet: View {
                 batchLabel = jobs.count > 1 ? String(localized: "\(job.preset.name), \(i + 1) av \(jobs.count)") : nil
                 let isGIF = job.preset.codec == .gif
                 let exporter = Exporter(recording: model.recording, project: model.project, preset: job.preset, fps: fps, range: range,
-                                        loudnessTarget: loudness < 0 && !isGIF ? loudness : nil)
+                                        loudnessTarget: loudness < 0 && !isGIF ? loudness : nil, quality: quality)
                 self.exporter = exporter
                 do {
                     try await exporter.run(to: job.url) { p in

@@ -74,9 +74,13 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
     }
 
     /// Ungefärlig filstorlek i byte.
-    public func estimatedBytes(canvas: CGSize, duration: Double) -> Int64 {
-        Int64(Double(bitrate(for: canvas)) / 8 * duration) + (codec == .gif || isAudioOnly ? 0 : Int64(24_000 * duration))
+    public func estimatedBytes(canvas: CGSize, duration: Double, quality: Exporter.Quality = .normal) -> Int64 {
+        Int64(Double(bitrate(for: canvas)) * (usesQuality ? quality.factor : 1) / 8 * duration)
+            + (codec == .gif || isAudioOnly ? 0 : Int64(24_000 * duration))
     }
+
+    /// Kvalitetsvalet gäller H.264 och HEVC (ProRes, GIF och ljud har sin egen).
+    public var usesQuality: Bool { codec == .h264 || codec == .hevc || codec == .hevcHDR }
 
     /// Bildytan för exporten. GIF begränsas till 800 px på längsta sidan.
     public func canvas(aspect: EditProject.Aspect, source: CGSize) -> CGSize {
@@ -114,13 +118,27 @@ public final class Exporter: @unchecked Sendable {
     public let fps: Int
     /// Bara ett utsnitt av filmen (utdatatid, s), eller nil = hela.
     public let range: ClosedRange<Double>?
+    /// Kvaliteten för H.264 och HEVC: bitraten gånger `factor` (ProRes och GIF påverkas inte).
+    public enum Quality: String, CaseIterable, Sendable {
+        case small, normal, high
+        public var factor: Double {
+            switch self {
+            case .small: 0.5
+            case .normal: 1
+            case .high: 1.8
+            }
+        }
+    }
+    public let quality: Quality
+
     /// Jämna ut hela ljudet till den här ljudstyrkan (LUFS), t.ex. −14 för YouTube, eller nil.
     public let loudnessTarget: Double?
     /// Vad mätningen gav och hur mycket ljudet ändrades (när `loudnessTarget` är satt).
     public private(set) var loudnessReport: (measured: Double, gainDB: Double, limitedByPeaks: Bool)?
 
     public init(recording: LoadedRecording, project: EditProject, preset: ExportPreset, fps: Int? = nil,
-                range: ClosedRange<Double>? = nil, loudnessTarget: Double? = nil) {
+                range: ClosedRange<Double>? = nil, loudnessTarget: Double? = nil, quality: Quality = .normal) {
+        self.quality = quality
         self.loudnessTarget = loudnessTarget
         self.recording = recording
         self.project = project
@@ -303,7 +321,7 @@ public final class Exporter: @unchecked Sendable {
                         AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_2020,
                     ],
                     AVVideoCompressionPropertiesKey: [
-                        AVVideoAverageBitRateKey: preset.bitrate(for: canvas, fps: fps),
+                        AVVideoAverageBitRateKey: Int(Double(preset.bitrate(for: canvas, fps: fps)) * quality.factor),
                         AVVideoExpectedSourceFrameRateKey: fps,
                         AVVideoProfileLevelKey: kVTProfileLevel_HEVC_Main10_AutoLevel as String,
                     ]]
@@ -311,7 +329,7 @@ public final class Exporter: @unchecked Sendable {
             return [AVVideoCodecKey: AVVideoCodecType.hevc, AVVideoWidthKey: canvas.width,
                     AVVideoHeightKey: canvas.height, AVVideoColorPropertiesKey: color,
                     AVVideoCompressionPropertiesKey: [
-                        AVVideoAverageBitRateKey: preset.bitrate(for: canvas, fps: fps),
+                        AVVideoAverageBitRateKey: Int(Double(preset.bitrate(for: canvas, fps: fps)) * quality.factor),
                         AVVideoExpectedSourceFrameRateKey: fps,
                         AVVideoProfileLevelKey: kVTProfileLevel_HEVC_Main_AutoLevel as String,
                     ]]
@@ -319,7 +337,7 @@ public final class Exporter: @unchecked Sendable {
             return [AVVideoCodecKey: AVVideoCodecType.h264, AVVideoWidthKey: canvas.width,
                     AVVideoHeightKey: canvas.height, AVVideoColorPropertiesKey: color,
                     AVVideoCompressionPropertiesKey: [
-                        AVVideoAverageBitRateKey: preset.bitrate(for: canvas, fps: fps),
+                        AVVideoAverageBitRateKey: Int(Double(preset.bitrate(for: canvas, fps: fps)) * quality.factor),
                         AVVideoExpectedSourceFrameRateKey: fps,
                         AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
                     ]]

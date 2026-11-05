@@ -570,7 +570,8 @@ enum TestMode {
             let exporter = Exporter(recording: rec, project: project, preset: preset,
                                     fps: value(after: "--fps", in: CommandLine.arguments).flatMap { Int($0) },
                                     range: cut.flatMap { $0.count == 2 ? $0[0]...$0[1] : nil },
-                                    loudnessTarget: value(after: "--ljudniva", in: CommandLine.arguments).flatMap { Double($0) })
+                                    loudnessTarget: value(after: "--ljudniva", in: CommandLine.arguments).flatMap { Double($0) },
+                                    quality: value(after: "--kvalitet", in: CommandLine.arguments).flatMap(Exporter.Quality.init(rawValue:)) ?? .normal)
             try await exporter.run(to: out) { _ in }
             let size = (try? FileManager.default.attributesOfItem(atPath: out.path)[.size] as? Int) ?? 0
             if let l = exporter.loudnessReport {

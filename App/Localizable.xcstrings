@@ -885,6 +885,23 @@
         }
       }
     },
+    "Bitraten för MP4: halva (för mejl och chatt) eller nästan dubbla (snabb rörelse, mycket text).": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The bitrate for MP4: half (for mail and chat) or nearly double (fast motion, lots of text)."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitraten för MP4: halva (för mejl och chatt) eller nästan dubbla (snabb rörelse, mycket text)."
+          }
+        }
+      }
+    },
     "Blixt": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2772,6 +2789,23 @@
         }
       }
     },
+    "Hög": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "High"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hög"
+          }
+        }
+      }
+    },
     "Höger": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3894,6 +3928,23 @@
         }
       }
     },
+    "Kvalitet": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quality"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kvalitet"
+          }
+        }
+      }
+    },
     "Ladda upp exporterade filmer till din egen S3-kompatibla lagring (Cloudflare R2, AWS S3, MinIO, Backblaze B2) och få en länk i urklipp.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3958,6 +4009,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ligger kvar"
+          }
+        }
+      }
+    },
+    "Liten fil": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Small file"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liten fil"
           }
         }
       }
@@ -4706,6 +4774,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nere till vänster"
+          }
+        }
+      }
+    },
+    "Normal": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal"
           }
         }
       }

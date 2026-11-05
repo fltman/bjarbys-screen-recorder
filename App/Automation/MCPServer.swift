@@ -293,6 +293,7 @@ enum MCPServer {
                                     "path": ["type": "string", "description": "Output file (default: ~/Movies/<name>.<ext>)."],
                                     "subtitles": ["type": "boolean", "description": "Also write an .srt next to the video (default true if transcribed)."],
                                     "fps": ["type": "integer", "description": "Frame rate of the file (default: the preset's, 60; use 120 for a 120 fps recording)."],
+                                    "quality": ["type": "string", "enum": ["small", "normal", "high"], "description": "Bitrate for MP4: small = half (mail, chat), high = 1.8× (fast motion, lots of text). Default normal."],
                                     "upload": ["type": "boolean", "description": "Upload to the S3/R2 bucket set up under Sharing in the app and return the public link."],
                                     "loudness": ["type": "number", "description": "Even out the whole film's audio to this loudness in LUFS (e.g. -14 for YouTube, -16 for podcasts), peaks kept under -1 dBFS."],
                                     "range": ["type": "array", "items": ["type": "number"], "minItems": 2, "maxItems": 2,
@@ -885,7 +886,8 @@ enum MCPServer {
         let bounds = (a["range"] as? [Any])?.compactMap(number)
         let range = bounds.flatMap { $0.count == 2 && $0[1] > $0[0] ? $0[0]...$0[1] : nil }
         let exporter = Exporter(recording: rec, project: project, preset: preset, fps: a["fps"] as? Int, range: range,
-                                loudnessTarget: number(a["loudness"]))
+                                loudnessTarget: number(a["loudness"]),
+                                quality: (a["quality"] as? String).flatMap(Exporter.Quality.init(rawValue:)) ?? .normal)
         try await exporter.run(to: url) { _ in }
         var text = String(format: "Exported %@ in %.1f s: %@", preset.name, Date().timeIntervalSince(started), url.path)
         if !project.chapters.isEmpty, !preset.isAudioOnly, preset.codec != .gif {
