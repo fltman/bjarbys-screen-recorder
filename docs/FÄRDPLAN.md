@@ -18,7 +18,6 @@ tagning, sedan redigerbar polish, sedan resten.
 - Redigeraren interaktivt med mus (dra zoomblock, dela, ångra) — layouten är granskad utanför
   skärmen, rutorna och exporten är provade, men ingen har suttit och klickat i den än.
 - Kameraspåret är inte provat med en riktig kamera (koden finns, provet kördes utan).
-- Fönsterinspelning där fönstret flyttas under inspelningen (`frame`-händelser) är inte provad.
 
 ## Byggt efter fas 2
 

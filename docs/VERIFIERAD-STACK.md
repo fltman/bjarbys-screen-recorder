@@ -279,6 +279,16 @@ vänster kanal:
 - ⚠️ Första mätningen visade ingen övertoning: den kördes mot en appbinär byggd före ändringen
   (`test.sh` bygger bara paketet). Mät alltid efter xcodebuild.
 
+## Fönster som flyttas (2026-11-05)
+
+`--prov-fonsterflytt`: eget fönster (600×400 pt, röd ruta) inspelat som fönster i 3 s, flyttat
++300/+120 pt efter 1 s.
+- `frame`-händelserna: (120, 128) vid 0,03 s och (420, 248) vid 1,14 s — 0,1 s efter flytten.
+- Den röda rutan ligger kvar i skärmspåret: (0,233, 0,397) före och efter — inspelningen följer
+  fönstret (`desktopIndependentWindow`).
+- Rutans globala punkt före och efter, genom `ContentMapping`: (0,233, 0,398) båda gångerna —
+  samma ställe som i spåret, så markören och zoomen hamnar rätt efter en flytt.
+
 ## GIF (2026-11-05)
 
 Provinspelning med bakgrundsgradient, 800×450, 15 bilder/s, 2 s; kolumnen x = 6 i bakgrunden:

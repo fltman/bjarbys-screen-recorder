@@ -34,6 +34,7 @@ open Skarminspelare.xcodeproj
   - `--prov-teleprompter <png>` — teleprompterrutan efter 6 s rullning, utanför skärmen
   - `--prov-vyer <mapp> <paket>` — alla fönster och paneler (ljust och mörkt, inspektörens flikar)
     som PNG; material och videolager ritas inte utanför skärmen
+  - `--prov-fonsterflytt <mapp>` — fönsterinspelning där fönstret flyttas mitt i
   - `--prov-hdr <mapp>` — ett eget EDR-fönster spelas in i HDR; fälten mäts i inspelning och export
   - `--prov-hdr-syntetisk <mapp>` — samma mätning på ett påhittat HDR-paket, utan skärm
   - `--prov-appljud <mapp> [--behall]` — ljud per app med egna toner: separation och synk mot SCK
