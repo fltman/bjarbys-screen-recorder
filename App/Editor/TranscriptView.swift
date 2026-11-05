@@ -26,6 +26,9 @@ struct TranscriptView: View {
     private var header: some View {
         HStack(spacing: 8) {
             Label("Text", systemImage: "text.quote").font(.headline)
+            if !model.words.isEmpty {
+                Text("\(model.words.count) ord").font(.caption).foregroundStyle(.secondary)
+            }
             Spacer()
             if let sel = model.wordSelection {
                 let anyCut = sel.contains { !model.isWordKept($0) }
@@ -75,9 +78,20 @@ struct TranscriptView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 12) {
                     ForEach(paragraphs, id: \.lowerBound) { range in
-                        FlowLayout(spacing: 0, lineSpacing: 3) {
-                            ForEach(range, id: \.self) { i in
-                                word(i, current: current == i)
+                        VStack(alignment: .leading, spacing: 4) {
+                            // Var stycket börjar i filmen; klick hoppar dit.
+                            if let t = model.timeMap.output(at: model.words[range.lowerBound].start) {
+                                Button { model.seek(toWord: range.lowerBound) } label: {
+                                    Text(TransportTime.format(t))
+                                        .font(.caption2.monospacedDigit())
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            FlowLayout(spacing: 0, lineSpacing: 3) {
+                                ForEach(range, id: \.self) { i in
+                                    word(i, current: current == i)
+                                }
                             }
                         }
                         .id(range.lowerBound)
@@ -103,7 +117,7 @@ struct TranscriptView: View {
             .padding(.vertical, 1)
             .background(
                 RoundedRectangle(cornerRadius: 3)
-                    .fill(selected ? Color.accentColor.opacity(0.28) : (current ? Color.yellow.opacity(0.35) : .clear))
+                    .fill(selected ? Color.accentColor.opacity(0.32) : (current ? Color.accentColor.opacity(0.16) : .clear))
             )
             .contentShape(Rectangle())
             .onTapGesture {
@@ -189,5 +203,13 @@ struct FlowLayout: Layout {
             x += size.width + spacing
         }
         return rows
+    }
+}
+
+/// Tid som "1:05", för stycken och listor.
+enum TransportTime {
+    static func format(_ s: Double) -> String {
+        let t = max(0, Int(s.rounded(.down)))
+        return String(format: "%d:%02d", t / 60, t % 60)
     }
 }

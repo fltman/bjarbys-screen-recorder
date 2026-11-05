@@ -154,6 +154,23 @@
         }
       }
     },
+    "%lld ord": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld words"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ord"
+          }
+        }
+      }
+    },
     "%lld ord, ungefär %@. Rutan syns bara för dig: appens egna fönster kommer aldrig med i inspelningen.": {
       "extractionState": "extracted_with_value",
       "localizations": {

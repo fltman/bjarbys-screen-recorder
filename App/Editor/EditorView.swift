@@ -112,17 +112,12 @@ private struct TransportBar: View {
                 .lineLimit(1)
                 .fixedSize()
             Divider().frame(height: 18)
-            Button { model.split() } label: { Label("Dela", systemImage: "scissors") }
-                .help("Dela vid spelhuvudet (⌘B)")
-            Button { model.addZoomAtPlayhead() } label: { Label("Zoom", systemImage: "plus.magnifyingglass") }
-                .help("Lägg till en zoom vid spelhuvudet")
-            Button { model.deleteSelection() } label: { Label("Ta bort", systemImage: "trash") }
-                .disabled(model.selectedZoomID == nil && model.selectedSegmentID == nil && model.wordSelection == nil)
-                .help("Ta bort markerad zoom, del eller markerade ord (⌫)")
-            Toggle(isOn: $model.transcriptShown) { Label("Text", systemImage: "text.quote") }
-                .toggleStyle(.button)
-                .help("Visa texten")
-            Spacer()
+            // Med namn när det får plats, annars bara ikoner (namnen finns i hjälptexten).
+            ViewThatFits(in: .horizontal) {
+                tools.labelStyle(.titleAndIcon)
+                tools.labelStyle(.iconOnly)
+            }
+            Spacer(minLength: 8)
             Button { model.undo() } label: { Image(systemName: "arrow.uturn.backward") }
                 .disabled(!model.canUndo).help("Ångra (⌘Z)")
             Button { model.redo() } label: { Image(systemName: "arrow.uturn.forward") }
@@ -139,6 +134,22 @@ private struct TransportBar: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    private var tools: some View {
+        HStack(spacing: 12) {
+            Button { model.split() } label: { Label("Dela", systemImage: "scissors") }
+                .help("Dela vid spelhuvudet (⌘B)")
+            Button { model.addZoomAtPlayhead() } label: { Label("Zoom", systemImage: "plus.magnifyingglass") }
+                .help("Lägg till en zoom vid spelhuvudet")
+            Button { model.deleteSelection() } label: { Label("Ta bort", systemImage: "trash") }
+                .disabled(model.selectedZoomID == nil && model.selectedSegmentID == nil && model.wordSelection == nil)
+                .help("Ta bort markerad zoom, del eller markerade ord (⌫)")
+            Toggle(isOn: $model.transcriptShown) { Label("Text", systemImage: "text.quote") }
+                .toggleStyle(.button)
+                .help("Visa texten")
+        }
+        .fixedSize()
     }
 
     static func time(_ s: Double) -> String {
