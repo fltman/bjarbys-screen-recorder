@@ -445,7 +445,9 @@ enum TestMode {
                 try await shot("inspektor-\(tab.rawValue)", NSSize(width: 310, height: 860), InspectorView(model: model))
             }
             UserDefaults.standard.set(InspectorView.Tab.style.rawValue, forKey: "inspectorTab")
-            try await shot("export", NSSize(width: 560, height: 560), ExportSheet(model: model))
+            model.markIn = min(1, model.duration * 0.25); model.markOut = min(3, model.duration * 0.75)
+            try await shot("export", NSSize(width: 560, height: 600), ExportSheet(model: model))
+            try await shot("redigerare-markerat", NSSize(width: 1400, height: 860), EditorView(model: model))
             print(#"{"mapp":"\#(out.path)"}"#)
             return 0
         } catch {
@@ -466,12 +468,16 @@ enum TestMode {
                                                    duration: rec.meta.duration, scale: project.zoomScale)
             }
             let started = Date()
+            // --utsnitt a,b: bara utdatatiden a–b.
+            let cut = value(after: "--utsnitt", in: CommandLine.arguments)?.split(separator: ",").compactMap { Double($0) }
             let exporter = Exporter(recording: rec, project: project, preset: preset,
-                                    fps: value(after: "--fps", in: CommandLine.arguments).flatMap { Int($0) })
+                                    fps: value(after: "--fps", in: CommandLine.arguments).flatMap { Int($0) },
+                                    range: cut.flatMap { $0.count == 2 ? $0[0]...$0[1] : nil })
             try await exporter.run(to: out) { _ in }
             let size = (try? FileManager.default.attributesOfItem(atPath: out.path)[.size] as? Int) ?? 0
             print(String(format: "{\"fil\":\"%@\",\"sekunder\":%.2f,\"byte\":%d,\"langd\":%.3f}",
-                         out.path, Date().timeIntervalSince(started), size, TimeMap(segments: project.segments).outputDuration))
+                         out.path, Date().timeIntervalSince(started), size,
+                         exporter.range.map { $0.upperBound - $0.lowerBound } ?? TimeMap(segments: project.segments).outputDuration))
             return 0
         } catch {
             print("{\"fel\":\"\(error.localizedDescription)\"}")

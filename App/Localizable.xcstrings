@@ -545,6 +545,23 @@
         }
       }
     },
+    "Bara det markerade, %@–%@ (%@ s)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the marked part, %@–%@ (%@ s)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bara det markerade, %@–%@ (%@ s)"
+          }
+        }
+      }
+    },
     "Bara skärminspelning krävs. Resten lägger till spår och gör efterbearbetningen bättre.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4672,6 +4689,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Spara"
+          }
+        }
+      }
+    },
+    "Spara bild vid spelhuvudet …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save Frame at Playhead…"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spara bild vid spelhuvudet …"
           }
         }
       }

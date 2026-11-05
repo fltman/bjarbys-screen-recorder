@@ -99,11 +99,15 @@ public final class Exporter: @unchecked Sendable {
 
     /// Bildfrekvensen i filen: förvalets, eller (för en 120-fps-inspelning) inspelningens.
     public let fps: Int
+    /// Bara ett utsnitt av filmen (utdatatid, s), eller nil = hela.
+    public let range: ClosedRange<Double>?
 
-    public init(recording: LoadedRecording, project: EditProject, preset: ExportPreset, fps: Int? = nil) {
+    public init(recording: LoadedRecording, project: EditProject, preset: ExportPreset, fps: Int? = nil,
+                range: ClosedRange<Double>? = nil) {
         self.recording = recording
         self.project = project
         self.preset = preset
+        self.range = range.flatMap { $0.upperBound - $0.lowerBound > 0.05 ? $0 : nil }
         self.fps = preset.codec == .gif ? preset.fps : min(240, max(1, fps ?? preset.fps))
     }
 
@@ -134,6 +138,8 @@ public final class Exporter: @unchecked Sendable {
     private func exportMovie(_ built: CompositionBuilder.Result, canvas: CGSize, to url: URL,
                              progress: @escaping @Sendable (Double) -> Void) async throws {
         let reader = try AVAssetReader(asset: built.composition)
+        let span = clampedRange(built)
+        reader.timeRange = span.time
         let videoTracks = try await built.composition.loadTracks(withMediaType: .video)
         let audioTracks = try await built.composition.loadTracks(withMediaType: .audio)
         // HDR: 10 bit 4:2:0 direkt till HEVC Main10 (kompositören ritar HLG i halvflyttal).
@@ -155,7 +161,8 @@ public final class Exporter: @unchecked Sendable {
                 AVLinearPCMIsFloatKey: true,
                 AVLinearPCMIsNonInterleaved: false,
             ])
-            out.audioMix = built.audioMix
+            out.audioMix = range == nil ? built.audioMix
+                : CompositionBuilder.audioMix(for: built.composition, plan: built.plan, appIDs: recording.apps.map(\.id), edges: span.seconds)
             out.audioTimePitchAlgorithm = .spectral
             reader.add(out)
             audioOut = out
@@ -190,13 +197,14 @@ public final class Exporter: @unchecked Sendable {
 
         guard reader.startReading() else { throw ExportError.failed(reader.error?.localizedDescription ?? "Läsningen startade inte") }
         guard writer.startWriting() else { throw ExportError.failed(writer.error?.localizedDescription ?? "Skrivningen startade inte") }
-        writer.startSession(atSourceTime: .zero)
+        writer.startSession(atSourceTime: span.time.start)
 
-        let total = max(built.duration.seconds, 0.001)
+        let total = max(span.seconds.upperBound - span.seconds.lowerBound, 0.001)
+        let offset = span.seconds.lowerBound
         await withTaskGroup(of: Void.self) { group in
             group.addTask {
                 await Self.pump(videoOut, into: videoIn, queue: "skarminspelare.export.video") { t in
-                    progress(min(1, t / total))
+                    progress(min(1, max(0, t - offset) / total))
                 }
             }
             if let audioOut, let audioIn {
@@ -297,16 +305,27 @@ public final class Exporter: @unchecked Sendable {
         }
     }
 
+    /// Utsnittet inom filmen (eller hela filmen), som tidsintervall och sekunder.
+    private func clampedRange(_ built: CompositionBuilder.Result) -> (time: CMTimeRange, seconds: ClosedRange<Double>) {
+        let d = built.duration.seconds
+        let a = min(max(0, range?.lowerBound ?? 0), d), b = min(max(a, range?.upperBound ?? d), d)
+        let time = CMTimeRange(start: CMTime(seconds: a, preferredTimescale: 600), end: CMTime(seconds: b, preferredTimescale: 600))
+        return (time, a...b)
+    }
+
     // MARK: - GIF
 
     /// GIF i två varv: först stickprov ur hela filmen till en gemensam palett (median cut),
     /// sedan varje ruta med ordnat gitter mot den (`GIFPalette`). ImageIOs palett per ruta bandade.
     private func exportGIF(_ built: CompositionBuilder.Result, canvas: CGSize, to url: URL,
                            progress: @escaping @Sendable (Double) -> Void) async throws {
-        let total = max(built.duration.seconds, 0.001)
+        let span = clampedRange(built).seconds
+        let total = max(span.upperBound - span.lowerBound, 0.001)
+        let offset = span.lowerBound
         let videoTracks = try await built.composition.loadTracks(withMediaType: .video)
         func makeReader() throws -> (AVAssetReader, AVAssetReaderVideoCompositionOutput) {
             let reader = try AVAssetReader(asset: built.composition)
+            reader.timeRange = clampedRange(built).time
             let out = AVAssetReaderVideoCompositionOutput(videoTracks: videoTracks, videoSettings: [
                 kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
             ])
@@ -336,7 +355,7 @@ public final class Exporter: @unchecked Sendable {
                     samples += s
                 }
                 n += 1
-                progress(min(0.3, CMSampleBufferGetPresentationTimeStamp(buffer).seconds / total * 0.3))
+                progress(min(0.3, (CMSampleBufferGetPresentationTimeStamp(buffer).seconds - offset) / total * 0.3))
             }
             if reader.status == .failed { throw ExportError.failed(reader.error?.localizedDescription ?? "Läsningen misslyckades") }
         }
@@ -369,7 +388,7 @@ public final class Exporter: @unchecked Sendable {
                 CGImageDestinationAddImage(dest, cg, props)
                 frameIndex += 1
             }
-            progress(min(1, 0.3 + CMSampleBufferGetPresentationTimeStamp(buffer).seconds / total * 0.7))
+            progress(min(1, 0.3 + (CMSampleBufferGetPresentationTimeStamp(buffer).seconds - offset) / total * 0.7))
         }
         if reader.status == .failed { throw ExportError.failed(reader.error?.localizedDescription ?? "Läsningen misslyckades") }
         guard CGImageDestinationFinalize(dest) else { throw ExportError.failed("GIF-filen gick inte att skriva klart") }

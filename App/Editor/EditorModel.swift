@@ -289,7 +289,26 @@ final class EditorModel: ObservableObject {
         }
     }
 
-    /// ⌥[ / ⌥]: delen under spelhuvudet börjar respektive slutar vid spelhuvudet (på rutan).
+    /// In- och utpunkt (utdatatid): ett utsnitt som kan exporteras för sig. I, O, X tar bort.
+    @Published var markIn: Double?
+    @Published var markOut: Double?
+
+    /// Det markerade utsnittet: mellan punkterna, eller från inpunkten till slutet / från början
+    /// till utpunkten när bara den ena finns.
+    var markedRange: ClosedRange<Double>? {
+        guard markIn != nil || markOut != nil else { return nil }
+        let a = markIn ?? 0, b = markOut ?? duration
+        return b - a > 0.1 ? a...b : nil
+    }
+
+    func setMark(in isIn: Bool) {
+        if isIn { markIn = currentTime; if let o = markOut, o <= currentTime { markOut = nil } }
+        else { markOut = currentTime; if let i = markIn, i >= currentTime { markIn = nil } }
+    }
+
+    func clearMarks() { markIn = nil; markOut = nil }
+
+    /// Q / W: delen under spelhuvudet börjar respektive slutar vid spelhuvudet (på rutan).
     func trimToPlayhead(start: Bool) {
         guard let seg = segment(atOutput: currentTime) else { return }
         let s = sourceTimeAtPlayhead

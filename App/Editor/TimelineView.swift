@@ -170,6 +170,7 @@ struct TimelineView: View {
 
     private func draw(_ ctx: inout GraphicsContext, size: CGSize, pps: Double) {
         let map = model.editTimeMap
+        drawMarks(&ctx, size: size, pps: pps)
         drawRuler(&ctx, size: size, pps: pps)
 
         // Delar med miniatyrer.
@@ -398,6 +399,23 @@ struct TimelineView: View {
             p.move(to: CGPoint(x: px - 6, y: 0)); p.addLine(to: CGPoint(x: px + 6, y: 0))
             p.addLine(to: CGPoint(x: px, y: 9)); p.closeSubpath()
         }, with: .color(.red))
+    }
+
+    /// Det markerade utsnittet: tonat över hela tidslinjen, med flaggor i linjalen.
+    private func drawMarks(_ ctx: inout GraphicsContext, size: CGSize, pps: Double) {
+        guard model.markIn != nil || model.markOut != nil else { return }
+        let a = x(model.markIn ?? 0, pps), b = x(model.markOut ?? model.duration, pps)
+        if b > a {
+            ctx.fill(Path(CGRect(x: a, y: 0, width: b - a, height: size.height)), with: .color(.accentColor.opacity(0.08)))
+            ctx.fill(Path(CGRect(x: a, y: 0, width: b - a, height: rulerH)), with: .color(.accentColor.opacity(0.25)))
+        }
+        for (t, label) in [(model.markIn, "I"), (model.markOut, "O")] {
+            guard let t else { continue }
+            let px = x(t, pps)
+            ctx.fill(Path(CGRect(x: px - 0.75, y: 0, width: 1.5, height: size.height)), with: .color(.accentColor.opacity(0.7)))
+            ctx.draw(Text(verbatim: label).font(.system(size: 9, weight: .bold)).foregroundStyle(Color.accentColor),
+                     at: CGPoint(x: px + (label == "I" ? 6 : -6), y: 6))
+        }
     }
 
     private func drawRuler(_ ctx: inout GraphicsContext, size: CGSize, pps: Double) {

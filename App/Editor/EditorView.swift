@@ -72,6 +72,7 @@ struct EditorView: View {
         }
     }
 
+    /// I och O sätter in- och utpunkt, X tar bort dem (för att exportera ett utsnitt).
     /// Q och W trimmar delen under spelhuvudet till spelhuvudet (som i Premiere): bokstäver som
     /// ligger likadant på alla tangentbord (⌥[ och ⌥] går inte att trycka på ett svenskt, där
     /// klamrarna själva kräver ⌥). Bara när inget textfält har fokus och bara i redigerarens fönster.
@@ -84,6 +85,9 @@ struct EditorView: View {
             switch event.charactersIgnoringModifiers?.lowercased() {
             case "q": model.trimToPlayhead(start: true); return nil
             case "w": model.trimToPlayhead(start: false); return nil
+            case "i": model.setMark(in: true); return nil
+            case "o": model.setMark(in: false); return nil
+            case "x": model.clearMarks(); return nil
             default: return event
             }
         }

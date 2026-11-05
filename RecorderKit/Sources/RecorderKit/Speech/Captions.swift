@@ -87,6 +87,14 @@ public struct Captions: Equatable, Sendable {
 
     // MARK: - Filer
 
+    /// Undertexterna för ett utsnitt av filmen (utdatatid), med tiderna räknade från utsnittets början.
+    public func srt(in range: ClosedRange<Double>) -> String {
+        cues.filter { $0.end > range.lowerBound && $0.start < range.upperBound }.enumerated().map { i, c in
+            let a = max(0, c.start - range.lowerBound), b = min(range.upperBound, c.end) - range.lowerBound
+            return "\(i + 1)\n\(Self.stamp(a, separator: ",")) --> \(Self.stamp(b, separator: ","))\n\(c.text)\n"
+        }.joined(separator: "\n")
+    }
+
     public var srt: String {
         cues.enumerated().map { i, c in
             "\(i + 1)\n\(Self.stamp(c.start, separator: ",")) --> \(Self.stamp(c.end, separator: ","))\n\(c.text)\n"

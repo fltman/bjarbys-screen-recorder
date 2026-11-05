@@ -15,6 +15,14 @@ struct ExportSheet: View {
     @State private var uploading: Double?
     @State private var fullFrameRate = true
     @State private var sharedURL: URL?
+    /// Bara det markerade utsnittet (I–O), när det finns ett.
+    @State private var onlyMarked = true
+
+    /// Längden som exporteras: utsnittet om det är valt, annars hela filmen.
+    private var exportedDuration: Double {
+        if onlyMarked, let r = model.markedRange { return r.upperBound - r.lowerBound }
+        return model.duration
+    }
 
     private var preset: ExportPreset { ExportPreset.all.first { $0.id == presetID } ?? ExportPreset.all[0] }
 
@@ -38,7 +46,7 @@ struct ExportSheet: View {
                         Spacer(minLength: 8)
                         VStack(alignment: .trailing, spacing: 2) {
                             Text(verbatim: "\(Int(canvas.width))×\(Int(canvas.height))")
-                            Text("≈ " + ByteCountFormatter.string(fromByteCount: p.estimatedBytes(canvas: canvas, duration: model.duration),
+                            Text("≈ " + ByteCountFormatter.string(fromByteCount: p.estimatedBytes(canvas: canvas, duration: exportedDuration),
                                                                  countStyle: .file))
                         }
                         .font(.caption.monospacedDigit())
@@ -61,6 +69,11 @@ struct ExportSheet: View {
                 Toggle("\(model.recording.meta.fps) bilder/s, som inspelningen", isOn: $fullFrameRate)
                     .disabled(progress != nil)
             }
+            if let r = model.markedRange {
+                Toggle("Bara det markerade, \(TransportTime.format(r.lowerBound))–\(TransportTime.format(r.upperBound)) (\(AppLocale.format("%.1f", r.upperBound - r.lowerBound)) s)",
+                       isOn: $onlyMarked)
+                    .disabled(progress != nil)
+            }
             if model.plan.captions != nil && presetID != "gif" {
                 Toggle("Spara undertexter (.srt) bredvid filmen", isOn: $subtitles)
                     .disabled(progress != nil)
@@ -80,6 +93,8 @@ struct ExportSheet: View {
             HStack {
                 if progress == nil && finishedURL == nil {
                     Menu {
+                        Button("Spara bild vid spelhuvudet …") { saveStill() }
+                        Divider()
                         Button("Steg-för-steg-guide …") { makeGuide() }
                         Button("Felrapport …") { makeBugReport() }
                     } label: {
@@ -115,6 +130,26 @@ struct ExportSheet: View {
         }
         .padding(22)
         .frame(width: 560)
+    }
+
+    /// Den färdiga rutan vid spelhuvudet som PNG, 4K på kortaste sidan (miniatyr till YouTube m.m.).
+    private func saveStill() {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "\(model.recording.bundle.name) \(TransportTime.format(model.currentTime).replacingOccurrences(of: ":", with: "."))"
+        panel.allowedContentTypes = [.png]
+        panel.directoryURL = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask).first
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        let rec = model.recording, project = model.project, t = model.currentTime
+        error = nil
+        Task {
+            do {
+                let (images, _) = try await FrameGrabber.frames(rec, project: project, outputTimes: [t], shortSide: 2160)
+                if let image = images.first { try FrameGrabber.writePNG(image, to: url) }
+                finishedURL = url
+            } catch {
+                self.error = error.localizedDescription
+            }
+        }
     }
 
     private func chooseAndExport() {
@@ -197,14 +232,16 @@ struct ExportSheet: View {
         progress = 0
         model.player.pause()
         let fps = model.recording.meta.fps > 60 && fullFrameRate ? model.recording.meta.fps : nil
-        let exporter = Exporter(recording: model.recording, project: model.project, preset: preset, fps: fps)
+        let range = onlyMarked ? model.markedRange : nil
+        let exporter = Exporter(recording: model.recording, project: model.project, preset: preset, fps: fps, range: range)
         self.exporter = exporter
         Task {
             do {
                 try await exporter.run(to: url) { p in
                     Task { @MainActor in progress = p }
                 }
-                if subtitles, presetID != "gif", let srt = model.plan.captions?.srt {
+                if subtitles, presetID != "gif", let captions = model.plan.captions {
+                    let srt = range.map { captions.srt(in: $0) } ?? captions.srt
                     try? srt.write(to: url.deletingPathExtension().appendingPathExtension("srt"), atomically: true, encoding: .utf8)
                 }
                 finishedURL = url

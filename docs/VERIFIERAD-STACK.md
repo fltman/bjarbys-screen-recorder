@@ -293,6 +293,12 @@ vänster kanal:
 - ⚠️ Första mätningen visade ingen övertoning: den kördes mot en appbinär byggd före ändringen
   (`test.sh` bygger bara paketet). Mät alltid efter xcodebuild.
 
+## Utsnitt (2026-11-05)
+
+`--prov-exportera … --utsnitt 1.5,3.0` på en film på 5 s med en 440 Hz-ton: MP4 och ProRes 1,500 s
+(bild och ljud), GIF 23 rutor. Ljudet tonas: topp 0,076 de första 2 ms mot 0,141 efter 30 ms,
+0,012 de sista 2 ms — inget klick i kanterna.
+
 ## Klickljud (2026-11-05)
 
 Provinspelning med tre påhittade klick (1,0, 2,5 och 3,2 s; delen 0–3 s behålls), ProRes-export:

@@ -76,6 +76,7 @@ public enum CompositionBuilder {
         public let videoComposition: AVVideoComposition
         public let audioMix: AVMutableAudioMix
         public let duration: CMTime
+        public let plan: RenderPlan
     }
 
     public static func build(_ rec: LoadedRecording, plan: RenderPlan, fps: Int) async throws -> Result {
@@ -279,7 +280,7 @@ public enum CompositionBuilder {
 
         let video = videoComposition(plan: plan, duration: cursor, fps: fps, hasCamera: hasCamera, hasAlternate: hasAlternate)
         let mix = audioMix(for: composition, plan: plan, appIDs: rec.apps.map(\.id))
-        return Result(composition: composition, videoComposition: video, audioMix: mix, duration: cursor)
+        return Result(composition: composition, videoComposition: video, audioMix: mix, duration: cursor, plan: plan)
     }
 
     /// Spår-id:n i kompositionen är fasta, så utseendet kan bytas utan att klippen byggs om.
@@ -329,7 +330,9 @@ public enum CompositionBuilder {
 
     /// Ljudmixen: volym och tystning per spår, datorljudet under tal (om valt), mikrofon och
     /// datorljud under berättarröst, musik under tal och berättarröst, och klippens toningar.
-    public static func audioMix(for composition: AVComposition, plan: RenderPlan, appIDs: [String] = []) -> AVMutableAudioMix {
+    /// `edges`: ett utsnitt som exporteras för sig; ljudet tonas in och ut på 20 ms i dess kanter.
+    public static func audioMix(for composition: AVComposition, plan: RenderPlan, appIDs: [String] = [],
+                                edges: ClosedRange<Double>? = nil) -> AVMutableAudioMix {
         let mix = plan.project.audio
         let map = plan.timeMap
         // Berättarrösten i utdatatid.
@@ -338,7 +341,12 @@ public enum CompositionBuilder {
         }
         var params: [AVMutableAudioMixInputParameters] = []
         func time(_ s: Double) -> CMTime { CMTime(seconds: max(0, s), preferredTimescale: 600) }
-        func apply(_ p: AVMutableAudioMixInputParameters, _ envelope: GainEnvelope) {
+        let edgePart = edges.map { r in
+            GainEnvelope.Part([(r.lowerBound, 0), (r.lowerBound + 0.02, 1), (r.upperBound - 0.02, 1), (r.upperBound, 0)])
+        }
+        func apply(_ p: AVMutableAudioMixInputParameters, _ base: GainEnvelope) {
+            var envelope = base
+            if let edgePart { envelope.parts.append(edgePart) }
             let ramps = envelope.ramps()
             if ramps.first.map({ $0.start > 0.001 }) ?? true { p.setVolume(Float(envelope.value(at: 0)), at: .zero) }
             for r in ramps {
