@@ -86,6 +86,23 @@
         }
       }
     },
+    "%@, %lld av %lld": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %lld of %lld"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %lld av %lld"
+          }
+        }
+      }
+    },
     "%lld": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -133,6 +150,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld bilder/s, som inspelningen"
+          }
+        }
+      }
+    },
+    "%lld format i samma svep: %@": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld formats in one go: %@"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld format i samma svep: %@"
           }
         }
       }
@@ -1582,6 +1616,40 @@
         }
       }
     },
+    "Exportera %lld …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export %lld…"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportera %lld …"
+          }
+        }
+      }
+    },
+    "Exportera hit": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export Here"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportera hit"
+          }
+        }
+      }
+    },
     "Exportera …": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1595,6 +1663,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Exportera …"
+          }
+        }
+      }
+    },
+    "Exporterar %@ …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exporting %@…"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exporterar %@ …"
           }
         }
       }
@@ -3737,6 +3822,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mapp i hinken"
+          }
+        }
+      }
+    },
+    "Mappen där de %lld filerna hamnar.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The folder where the %lld files go."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mappen där de %lld filerna hamnar."
           }
         }
       }
@@ -7477,6 +7579,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "≈ %@ per spår"
+          }
+        }
+      }
+    },
+    "⌘-klicka för att exportera flera format i samma svep.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘-click to export several formats in one go."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘-klicka för att exportera flera format i samma svep."
           }
         }
       }

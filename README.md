@@ -137,6 +137,7 @@ the mix as M4A or WAV, or one WAV per source (microphone, computer audio, each a
 music) for Logic or Resolve — all as long as the film, and they add up to the mix. Chapters go
 into the file (MP4, MOV and M4A — QuickTime, IINA, VLC and podcast players show them), and after
 the export you can copy them as YouTube timestamps or share the file through the Share menu.
+⌘-click several formats to export them all in one go into a folder.
 
 ## Measured, not assumed
 

@@ -17,6 +17,39 @@ struct ExportSheet: View {
     @State private var sharedURL: URL?
     /// Kapitlen som YouTube-text för det som exporterades (nil utan kapitel).
     @State private var finishedChapters: String?
+    /// Fler förval i samma svep (⌘-klick), utöver `presetID`.
+    @State private var extraIDs: Set<String> = []
+    /// Alla filer som blev klara (flera vid ett svep).
+    @State private var finishedAll: [URL] = []
+    /// Vilket förval som exporteras just nu, vid flera ("MP4 1080p, 2 av 3").
+    @State private var batchLabel: String?
+
+    init(model: EditorModel, extra: Set<String> = []) {
+        self.model = model
+        _extraIDs = State(initialValue: extra)
+    }
+
+    /// Förvalen som exporteras, i listans ordning.
+    private var selectedPresets: [ExportPreset] {
+        ExportPreset.all.filter { $0.id == presetID || extraIDs.contains($0.id) }
+    }
+
+    /// Klick väljer ett förval; ⌘-klick lägger till eller tar bort fler i samma svep.
+    private func choose(_ p: ExportPreset) {
+        guard progress == nil else { return }
+        if NSEvent.modifierFlags.contains(.command) {
+            if p.id == presetID {
+                if let next = extraIDs.first { presetID = next; extraIDs.remove(next) }
+            } else if extraIDs.contains(p.id) {
+                extraIDs.remove(p.id)
+            } else {
+                extraIDs.insert(p.id)
+            }
+        } else {
+            presetID = p.id
+            extraIDs = []
+        }
+    }
     /// Bara det markerade utsnittet (I–O), när det finns ett.
     @State private var onlyMarked = true
     /// Hela ljudets ljudstyrka i filmen: 0 = som det är, annars målet i LUFS.
@@ -37,7 +70,7 @@ struct ExportSheet: View {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(ExportPreset.available(hdr: model.recording.isHDR).filter { !$0.isAudioOnly }) { p in
                     let canvas = p.canvas(aspect: model.project.aspect, source: model.recording.sourceSize)
-                    let selected = p.id == presetID
+                    let selected = p.id == presetID || extraIDs.contains(p.id)
                     HStack(alignment: .center, spacing: 12) {
                         Image(systemName: Self.icon(p))
                             .font(.system(size: 18, weight: .medium))
@@ -64,8 +97,8 @@ struct ExportSheet: View {
                         .stroke(selected ? Color.accentColor : Color.primary.opacity(0.08), lineWidth: selected ? 1.5 : 1))
                     .contentShape(Rectangle())
                     // Dubbelklick först, annars hinner enkelklicket ta det.
-                    .onTapGesture(count: 2) { if progress == nil { presetID = p.id; chooseAndExport() } }
-                    .onTapGesture { if progress == nil { presetID = p.id } }
+                    .onTapGesture(count: 2) { if progress == nil { presetID = p.id; extraIDs = []; chooseAndExport() } }
+                    .onTapGesture { choose(p) }
                 }
             }
 
@@ -74,7 +107,7 @@ struct ExportSheet: View {
                 Text("Bara ljudet").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
                 HStack(spacing: 8) {
                     ForEach(ExportPreset.all.filter(\.isAudioOnly)) { p in
-                        let selected = p.id == presetID
+                        let selected = p.id == presetID || extraIDs.contains(p.id)
                         HStack(spacing: 8) {
                             Image(systemName: Self.icon(p))
                                 .foregroundStyle(selected ? Color.accentColor : .secondary)
@@ -96,13 +129,17 @@ struct ExportSheet: View {
                             .stroke(selected ? Color.accentColor : Color.primary.opacity(0.08), lineWidth: selected ? 1.5 : 1))
                         .contentShape(Rectangle())
                         .help(p.detail)
-                        .onTapGesture(count: 2) { if progress == nil { presetID = p.id; chooseAndExport() } }
-                        .onTapGesture { if progress == nil { presetID = p.id } }
+                        .onTapGesture(count: 2) { if progress == nil { presetID = p.id; extraIDs = []; chooseAndExport() } }
+                        .onTapGesture { choose(p) }
                     }
                 }
-                if preset.isAudioOnly {
+                if preset.isAudioOnly && extraIDs.isEmpty {
                     Text(preset.detail).font(.caption).foregroundStyle(.secondary)
                 }
+                Text(selectedPresets.count > 1
+                     ? "\(selectedPresets.count) format i samma svep: \(selectedPresets.map(\.name).joined(separator: ", "))"
+                     : "⌘-klicka för att exportera flera format i samma svep.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
 
             if model.recording.meta.fps > 60 && presetID != "gif" && !preset.isAudioOnly {
@@ -130,7 +167,7 @@ struct ExportSheet: View {
 
             if let progress {
                 ProgressView(value: progress) {
-                    Text(finishedURL == nil ? "Exporterar …" : "Klart")
+                    Text(finishedURL != nil ? "Klart" : batchLabel.map { "Exporterar \($0) …" } ?? "Exporterar …")
                 } currentValueLabel: {
                     Text("\(Int(progress * 100)) %").monospacedDigit()
                 }
@@ -158,10 +195,10 @@ struct ExportSheet: View {
                         Text(sharedURL.absoluteString).font(.caption).textSelection(.enabled).lineLimit(1)
                     } else if let uploading {
                         ProgressView(value: uploading).frame(width: 120)
-                    } else if SharingStore.isReady && preset.codec != .audioStems {
+                    } else if SharingStore.isReady && preset.codec != .audioStems && finishedAll.count <= 1 {
                         Button("Ladda upp och kopiera länk") { upload(finishedURL) }
                     }
-                    ShareLink(item: finishedURL) { Label("Dela …", systemImage: "square.and.arrow.up") }
+                    ShareLink(items: finishedAll.isEmpty ? [finishedURL] : finishedAll) { Label("Dela …", systemImage: "square.and.arrow.up") }
                         .help("AirDrop, Mail, Meddelanden … (systemets Dela-meny)")
                     if let chapters = finishedChapters {
                         Button("Kopiera kapitel") {
@@ -170,7 +207,7 @@ struct ExportSheet: View {
                         }
                         .help("Tidsstämplarna för en YouTube-beskrivning (\"0:00 Start\" …). Kapitlen ligger också i filmen.")
                     }
-                    Button("Visa i Finder") { NSWorkspace.shared.activateFileViewerSelecting([finishedURL]) }
+                    Button("Visa i Finder") { NSWorkspace.shared.activateFileViewerSelecting(finishedAll.isEmpty ? [finishedURL] : finishedAll) }
                 }
                 Spacer()
                 if progress != nil && finishedURL == nil {
@@ -179,7 +216,7 @@ struct ExportSheet: View {
                     Button(finishedURL == nil ? "Avbryt" : "Stäng", role: .cancel) { dismiss() }
                         .keyboardShortcut(.cancelAction)
                     if finishedURL == nil {
-                        Button("Exportera …") { chooseAndExport() }
+                        Button(selectedPresets.count > 1 ? "Exportera \(selectedPresets.count) …" : "Exportera …") { chooseAndExport() }
                             .keyboardShortcut(.defaultAction)
                             .buttonStyle(.borderedProminent)
                     }
@@ -211,6 +248,20 @@ struct ExportSheet: View {
     }
 
     private func chooseAndExport() {
+        let presets = selectedPresets
+        if presets.count > 1 {
+            // Flera format: en mapp, filerna heter som inspelningen med förvalets namn.
+            let panel = NSOpenPanel()
+            panel.canChooseDirectories = true
+            panel.canChooseFiles = false
+            panel.canCreateDirectories = true
+            panel.prompt = String(localized: "Exportera hit")
+            panel.message = String(localized: "Mappen där de \(presets.count) filerna hamnar.")
+            panel.directoryURL = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first
+            guard panel.runModal() == .OK, let dir = panel.url else { return }
+            start(presets.map { p in (p, Self.freeURL(in: dir, base: "\(model.recording.bundle.name) – \(p.name)", ext: p.fileExtension)) })
+            return
+        }
         let panel = NSSavePanel()
         // Ljudspåren var för sig hamnar i en mapp.
         panel.nameFieldStringValue = preset.codec == .audioStems
@@ -219,7 +270,17 @@ struct ExportSheet: View {
         panel.directoryURL = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first
         if !preset.fileExtension.isEmpty, let type = UTType(filenameExtension: preset.fileExtension) { panel.allowedContentTypes = [type] }
         guard panel.runModal() == .OK, let url = panel.url else { return }
-        start(url)
+        start([(preset, url)])
+    }
+
+    /// En fil- eller mappadress som inte finns än ("namn.mp4", "namn (2).mp4" …).
+    static func freeURL(in dir: URL, base: String, ext: String) -> URL {
+        func make(_ name: String) -> URL { ext.isEmpty ? dir.appendingPathComponent(name, isDirectory: true)
+                                                       : dir.appendingPathComponent(name).appendingPathExtension(ext) }
+        var url = make(base)
+        var n = 2
+        while FileManager.default.fileExists(atPath: url.path) { url = make("\(base) (\(n))"); n += 1 }
+        return url
     }
 
     private func upload(_ file: URL) {
@@ -291,35 +352,46 @@ struct ExportSheet: View {
         }
     }
 
-    private func start(_ url: URL) {
+    /// Exporterar ett eller flera förval i tur och ordning.
+    private func start(_ jobs: [(preset: ExportPreset, url: URL)]) {
+        guard !jobs.isEmpty else { return }
         error = nil
         progress = 0
+        finishedAll = []
         model.player.pause()
         let fps = model.recording.meta.fps > 60 && fullFrameRate ? model.recording.meta.fps : nil
         let range = onlyMarked ? model.markedRange : nil
-        let exporter = Exporter(recording: model.recording, project: model.project, preset: preset, fps: fps, range: range,
-                                loudnessTarget: loudness < 0 && presetID != "gif" ? loudness : nil)
-        self.exporter = exporter
         Task {
-            do {
-                try await exporter.run(to: url) { p in
-                    Task { @MainActor in progress = p }
+            var done: [URL] = []
+            for (i, job) in jobs.enumerated() {
+                batchLabel = jobs.count > 1 ? String(localized: "\(job.preset.name), \(i + 1) av \(jobs.count)") : nil
+                let isGIF = job.preset.codec == .gif
+                let exporter = Exporter(recording: model.recording, project: model.project, preset: job.preset, fps: fps, range: range,
+                                        loudnessTarget: loudness < 0 && !isGIF ? loudness : nil)
+                self.exporter = exporter
+                do {
+                    try await exporter.run(to: job.url) { p in
+                        Task { @MainActor in progress = (Double(i) + p) / Double(jobs.count) }
+                    }
+                    if subtitles, !isGIF, let captions = model.plan.captions {
+                        let srt = range.map { captions.srt(in: $0) } ?? captions.srt
+                        try? srt.write(to: job.url.deletingPathExtension().appendingPathExtension("srt"), atomically: true, encoding: .utf8)
+                    }
+                    done.append(job.url)
+                } catch Exporter.ExportError.cancelled {
+                    break
+                } catch {
+                    self.error = "\(job.preset.name): \(error.localizedDescription)"
                 }
-                if subtitles, presetID != "gif", let captions = model.plan.captions {
-                    let srt = range.map { captions.srt(in: $0) } ?? captions.srt
-                    try? srt.write(to: url.deletingPathExtension().appendingPathExtension("srt"), atomically: true, encoding: .utf8)
-                }
-                let span = range ?? 0...model.duration
-                let chapters = model.plan.overlayTrack.youtubeChapters(in: span)
-                finishedChapters = model.project.chapters.isEmpty || chapters.isEmpty ? nil : chapters
-                finishedURL = url
-                progress = 1
-            } catch Exporter.ExportError.cancelled {
-                progress = nil
-            } catch {
-                self.error = error.localizedDescription
-                progress = nil
             }
+            batchLabel = nil
+            guard let first = done.first else { progress = nil; return }
+            let span = range ?? 0...model.duration
+            let chapters = model.plan.overlayTrack.youtubeChapters(in: span)
+            finishedChapters = model.project.chapters.isEmpty || chapters.isEmpty ? nil : chapters
+            finishedAll = done
+            finishedURL = first
+            progress = 1
         }
     }
 }

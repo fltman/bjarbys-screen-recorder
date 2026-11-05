@@ -84,6 +84,10 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Flera format i samma svep (2026-11-05): ⌘-klick i exportfönstret markerar fler förval; de
+  exporteras i tur och ordning till en vald mapp ("<inspelning> – <förval>", aldrig över en
+  befintlig fil), med "MP4 4K, 2 av 3" i förloppet. Avbryt stoppar svepet; ett fel i ett format
+  hindrar inte de andra. Visa i Finder och Dela tar alla filerna.
 - Fönsterram (2026-11-05): Stil › Bild › Fönsterram — ingen, macOS-fönster (titelrad med de tre
   prickarna och titel) eller webbläsare (adressfält med en egen adress), ljus eller mörk. Raden
   tar plats ovanför skärmen (skärmytan krymper), ritas en gång till en IOSurface och omfattas av
