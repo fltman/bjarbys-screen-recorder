@@ -59,7 +59,8 @@ is included; to have the app follow your system language instead, run
 - Save a project's look (background, frame, format, cursor, camera, captions, transitions) as
   the default, and every new recording starts with it.
 - Drag and resize layers directly in the preview; fact boxes and QR codes snap to a corner.
-- A camera bubble in any corner, round or rounded square.
+- A camera bubble in any corner, round or rounded square, with the background behind you kept,
+  blurred or replaced by the film's background (Apple's person segmentation, on device).
 
 **Speech** (with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), locally)
 - Transcribe the recording and edit the video by striking out words in the text. Cut words

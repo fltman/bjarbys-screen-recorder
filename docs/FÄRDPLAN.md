@@ -69,6 +69,9 @@ tagning, sedan redigerbar polish, sedan resten.
 
 - Kortkommandon i filmen (2026-11-05): bubbla nere eller uppe i mitten, räknar upp
   upprepningar ("⌘Z ×3"), visas i utdatatid så att 4×-delar inte blinkar förbi.
+- Kamerabakgrund (2026-11-05): Stil › Kamera › Bakgrund — som den är, suddig eller borttagen
+  (filmens bakgrund, något mörkare, bakom personen). `VNGeneratePersonSegmentationRequest`
+  (balanserad) på en nedskalad kopia per ruta, mjuk maskkant. MCP: `camera_backdrop`.
 - Standardutseende (2026-11-05): Stil › Standardutseende sparar projektets utseende (bakgrund,
   ram, format, markör, kamera, kortkommandon, undertexter, övergångar, zoomnivå) i
   inställningarna; nya projekt får det (`EditProject.standardStyle`, också i MCP-läget), och

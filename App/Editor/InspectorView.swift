@@ -453,6 +453,12 @@ struct InspectorView: View {
                 Text("Uppe till vänster").tag(EditProject.CameraStyle.Corner.topLeft)
             }
             Toggle("Spegelvänd", isOn: binding(\.camera.mirror))
+            Picker("Bakgrund", selection: binding(\.camera.backdrop)) {
+                Text("Som den är").tag(EditProject.CameraStyle.Backdrop.original)
+                Text("Suddig").tag(EditProject.CameraStyle.Backdrop.blur)
+                Text("Borttagen").tag(EditProject.CameraStyle.Backdrop.remove)
+            }
+            .help("Bakgrunden bakom dig i bubblan, med Apples personsegmentering på datorn.")
         }
     }
 

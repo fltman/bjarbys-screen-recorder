@@ -293,6 +293,13 @@ vänster kanal:
 - ⚠️ Första mätningen visade ingen övertoning: den kördes mot en appbinär byggd före ändringen
   (`test.sh` bygger bara paketet). Mät alltid efter xcodebuild.
 
+## Kamerabakgrund (2026-11-05)
+
+Syntetiskt kameraspår (testbild 1280×720, ingen person), bubbla 40 %, export MP4 1080p av 4 s:
+som den är 1,29 s (3,1× realtid), borttagen 1,94 s (2,1×) — segmenteringen per ruta kostar en
+tredjedel. Utan person blir allt suddigt respektive utbytt (masken är tom), utan fel. Med en
+riktig person: inte provat av mig (kräver kameran).
+
 ## Trimma delar (2026-11-05)
 
 `--prov-trim` på delarna [0–1] och [2–3] i en inspelning på 4,18 s: slutet till 1,8 → 1,8; till

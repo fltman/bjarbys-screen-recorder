@@ -4,6 +4,7 @@ import CoreImage
 import CoreImage.CIFilterBuiltins
 import Metal
 import AVFoundation
+import Vision
 import os
 
 /// Den delade Core Image-kontexten, på GPU:n. Rutorna stannar i IOSurface/Metal hela vägen.
@@ -346,6 +347,21 @@ public final class RenderPlan: @unchecked Sendable {
                 .transformed(by: CGAffineTransform(translationX: -(e.midX - side / 2), y: -(e.midY - side / 2)))
             if project.camera.mirror {
                 cam = cam.transformed(by: CGAffineTransform(scaleX: -1, y: 1).translatedBy(x: -side, y: 0))
+            }
+            if project.camera.backdrop != .original, let person = Self.personMask(cam) {
+                // Personen skarp, bakgrunden suddig eller utbytt mot filmens egen bakgrund.
+                let behind: CIImage
+                if project.camera.backdrop == .blur {
+                    behind = cam.clampedToExtent().applyingGaussianBlur(sigma: side * 0.035).cropped(to: cam.extent)
+                } else {
+                    let bg = backgroundImage(screen: screen)
+                    let toBubble = CGAffineTransform(translationX: -cameraRect.minX, y: -cameraRect.minY)
+                        .concatenating(CGAffineTransform(scaleX: side / cameraRect.width, y: side / cameraRect.height))
+                    behind = bg.transformed(by: toBubble).cropped(to: cam.extent)
+                        .applyingFilter("CIExposureAdjust", parameters: [kCIInputEVKey: -0.35])
+                }
+                cam = cam.applyingFilter("CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: behind,
+                                                                         kCIInputMaskImageKey: person])
             }
             cam = cam.transformed(by: CGAffineTransform(scaleX: cameraRect.width / side, y: cameraRect.height / side))
                 .transformed(by: CGAffineTransform(translationX: cameraRect.minX, y: cameraRect.minY))
@@ -792,6 +808,26 @@ public final class RenderPlan: @unchecked Sendable {
         return size
     }
     private final class SizeBox: @unchecked Sendable { var size: CGSize? }
+
+    /// Var personen är i en kamerabild (1 = person), i bildens egna koordinater, med mjuk kant.
+    /// Apples personsegmentering på en nedskalad kopia (bubblan är liten); nil om den inte går.
+    static func personMask(_ image: CIImage) -> CIImage? {
+        let e = image.extent
+        let k = min(1, 512 / max(e.width, e.height))
+        let small = image.transformed(by: CGAffineTransform(translationX: -e.minX, y: -e.minY))
+            .transformed(by: CGAffineTransform(scaleX: k, y: k))
+        let request = VNGeneratePersonSegmentationRequest()
+        request.qualityLevel = .balanced
+        request.outputPixelFormat = kCVPixelFormatType_OneComponent8
+        let handler = VNImageRequestHandler(ciImage: small, options: [.ciContext: RenderContext.shared])
+        guard (try? handler.perform([request])) != nil, let buffer = request.results?.first?.pixelBuffer else { return nil }
+        let mask = CIImage(cvPixelBuffer: buffer)
+        let me = mask.extent
+        return mask
+            .transformed(by: CGAffineTransform(scaleX: e.width / me.width, y: e.height / me.height))
+            .transformed(by: CGAffineTransform(translationX: e.minX, y: e.minY))
+            .clampedToExtent().applyingGaussianBlur(sigma: max(1.5, e.width * 0.004)).cropped(to: e)
+    }
 
     /// Slutaren öppen halva rutan, och oskärpans längsta sträcka i pixlar vid 1080p.
     static let shutter: Double = 0.5

@@ -289,16 +289,20 @@ public struct EditProject: Codable, Equatable, Sendable {
     public struct CameraStyle: Codable, Equatable, Hashable, Sendable {
         public enum Shape: String, Codable, Sendable, CaseIterable { case circle, rounded }
         public enum Corner: String, Codable, Sendable, CaseIterable { case bottomRight, bottomLeft, topRight, topLeft }
+        /// Bakgrunden bakom personen i bubblan (Apples personsegmentering, lokalt).
+        public enum Backdrop: String, Codable, Sendable, CaseIterable { case original, blur, remove }
         public var visible: Bool
         public var shape: Shape
         /// Bubblans storlek som andel av bildytans höjd.
         public var size: Double
         public var corner: Corner
         public var mirror: Bool
+        public var backdrop: Backdrop
 
         public init(visible: Bool = true, shape: Shape = .circle, size: Double = 0.24,
-                    corner: Corner = .bottomRight, mirror: Bool = true) {
+                    corner: Corner = .bottomRight, mirror: Bool = true, backdrop: Backdrop = .original) {
             self.visible = visible; self.shape = shape; self.size = size; self.corner = corner; self.mirror = mirror
+            self.backdrop = backdrop
         }
 
         public init(from decoder: Decoder) throws {
@@ -309,6 +313,7 @@ public struct EditProject: Codable, Equatable, Sendable {
             size = c.value(.size, d.size)
             corner = c.value(.corner, d.corner)
             mirror = c.value(.mirror, d.mirror)
+            backdrop = c.value(.backdrop, d.backdrop)
         }
     }
 

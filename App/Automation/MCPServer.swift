@@ -170,6 +170,8 @@ enum MCPServer {
                 "transition_duration": ["type": "number"],
                 "fade_in_out": ["type": "boolean", "description": "Fade in from black at the start and out at the end."],
                 "motion_blur": ["type": "boolean", "description": "Motion blur while the camera zooms and pans."],
+                "camera_backdrop": ["type": "string", "enum": ["original", "blur", "remove"],
+                                    "description": "Behind the person in the camera bubble: as recorded, blurred, or replaced by the film's background."],
              ], required: ["recording"])],
             ["name": "render_frames",
              "description": "Render finished frames (with all polish) as PNG files at output times, so you can look at them.",
@@ -479,6 +481,7 @@ enum MCPServer {
         if let v = a["transition_duration"] as? Double { p.transition.duration = min(1.5, max(0.2, v)) }
         if let v = a["fade_in_out"] as? Bool { p.fadeInOut = v }
         if let v = a["motion_blur"] as? Bool { p.motionBlur = v }
+        if let v = (a["camera_backdrop"] as? String).flatMap(EditProject.CameraStyle.Backdrop.init(rawValue:)) { p.camera.backdrop = v }
         if let v = a["zoom_scale"] as? Double { p.zoomScale = min(4, max(1.25, v)) }
         if let v = a["auto_zoom"] as? Bool {
             p.autoZoom = v

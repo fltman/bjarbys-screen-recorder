@@ -528,6 +528,23 @@
         }
       }
     },
+    "Bakgrunden bakom dig i bubblan, med Apples personsegmentering på datorn.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The background behind you in the bubble, using Apple's person segmentation on this Mac."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bakgrunden bakom dig i bubblan, med Apples personsegmentering på datorn."
+          }
+        }
+      }
+    },
     "Bara skärminspelning krävs. Resten lägger till spår och gör efterbearbetningen bättre.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -694,6 +711,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Blixt"
+          }
+        }
+      }
+    },
+    "Borttagen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borttagen"
           }
         }
       }
@@ -4421,6 +4455,23 @@
         }
       }
     },
+    "Som den är": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As recorded"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Som den är"
+          }
+        }
+      }
+    },
     "Spara": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -5063,6 +5114,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Största bredd"
+          }
+        }
+      }
+    },
+    "Suddig": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blurred"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suddig"
           }
         }
       }
