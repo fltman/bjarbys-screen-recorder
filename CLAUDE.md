@@ -64,7 +64,8 @@ open Skarminspelare.xcodeproj
 - `RecorderKit/Sources/RecorderKit/` — `Capture/` `Writing/` `Telemetry/` `Project/`
   `Motion/` `Render/` `Export/`. Identifierare på engelska, kommentarer på svenska.
 - `docs/FORMAT.md` — projektpaketet `.bsrec`. `docs/VERIFIERAD-STACK.md` — uppmätta fakta.
-  `docs/FÄRDPLAN.md` — faserna.
+  `docs/FÄRDPLAN.md` — faserna. `docs/TESTLISTA.md` — det som väntar på ett test med mus och
+  tangentbord (bocka av, eller flytta in fynden i VERIFIERAD-STACK).
 - `vault/` — Obsidian-valv för arbetsanteckningar, gitignorerat, kommer aldrig in i repot.
 
 ## Utseende
