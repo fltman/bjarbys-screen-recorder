@@ -182,6 +182,7 @@ enum MCPServer {
                 "window_frame_dark": ["type": "boolean", "description": "Dark title bar."],
                 "window_title": ["type": "string", "description": "Title in the macOS window frame."],
                 "window_address": ["type": "string", "description": "Address in the browser frame's address field."],
+                "camera_follow_face": ["type": "boolean", "description": "Keep the face centred in the camera bubble (faces are found once with Vision and saved in the bundle)."],
                 "cursor_highlight": ["type": "boolean", "description": "A soft coloured halo under the cursor so it is easy to follow."],
                 "cursor_highlight_color": ["type": "string", "description": "Halo colour as #RRGGBB (default #FFD60A, yellow)."],
                 "ink": ["type": "boolean", "description": "Show what was drawn on screen with the pen during the recording (default true)."],
@@ -517,6 +518,13 @@ enum MCPServer {
         if let v = a["window_frame_dark"] as? Bool { p.chrome.dark = v }
         if let v = a["window_title"] as? String { p.chrome.title = v }
         if let v = a["window_address"] as? String { p.chrome.address = v }
+        if let v = a["camera_follow_face"] as? Bool {
+            if v, rec.bundle.readFaceTrack() == nil, let camera = rec.asset(.camera) {
+                let track = try await FaceTrack.analyze(camera, from: rec.meta.track(.camera)?.start ?? 0, to: rec.meta.duration)
+                if track.samples.isEmpty { notes.append("No face found in the camera picture.") } else { try rec.bundle.saveFaceTrack(track) }
+            }
+            p.camera.followFace = v && rec.bundle.readFaceTrack() != nil
+        }
         if let v = a["cursor_highlight"] as? Bool { p.cursor.highlight = v }
         if let v = a["cursor_highlight_color"] as? String, v.hasPrefix("#"), v.count == 7 { p.cursor.highlightColor = v }
         if let v = a["ink"] as? Bool { p.showsInk = v }

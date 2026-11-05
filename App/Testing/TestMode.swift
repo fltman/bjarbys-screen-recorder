@@ -128,6 +128,20 @@ enum TestMode {
                 } catch { print(error.localizedDescription); code = 1 }
             } else if let i = args.firstIndex(of: "--prov-penna"), args.count > i + 1 {
                 code = await inkTest(out: URL(fileURLWithPath: args[i + 1]))
+            } else if let i = args.firstIndex(of: "--prov-ansikten"), args.count > i + 1 {
+                // Ansiktena i kameraspåret (Vision), utan att spara något i paketet.
+                do {
+                    let rec = try LoadedRecording.load(RecordingBundle(url: URL(fileURLWithPath: args[i + 1])))
+                    guard let camera = rec.asset(.camera) else { print("ingen kamera i paketet"); code = 2; return }
+                    let started = Date()
+                    let track = try await FaceTrack.analyze(camera, from: rec.meta.track(.camera)?.start ?? 0, to: rec.meta.duration)
+                    print(String(format: "prov: %d på %.1f s (inspelningen %.1f s)", track.samples.count,
+                                 Date().timeIntervalSince(started), rec.meta.duration))
+                    for smp in track.samples.prefix(12) {
+                        print(String(format: "  %.2f s: mitt (%.3f, %.3f), höjd %.3f", smp.t, smp.x, smp.y, smp.h))
+                    }
+                    code = 0
+                } catch { print(error.localizedDescription); code = 1 }
             } else if let i = args.firstIndex(of: "--prov-slaihop"), args.count > i + 3 {
                 // Slår ihop paketen (i den givna ordningen) till ett nytt i mappen och mäter resultatet.
                 let bundles = args[(i + 2)...].prefix { !$0.hasPrefix("--") }.map { RecordingBundle(url: URL(fileURLWithPath: $0)) }

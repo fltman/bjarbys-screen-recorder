@@ -2602,6 +2602,23 @@
         }
       }
     },
+    "Håll ansiktet i mitten": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep face centred"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Håll ansiktet i mitten"
+          }
+        }
+      }
+    },
     "Höger": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2989,6 +3006,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ingen titel"
+          }
+        }
+      }
+    },
+    "Inget ansikte hittades i kamerabilden.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No face was found in the camera picture."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inget ansikte hittades i kamerabilden."
           }
         }
       }
@@ -7069,6 +7103,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Utseende"
+          }
+        }
+      }
+    },
+    "Utsnittet i bubblan följer ditt ansikte (Vision, på datorn), så att du inte hamnar i kanten. Räknas fram en gång.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The crop in the bubble follows your face (Vision, on this Mac), so you don't end up at the edge. Worked out once."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utsnittet i bubblan följer ditt ansikte (Vision, på datorn), så att du inte hamnar i kanten. Räknas fram en gång."
           }
         }
       }

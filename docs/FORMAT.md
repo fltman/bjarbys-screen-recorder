@@ -87,7 +87,7 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 | `shortcuts` | `visible`, `position` (`bottom`, `top`), `size` |
 | `captions` | `visible`, `size`, `highlightWord` (ordet som sägs lyser) — undertexter ur `transcript.json` |
 | `masks[]` | `start`, `end`, `keyframes[]` (`t`, `rect` normaliserat), `style` (`blur`, `pixelate`, `solid`), `kind`, `hint` (aldrig själva texten), `enabled` |
-| `camera` | `visible`, `shape`, `size`, `corner`, `mirror` |
+| `camera` | `visible`, `shape`, `size`, `corner`, `mirror`, `backdrop`, `followFace` (utsnittet följer ansiktet) |
 | `transition`, `fadeInOut` | standardövergång i snitten (`kind`: `none`, `dip`, `blur`, `flash`, `crossfade`; `duration`) och toning i början/slutet |
 | `overlays[]` | bildlagret: `kind` (`title`, `callout`, `fact`, `qr`, `text`, `image`, `video` — video med `offset` i filen, `volume`, `speed` (0,25–4; `duration` är tiden i filmen), `crop` (utsnitt av videon, 0–1, origo uppe till vänster) och `softness` (mjuka kanter 0–1), helbild = `frame` [0,0,1,1]), `animation` (`fade`, `slide`, `pop`, `typewriter`), `frame` (fri placering 0–1), `file` (bild i `media/`), `size`, `background`, `at` (källtid), `duration` (s i filmen), `title`, `lines`, `url`, `target` (0–1, markeringens mål), `corner` |
 | `chapters[]`, `showsChapterBanner` | kapitel (`at`, `title`) och om kapitelraden visas |
@@ -106,6 +106,7 @@ Filer som räknas fram ur inspelningen och alltid går att göra om.
 | Fil | Innehåll |
 |---|---|
 | `mic-isolated.caf` | mikrofonen efter Apples röstisolering, 48 kHz mono, börjar vid tidslinjens nollpunkt |
+| `camera-faces.json` | ansiktet i kamerabilden: `samples[]` med `t` (källtid), `x`, `y` (mitt, 0–1, origo nere till vänster), `h` (höjd), fyra per sekund, utjämnade — för `camera.followFace` |
 
 ## transcript.json
 

@@ -337,11 +337,13 @@ public struct EditProject: Codable, Equatable, Sendable {
         public var corner: Corner
         public var mirror: Bool
         public var backdrop: Backdrop
+        /// Utsnittet följer ansiktet (kräver `derived/camera-faces.json`, räknas fram vid behov).
+        public var followFace: Bool
 
         public init(visible: Bool = true, shape: Shape = .circle, size: Double = 0.24,
-                    corner: Corner = .bottomRight, mirror: Bool = true, backdrop: Backdrop = .original) {
+                    corner: Corner = .bottomRight, mirror: Bool = true, backdrop: Backdrop = .original, followFace: Bool = false) {
             self.visible = visible; self.shape = shape; self.size = size; self.corner = corner; self.mirror = mirror
-            self.backdrop = backdrop
+            self.backdrop = backdrop; self.followFace = followFace
         }
 
         public init(from decoder: Decoder) throws {
@@ -353,6 +355,7 @@ public struct EditProject: Codable, Equatable, Sendable {
             corner = c.value(.corner, d.corner)
             mirror = c.value(.mirror, d.mirror)
             backdrop = c.value(.backdrop, d.backdrop)
+            followFace = c.value(.followFace, d.followFace)
         }
     }
 

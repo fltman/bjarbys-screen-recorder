@@ -82,6 +82,8 @@ public final class RenderPlan: @unchecked Sendable {
     public let outputHDR: Bool
     /// Strecken som ritades på skärmen under inspelningen.
     public let inkTrack: InkTrack
+    /// Ansiktet i kamerabilden (när bubblan ska följa det).
+    let faceTrack: FaceTrack?
 
     /// ScreenCaptureKits HDR10-förval lägger SDR-vitt på 100 nits; Core Image har SDR-vitt
     /// (1,0 linjärt) på 203 nits, som BT.2408. Uppmätt: Y 509 (PQ 0,508) → 0,492 linjärt.
@@ -128,7 +130,9 @@ public final class RenderPlan: @unchecked Sendable {
     public init(canvas: CGSize, project: EditProject, meta: RecordingMeta, events: [InputEvent],
                 cursors: CursorCatalog, cursorsDir: URL, hasCamera: Bool, words: [Transcript.Word] = [],
                 transparentBackground: Bool = false, mediaDir: URL? = nil,
-                cursorPath: CursorPath? = nil, cameraPath: CameraPath? = nil, outputHDR: Bool = false) {
+                cursorPath: CursorPath? = nil, cameraPath: CameraPath? = nil, outputHDR: Bool = false,
+                faceTrack: FaceTrack? = nil) {
+        self.faceTrack = faceTrack
         self.transparent = transparentBackground
         self.sourceHDR = meta.hdr
         self.cameraStart = meta.track(.camera)?.start ?? 0
@@ -404,8 +408,14 @@ public final class RenderPlan: @unchecked Sendable {
             let aspect = rect.width / max(rect.height, 1)
             let cw = e.width / e.height > aspect ? e.height * aspect : e.width
             let ch = cw / aspect
-            var cam = camera.cropped(to: CGRect(x: e.midX - cw / 2, y: e.midY - ch / 2, width: cw, height: ch))
-                .transformed(by: CGAffineTransform(translationX: -(e.midX - cw / 2), y: -(e.midY - ch / 2)))
+            // Utsnittet: mitt i bilden, eller kring ansiktet (lite luft ovanför huvudet) inom bilden.
+            var cx = e.midX, cy = e.midY
+            if let face = faceTrack?.center(at: s) {
+                cx = min(max(e.minX + face.x * e.width, e.minX + cw / 2), e.maxX - cw / 2)
+                cy = min(max(e.minY + face.y * e.height - ch * 0.06, e.minY + ch / 2), e.maxY - ch / 2)
+            }
+            var cam = camera.cropped(to: CGRect(x: cx - cw / 2, y: cy - ch / 2, width: cw, height: ch))
+                .transformed(by: CGAffineTransform(translationX: -(cx - cw / 2), y: -(cy - ch / 2)))
             if project.camera.mirror {
                 cam = cam.transformed(by: CGAffineTransform(scaleX: -1, y: 1).translatedBy(x: -cw, y: 0))
             }

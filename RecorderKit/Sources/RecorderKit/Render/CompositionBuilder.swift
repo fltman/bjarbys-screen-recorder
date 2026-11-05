@@ -12,6 +12,8 @@ public struct LoadedRecording: @unchecked Sendable {
     public var transcript: Transcript?
     /// Mikrofonen efter röstisolering, om den är gjord.
     public var isolatedMicrophone: AVURLAsset?
+    /// Var ansiktet är i kamerabilden, om det är uträknat.
+    public var faceTrack: FaceTrack?
     let assets: [RecordingMeta.TrackKind: AVURLAsset]
     /// Apparna med eget ljudspår, i inspelningens ordning.
     public let apps: [AppAudio]
@@ -42,6 +44,7 @@ public struct LoadedRecording: @unchecked Sendable {
                                transcript: bundle.readTranscript(),
                                isolatedMicrophone: FileManager.default.fileExists(atPath: bundle.isolatedMicrophoneURL.path)
                                    ? AVURLAsset(url: bundle.isolatedMicrophoneURL) : nil,
+                               faceTrack: bundle.readFaceTrack(),
                                assets: assets, apps: apps)
     }
 
@@ -62,7 +65,8 @@ public struct LoadedRecording: @unchecked Sendable {
         RenderPlan(canvas: canvas, project: project, meta: meta, events: events, cursors: cursors,
                    cursorsDir: bundle.cursorsDir, hasCamera: hasCamera, words: transcript?.words ?? [],
                    transparentBackground: transparentBackground, mediaDir: bundle.mediaDir,
-                   cursorPath: cursorPath, cameraPath: cameraPath, outputHDR: hdr && meta.hdr)
+                   cursorPath: cursorPath, cameraPath: cameraPath, outputHDR: hdr && meta.hdr,
+                   faceTrack: project.camera.followFace ? faceTrack : nil)
     }
 
     public var isHDR: Bool { meta.hdr }

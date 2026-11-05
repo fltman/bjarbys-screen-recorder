@@ -687,6 +687,38 @@ final class EditorModel: ObservableObject {
     }
 
     @Published private(set) var isolating: Double?
+    /// Ansiktena i kamerabilden räknas fram (0–1), eller nil.
+    @Published private(set) var analyzingFaces: Double?
+    @Published private(set) var faceNote: String?
+
+    /// Bubblan följer ansiktet. Första gången räknas ansiktena fram ur kameraspåret och sparas i
+    /// paketet (`derived/camera-faces.json`).
+    func setFollowFace(_ on: Bool) {
+        faceNote = nil
+        guard on else { update { $0.camera.followFace = false }; return }
+        if recording.faceTrack != nil { update { $0.camera.followFace = true }; return }
+        guard let camera = recording.asset(.camera), analyzingFaces == nil else { return }
+        analyzingFaces = 0
+        let start = recording.meta.track(.camera)?.start ?? 0, end = recording.meta.duration
+        let bundle = recording.bundle
+        Task {
+            do {
+                let track = try await FaceTrack.analyze(camera, from: start, to: end) { p in
+                    Task { @MainActor [weak self] in if self?.analyzingFaces != nil { self?.analyzingFaces = p } }
+                }
+                if track.samples.isEmpty {
+                    faceNote = String(localized: "Inget ansikte hittades i kamerabilden.")
+                } else {
+                    try bundle.saveFaceTrack(track)
+                    recording.faceTrack = track
+                    update { $0.camera.followFace = true }
+                }
+            } catch {
+                faceNote = error.localizedDescription
+            }
+            analyzingFaces = nil
+        }
+    }
 
     /// Slår på eller av röstisoleringen. Första gången körs den på mikrofonspåret (några
     /// sekunder för en lång inspelning) och sparas i paketet.

@@ -536,6 +536,18 @@ struct InspectorView: View {
                 Text("Borttagen").tag(EditProject.CameraStyle.Backdrop.remove)
             }
             .help("Bakgrunden bakom dig i bubblan, med Apples personsegmentering på datorn.")
+            HStack {
+                Toggle("Håll ansiktet i mitten", isOn: Binding(get: { model.project.camera.followFace },
+                                                              set: { model.setFollowFace($0) }))
+                    .disabled(model.analyzingFaces != nil)
+                if let p = model.analyzingFaces {
+                    ProgressView(value: p).frame(width: 60)
+                }
+            }
+            .help("Utsnittet i bubblan följer ditt ansikte (Vision, på datorn), så att du inte hamnar i kanten. Räknas fram en gång.")
+            if let note = model.faceNote {
+                Text(note).font(.caption).foregroundStyle(.secondary)
+            }
         }
     }
 

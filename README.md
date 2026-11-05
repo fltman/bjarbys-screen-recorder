@@ -81,6 +81,7 @@ is included; to have the app follow your system language instead, run
   the screen, or hidden — the change glides over half a second.
 - A camera bubble in any corner, round or rounded square, with the background behind you kept,
   blurred or replaced by the film's background (Apple's person segmentation, on device).
+  The bubble can keep your face centred (Vision finds it once, on device).
 
 **Speech** (with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), locally)
 - Transcribe the recording and edit the video by striking out words in the text. Cut words

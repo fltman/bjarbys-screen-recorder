@@ -84,6 +84,12 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Ansiktet i mitten (2026-11-05): Stil › Kamera › Håll ansiktet i mitten. Första gången går
+  Vision igenom kameraspåret (4 rutor/s, 640 px, största ansiktet), luckor fylls med närmaste
+  fynd och banan jämnas ut (±0,75 s); sparas i `derived/camera-faces.json`. Bubblans utsnitt
+  följer ansiktet inom kamerabilden, med lite luft ovanför huvudet. MCP `camera_follow_face`.
+  ⚠️ Utsnittet provat med ett påhittat ansiktsspår och analysen med en bild utan ansikte;
+  igenkänningen på ett riktigt ansikte är inte provad (`--prov-ansikten` på en inspelning).
 - Markörhalo (2026-11-05): Rörelse › Markör › Markera markören — en mjuk cirkel (radiell gradient,
   45 % i mitten) i vald färg under markörens spets, zoomar med innehållet, döljs med markören.
   MCP: `cursor_highlight`, `cursor_highlight_color`.
