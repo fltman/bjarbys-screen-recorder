@@ -881,6 +881,7 @@ enum MCPServer {
         let movies = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first!
         let url = (a["path"] as? String).map { URL(fileURLWithPath: NSString(string: $0).expandingTildeInPath) }
             ?? (preset.codec == .audioStems ? movies.appendingPathComponent("\(rec.bundle.name) – ljudspår", isDirectory: true)
+                : preset.codec == .editorPackage ? movies.appendingPathComponent("\(rec.bundle.name) – Final Cut", isDirectory: true)
                 : movies.appendingPathComponent(rec.bundle.name).appendingPathExtension(preset.fileExtension))
         let started = Date()
         let bounds = (a["range"] as? [Any])?.compactMap(number)
@@ -895,7 +896,7 @@ enum MCPServer {
             let span = range ?? 0...TimeMap(segments: project.segments).outputDuration
             text += "\nChapters are embedded in the file. YouTube timestamps:\n" + track.youtubeChapters(in: span)
         }
-        if preset.codec == .audioStems {
+        if preset.fileExtension.isEmpty {
             let files = (try? FileManager.default.contentsOfDirectory(atPath: url.path))?.sorted() ?? []
             text += "\n" + files.map { "- \($0)" }.joined(separator: "\n")
         }
@@ -910,7 +911,7 @@ enum MCPServer {
             text += "\nSubtitles: \(srt.path)"
         }
         if a["upload"] as? Bool == true {
-            guard preset.codec != .audioStems else { throw ToolError(text + "\nNot uploaded: a folder of stems can't be uploaded; export ljud-m4a or ljud-wav.") }
+            guard !preset.fileExtension.isEmpty else { throw ToolError(text + "\nNot uploaded: a folder can't be uploaded; export a single file.") }
             guard SharingStore.isReady else {
                 throw ToolError(text + "\nNot uploaded: sharing is not set up (Sharing … in the app's menu).")
             }

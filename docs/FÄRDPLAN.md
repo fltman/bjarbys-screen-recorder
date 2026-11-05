@@ -84,6 +84,12 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Final Cut / Resolve (2026-11-05): förvalet ger en mapp med den färdiga bilden (ProRes 422,
+  utan ljud), en WAV per ljudkälla och en FCPXML 1.10-tidslinje: bilden i huvudspåret, ljuden
+  som anslutna klipp under (rollerna dialog, musik, effekter), kapitelmarkörer och inspelningens
+  markeringar, allt i filmens rutor. Det som FCPXML inte kan uttrycka (zoom, markör, bakgrund)
+  är redan inritat i bilden. ⚠️ Inte provat i Final Cut eller Resolve (finns inte på datorn);
+  välformat och kontrollerat mot elementordningen.
 - AV1 (2026-11-05): förvalet MP4 AV1 finns när en ffmpeg med AV1-kodare hittas (Homebrews
   platser, PATH; SVT-AV1 > rav1e > libaom). Rutorna renderas som vanligt och skickas råa (BGRA)
   i ett rör; ljudet görs först till en tillfällig M4A och kapitlen som ffmpeg-metadata. Uppmätt

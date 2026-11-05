@@ -7,7 +7,7 @@ import VideoToolbox
 
 /// Förvalen i exportdialogen.
 public struct ExportPreset: Identifiable, Hashable, Sendable {
-    public enum Codec: String, Sendable { case h264, hevc, hevcHDR, av1, prores, proresAlpha, gif, audioAAC, audioWAV, audioStems }
+    public enum Codec: String, Sendable { case h264, hevc, hevcHDR, av1, prores, proresAlpha, gif, audioAAC, audioWAV, audioStems, editorPackage }
 
     public let id: String
     public let name: String
@@ -32,6 +32,9 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
               codec: .av1, shortSide: 1080, fps: 60),
         .init(id: "mkv-1080", name: "MKV 1080p", detail: "H.264 i Matroska — för OBS-vana arbetsflöden, VLC, mpv",
               codec: .h264, shortSide: 1080, fps: 60, matroska: true),
+        .init(id: "fcpxml", name: "Final Cut / Resolve",
+              detail: "En mapp: den färdiga bilden (ProRes), ett ljudspår per källa och en tidslinje (FCPXML) med kapitel och markeringar",
+              codec: .editorPackage, shortSide: 1080, fps: 60),
         .init(id: "gif", name: "GIF", detail: "För Slack och GitHub, högst 800 px", codec: .gif, shortSide: 450, fps: 15),
         .init(id: "ljud-m4a", name: "Ljud M4A", detail: "AAC 256 kbit/s — bara ljudet, för en podd", codec: .audioAAC, shortSide: 0, fps: 30),
         .init(id: "ljud-wav", name: "Ljud WAV", detail: "24 bit, 48 kHz, okomprimerat", codec: .audioWAV, shortSide: 0, fps: 30),
@@ -48,7 +51,7 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
         case .gif: "gif"
         case .audioAAC: "m4a"
         case .audioWAV: "wav"
-        case .audioStems: ""
+        case .audioStems, .editorPackage: ""
         }
     }
 
@@ -75,7 +78,7 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
         case .hevc: return Int(pixels * Double(fps) * 0.06)
         case .hevcHDR: return Int(pixels * Double(fps) * 0.075)
         case .av1: return Int(pixels * Double(fps) * 0.025) // bara för uppskattningen (CRF)
-        case .prores: return Int(pixels * Double(fps) * 1.6) // bara för uppskattningen
+        case .prores, .editorPackage: return Int(pixels * Double(fps) * 1.6) // bara för uppskattningen
         case .proresAlpha: return Int(pixels * Double(fps) * 3.6)
         case .gif: return Int(pixels * Double(fps) * 0.25)
         case .audioAAC: return 256_000
@@ -189,6 +192,8 @@ public final class Exporter: @unchecked Sendable {
                 Matroska.Chapter(start: $0.start - span.seconds.lowerBound, end: $0.end - span.seconds.lowerBound, title: $0.title)
             }
             try await Matroska.remux(temp, to: url, chapters: chapters) { progress(0.95 + $0 * 0.05) }
+        } else if preset.codec == .editorPackage {
+            try await exportEditorPackage(built, canvas: canvas, to: url, progress: progress)
         } else if preset.codec == .av1 {
             try await exportAV1(built, canvas: canvas, to: url, progress: progress)
         } else if preset.isAudioOnly {
@@ -202,13 +207,13 @@ public final class Exporter: @unchecked Sendable {
 
     // MARK: - Film
 
-    private func exportMovie(_ built: CompositionBuilder.Result, canvas: CGSize, to url: URL,
+    private func exportMovie(_ built: CompositionBuilder.Result, canvas: CGSize, to url: URL, includeAudio: Bool = true,
                              progress: @escaping @Sendable (Double) -> Void) async throws {
         let reader = try AVAssetReader(asset: built.composition)
         let span = clampedRange(built)
         reader.timeRange = span.time
         let videoTracks = try await built.composition.loadTracks(withMediaType: .video)
-        let audioTracks = try await built.composition.loadTracks(withMediaType: .audio)
+        let audioTracks = includeAudio ? try await built.composition.loadTracks(withMediaType: .audio) : []
         // HDR: 10 bit 4:2:0 direkt till HEVC Main10 (kompositören ritar HLG i halvflyttal).
         let videoOut = AVAssetReaderVideoCompositionOutput(videoTracks: videoTracks, videoSettings: [
             kCVPixelBufferPixelFormatTypeKey as String: preset.isHDR && recording.isHDR
@@ -245,7 +250,7 @@ public final class Exporter: @unchecked Sendable {
         }
 
         // ProRes (även 4444) bara i .mov; i .mp4 kastar AVAssetWriter ett undantag.
-        let isMov = preset.fileExtension == "mov"
+        let isMov = preset.fileExtension == "mov" || preset.codec == .editorPackage
         let writer = try AVAssetWriter(outputURL: url, fileType: isMov ? .mov : .mp4)
         writer.shouldOptimizeForNetworkUse = !isMov
         let videoIn = AVAssetWriterInput(mediaType: .video, outputSettings: videoSettings(canvas: canvas))
@@ -333,7 +338,7 @@ public final class Exporter: @unchecked Sendable {
             AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2,
         ]
         switch preset.codec {
-        case .prores:
+        case .prores, .editorPackage:
             return [AVVideoCodecKey: AVVideoCodecType.proRes422, AVVideoWidthKey: canvas.width,
                     AVVideoHeightKey: canvas.height, AVVideoColorPropertiesKey: color]
         case .proresAlpha:
@@ -411,6 +416,54 @@ public final class Exporter: @unchecked Sendable {
                 }
             }
         }
+    }
+
+    // MARK: - Final Cut / Resolve
+
+    /// En mapp med den färdiga bilden (ProRes 422, utan ljud), ett ljudspår per källa (WAV) och
+    /// en tidslinje (FCPXML) som lägger dem kant i kant från noll, med kapitel och markeringar.
+    private func exportEditorPackage(_ built: CompositionBuilder.Result, canvas: CGSize, to url: URL,
+                                     progress: @escaping @Sendable (Double) -> Void) async throws {
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        let span = clampedRange(built)
+        let video = url.appendingPathComponent(String(localized: "Bild") + ".mov")
+        try await exportMovie(built, canvas: canvas, to: video, includeAudio: false) { progress($0 * 0.8) }
+        if isCancelled { throw ExportError.cancelled }
+
+        var audio: [FCPXML.Audio] = []
+        let audioTracks = try await built.composition.loadTracks(withMediaType: .audio)
+        if !audioTracks.isEmpty {
+            let mix = range == nil ? built.audioMix
+                : CompositionBuilder.audioMix(for: built.composition, plan: built.plan, appIDs: recording.apps.map(\.id), edges: span.seconds)
+            var gain: Float = 1
+            if let target = loudnessTarget, let m = try await Loudness.measureMix(built.composition, audioMix: mix, range: span.time) {
+                let g = Loudness.mixGain(for: m, target: target)
+                gain = Float(pow(10, g.db / 20))
+                loudnessReport = (m.integrated, g.db, g.limitedByPeaks)
+            }
+            let groups = stemGroups(audioTracks)
+            for (i, g) in groups.enumerated() {
+                let file = url.appendingPathComponent(String(format: "%02d ", i + 1) + g.name.replacingOccurrences(of: "/", with: "-") + ".wav")
+                try await writeAudio(built.composition, tracks: g.tracks, mix: mix, gain: gain, span: span.time, to: file, wav: true) { p in
+                    progress(0.8 + 0.18 * (Double(i) + p) / Double(groups.count))
+                }
+                audio.append(.init(name: g.name, url: file, role: FCPXML.role(forStem: g.key)))
+            }
+        }
+
+        let a = span.seconds.lowerBound, b = span.seconds.upperBound
+        var markers = built.plan.overlayTrack.chapterList(in: span.seconds).map {
+            FCPXML.Marker(time: $0.start - a, title: $0.title, chapter: true)
+        }
+        for (i, m) in recording.markers.enumerated() {
+            guard let t = built.plan.timeMap.output(at: m), t >= a, t < b else { continue }
+            markers.append(.init(time: t - a, title: String(localized: "Markering \(i + 1)"), chapter: false))
+        }
+        let name = recording.meta.name.isEmpty ? recording.bundle.name : recording.meta.name
+        let xml = FCPXML.document(name: name, video: video, size: canvas, fps: fps, duration: b - a, audio: audio, markers: markers)
+        try xml.write(to: url.appendingPathComponent(name.replacingOccurrences(of: "/", with: "-") + ".fcpxml"),
+                      atomically: true, encoding: .utf8)
+        progress(1)
     }
 
     // MARK: - AV1 (via ffmpeg)
@@ -577,7 +630,7 @@ public final class Exporter: @unchecked Sendable {
     }
 
     /// Kompositionens ljudspår i grupper: ett spår och dess B-spår (övertoningar) hör ihop.
-    func stemGroups(_ tracks: [AVAssetTrack]) -> [(name: String, tracks: [AVAssetTrack])] {
+    func stemGroups(_ tracks: [AVAssetTrack]) -> [(key: String, name: String, tracks: [AVAssetTrack])] {
         typealias B = CompositionBuilder
         var groups: [(key: String, name: String, tracks: [AVAssetTrack])] = []
         func add(_ key: String, _ name: String, _ t: AVAssetTrack) {
@@ -607,7 +660,7 @@ public final class Exporter: @unchecked Sendable {
             default: add("other", String(localized: "Övrigt"), t)
             }
         }
-        return groups.map { ($0.name, $0.tracks) }
+        return groups
     }
 
     private func writeAudio(_ composition: AVComposition, tracks: [AVAssetTrack], mix: AVAudioMix, gain: Float, span: CMTimeRange,

@@ -69,6 +69,23 @@
         }
       }
     },
+    "%@ – Final Cut": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ – Final Cut"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ – Final Cut"
+          }
+        }
+      }
+    },
     "%@ – ljudspår": {
       "extractionState": "extracted_with_value",
       "localizations": {

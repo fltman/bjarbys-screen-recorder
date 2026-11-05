@@ -208,7 +208,7 @@ struct ExportSheet: View {
                         Text(sharedURL.absoluteString).font(.caption).textSelection(.enabled).lineLimit(1)
                     } else if let uploading {
                         ProgressView(value: uploading).frame(width: 120)
-                    } else if SharingStore.isReady && preset.codec != .audioStems && finishedAll.count <= 1 {
+                    } else if SharingStore.isReady && !preset.fileExtension.isEmpty && finishedAll.count <= 1 {
                         Button("Ladda upp och kopiera länk") { upload(finishedURL) }
                     }
                     ShareLink(items: finishedAll.isEmpty ? [finishedURL] : finishedAll) { Label("Dela …", systemImage: "square.and.arrow.up") }
@@ -277,9 +277,11 @@ struct ExportSheet: View {
         }
         let panel = NSSavePanel()
         // Ljudspåren var för sig hamnar i en mapp.
-        panel.nameFieldStringValue = preset.codec == .audioStems
-            ? String(localized: "\(model.recording.bundle.name) – ljudspår")
-            : model.recording.bundle.name + "." + preset.fileExtension
+        panel.nameFieldStringValue = switch preset.codec {
+        case .audioStems: String(localized: "\(model.recording.bundle.name) – ljudspår")
+        case .editorPackage: String(localized: "\(model.recording.bundle.name) – Final Cut")
+        default: model.recording.bundle.name + "." + preset.fileExtension
+        }
         panel.directoryURL = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first
         if !preset.fileExtension.isEmpty, let type = UTType(filenameExtension: preset.fileExtension) { panel.allowedContentTypes = [type] }
         guard panel.runModal() == .OK, let url = panel.url else { return }
@@ -321,6 +323,7 @@ struct ExportSheet: View {
         case .audioAAC: "waveform"
         case .audioWAV: "waveform.badge.plus"
         case .audioStems: "slider.vertical.3"
+        case .editorPackage: "film.stack.fill"
         }
     }
 
