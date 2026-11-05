@@ -8,7 +8,7 @@ proprietärt. Formatversion: `schemaVersion` = 1.
 Inspelning 2026-11-04 kl. 22.27.41.bsrec/
   recording/                 rådata från inspelningen — skrivs bara under inspelning
     meta.json
-    screen-0.mov             HEVC, utan markör
+    screen-0.mov             HEVC, utan markör (HDR: HEVC Main10, BT.2020 PQ)
     system-0.mov             datorljud, LPCM 24 bit ("övrigt datorljud" när appar har egna spår)
     app-0-0.mov, app-1-0.mov …  en app per spår (Core Audio-tapp), LPCM 24 bit
     mic-0.mov                mikrofon, LPCM 24 bit, källans kanaler och frekvens
@@ -42,6 +42,7 @@ de att spela upp till sista fragmentet; `meta.json` har då `finished: false` ti
 | `gaps[]` | avbrott där vakthunden startade om strömmen |
 | `keystrokesRecorded` | om kortkommandon spelades in |
 | `startHostTime` | tidslinjens nollpunkt i värdklockan (s); flashback syr ihop delar med den |
+| `hdr` | skärmspåret är HDR: 10 bit BT.2020 PQ med SDR-vitt på 100 nits (ScreenCaptureKits HDR10-förval) |
 
 ## events.jsonl
 

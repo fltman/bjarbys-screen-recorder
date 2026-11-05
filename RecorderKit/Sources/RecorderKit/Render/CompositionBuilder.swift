@@ -56,13 +56,16 @@ public struct LoadedRecording: @unchecked Sendable {
         CGSize(width: meta.source.pixelWidth, height: meta.source.pixelHeight)
     }
 
+    /// `hdr`: rita i HDR (HLG). Gäller bara en HDR-inspelning; annars blir det SDR.
     public func makePlan(project: EditProject, canvas: CGSize, transparentBackground: Bool = false,
-                         cursorPath: CursorPath? = nil, cameraPath: CameraPath? = nil) -> RenderPlan {
+                         cursorPath: CursorPath? = nil, cameraPath: CameraPath? = nil, hdr: Bool = false) -> RenderPlan {
         RenderPlan(canvas: canvas, project: project, meta: meta, events: events, cursors: cursors,
                    cursorsDir: bundle.cursorsDir, hasCamera: hasCamera, words: transcript?.words ?? [],
                    transparentBackground: transparentBackground, mediaDir: bundle.mediaDir,
-                   cursorPath: cursorPath, cameraPath: cameraPath)
+                   cursorPath: cursorPath, cameraPath: cameraPath, outputHDR: hdr && meta.hdr)
     }
+
+    public var isHDR: Bool { meta.hdr }
 }
 
 /// Gör ett redigeringsläge till något AVFoundation kan spela och exportera: en komposition med
@@ -270,11 +273,20 @@ public enum CompositionBuilder {
                                             screenTrackID: screenTrackID, cameraTrackID: hasCamera ? cameraTrackID : nil,
                                             mediaTrackIDs: plan.videoOverlayIDs.indices.map { videoOverlayTrackBase + CMPersistentTrackID($0) },
                                             alternateTrackID: hasAlternate ? alternateScreenTrackID : nil)
+        // HDR-inspelning: kompositören tar emot rutorna oförändrade (10 bit PQ) och ritar HLG eller
+        // SDR. ⚠️ Kompositionen får då inga färgegenskaper: med dem gör AVFoundation om varje
+        // källruta till den färgrymden först (uppmätt: x420 märkt HLG respektive BT.709 trots
+        // `supportsHDRSourceFrames`), med sin egen nivå för SDR-vitt (uppmätt till SDR: vitt 197,
+        // grått 109 i stället för 255 och 124). Utdata märks i kompositören.
+        // Annars som förr — då gör AVFoundation om HDR-videoinslag till SDR åt oss.
+        let compositor: PolishCompositor.Type = plan.outputHDR ? PolishHDRCompositor.self
+            : (plan.sourceHDR ? PolishHDRToSDRCompositor.self : PolishCompositor.self)
+        let sdr = !plan.sourceHDR
         return AVVideoComposition(configuration: .init(
-            colorPrimaries: AVVideoColorPrimaries_ITU_R_709_2,
-            colorTransferFunction: AVVideoTransferFunction_ITU_R_709_2,
-            colorYCbCrMatrix: AVVideoYCbCrMatrix_ITU_R_709_2,
-            customVideoCompositorClass: PolishCompositor.self,
+            colorPrimaries: sdr ? AVVideoColorPrimaries_ITU_R_709_2 : nil,
+            colorTransferFunction: sdr ? AVVideoTransferFunction_ITU_R_709_2 : nil,
+            colorYCbCrMatrix: sdr ? AVVideoYCbCrMatrix_ITU_R_709_2 : nil,
+            customVideoCompositorClass: compositor,
             frameDuration: CMTime(value: 1, timescale: CMTimeScale(fps)),
             instructions: [instruction],
             renderSize: plan.canvas))

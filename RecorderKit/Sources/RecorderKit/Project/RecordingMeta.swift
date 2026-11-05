@@ -112,6 +112,9 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
     /// Tidslinjens nollpunkt i värdklockan (s), så att delar från olika sessioner kan läggas
     /// i rätt förhållande till varandra (flashback-bufferten). 0 = okänd.
     public var startHostTime: Double
+    /// Skärmspåret är HDR: HEVC Main10, BT.2020 PQ, SDR-vitt på 100 nits (ScreenCaptureKits
+    /// HDR10-förval). Renderaren lyfter det till 203 nits, där Core Image har SDR-vitt.
+    public var hdr: Bool
 
     public init(source: Source, fps: Int, appVersion: String) {
         self.schemaVersion = RecorderKit.formatVersion
@@ -127,6 +130,7 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
         self.keystrokesRecorded = false
         self.droppedFrames = 0
         self.startHostTime = 0
+        self.hdr = false
     }
 
     public init(from decoder: Decoder) throws {
@@ -144,6 +148,7 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
         keystrokesRecorded = c.value(.keystrokesRecorded, false)
         droppedFrames = c.value(.droppedFrames, 0)
         startHostTime = c.value(.startHostTime, 0)
+        hdr = c.value(.hdr, false)
     }
 
     public func track(_ kind: TrackKind) -> Track? {

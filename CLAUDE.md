@@ -34,6 +34,8 @@ open Skarminspelare.xcodeproj
   - `--prov-teleprompter <png>` — teleprompterrutan efter 6 s rullning, utanför skärmen
   - `--prov-vyer <mapp> <paket>` — alla fönster och paneler (ljust och mörkt, inspektörens flikar)
     som PNG; material och videolager ritas inte utanför skärmen
+  - `--prov-hdr <mapp>` — ett eget EDR-fönster spelas in i HDR; fälten mäts i inspelning och export
+  - `--prov-hdr-syntetisk <mapp>` — samma mätning på ett påhittat HDR-paket, utan skärm
   - `--prov-appljud <mapp> [--behall]` — ljud per app med egna toner: separation och synk mot SCK
   - `--prov-tappglapp <mapp> tappar|sck|bada[+ny]` — var tonen saknas, med/utan tappar och SCK,
     `+ny` = en ny ljudprocess ansluter mitt i
@@ -108,7 +110,11 @@ för taldetektering). Roten letas upp i `~/Projekt/whisper.cpp` m.fl., eller vä
   `build.sh` kontrollerar med `plutil -p`.
 - `NSWindow.sharingType = .none` ignoreras av ScreenCaptureKit sedan 15.4. Appens egna fönster
   (HUD, nedräkning, kameraförhandsvisning) hålls ute genom att appen utesluts ur `SCContentFilter`.
-- HDR (senare fas): sätt ingen explicit färgrymd, då tonmappas allt tyst till SDR.
+- HDR: sätt ingen egen färgrymd ovanpå SCK-förvalet (då tonmappas allt tyst till SDR). SDR-vitt
+  ligger på 100 nits i inspelningen men 203 i Core Image — renderaren lyfter ×2,03. En komposition
+  med HDR-källa får **inga färgegenskaper** (annars gör AVFoundation om rutorna själv, till grått),
+  och SDR-utritningen går via en linjär mellanbild (annars knä-kurva: vitt 229). Se
+  `docs/VERIFIERAD-STACK.md` och mät med `--prov-hdr-syntetisk` (behöver ingen skärm).
 - VideoToolbox-avkodning var 3–4,5× långsammare än mjukvara på M5 i Kairos när rutorna drogs
   till CPU. Här ska rutorna stanna i IOSurface/Metal. Mät, anta inte.
 - Döda aldrig en process utifrån en sökträff — bara en pid vi själva startat, eller

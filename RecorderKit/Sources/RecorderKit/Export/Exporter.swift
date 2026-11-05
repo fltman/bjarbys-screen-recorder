@@ -7,7 +7,7 @@ import VideoToolbox
 
 /// Förvalen i exportdialogen.
 public struct ExportPreset: Identifiable, Hashable, Sendable {
-    public enum Codec: String, Sendable { case h264, hevc, prores, proresAlpha, gif }
+    public enum Codec: String, Sendable { case h264, hevc, hevcHDR, prores, proresAlpha, gif }
 
     public let id: String
     public let name: String
@@ -20,6 +20,8 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
     public static let all: [ExportPreset] = [
         .init(id: "mp4-1080", name: "MP4 1080p", detail: "H.264 — spelas överallt", codec: .h264, shortSide: 1080, fps: 60),
         .init(id: "mp4-4k", name: "MP4 4K", detail: "HEVC — skarpast, mindre filer", codec: .hevc, shortSide: 2160, fps: 60),
+        .init(id: "mp4-4k-hdr", name: "MP4 4K HDR", detail: "HEVC 10 bit, HLG — ljusare högdagrar på HDR-skärmar, YouTube",
+              codec: .hevcHDR, shortSide: 2160, fps: 60),
         .init(id: "prores", name: "ProRes 422", detail: "För vidare redigering i Final Cut, Resolve, Premiere", codec: .prores, shortSide: 1080, fps: 60),
         .init(id: "prores-alfa", name: "ProRes 4444 med alfa",
               detail: "Genomskinlig bakgrund — lägg skärmen ovanpå något eget i Final Cut, Resolve, Premiere",
@@ -29,7 +31,7 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
 
     public var fileExtension: String {
         switch codec {
-        case .h264, .hevc: "mp4"
+        case .h264, .hevc, .hevcHDR: "mp4"
         case .prores, .proresAlpha: "mov"
         case .gif: "gif"
         }
@@ -38,6 +40,12 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
     /// Bakgrunden lämnas genomskinlig (bara skärmen, skuggan, markören, bubblan och texterna ritas).
     public var transparentBackground: Bool { codec == .proresAlpha }
 
+    /// HDR-utdata (HLG). Bara för HDR-inspelningar; de andra förvalen ger SDR även då.
+    public var isHDR: Bool { codec == .hevcHDR }
+
+    /// Förvalen som passar inspelningen (HDR-förvalet bara för en HDR-inspelning).
+    public static func available(hdr: Bool) -> [ExportPreset] { all.filter { hdr || !$0.isHDR } }
+
     /// Bitrate i bit/s för en bildyta.
     public func bitrate(for canvas: CGSize, fps override: Int? = nil) -> Int {
         let pixels = Double(canvas.width * canvas.height)
@@ -45,6 +53,7 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
         switch codec {
         case .h264: return Int(pixels * Double(fps) * 0.09)
         case .hevc: return Int(pixels * Double(fps) * 0.06)
+        case .hevcHDR: return Int(pixels * Double(fps) * 0.075)
         case .prores: return Int(pixels * Double(fps) * 1.6) // bara för uppskattningen
         case .proresAlpha: return Int(pixels * Double(fps) * 3.6)
         case .gif: return Int(pixels * Double(fps) * 0.25)
@@ -109,7 +118,8 @@ public final class Exporter: @unchecked Sendable {
     /// Kör exporten. `progress` anropas med 0–1 från en bakgrundskö.
     public func run(to url: URL, progress: @escaping @Sendable (Double) -> Void) async throws {
         let canvas = preset.canvas(aspect: project.aspect, source: recording.sourceSize)
-        let plan = recording.makePlan(project: project, canvas: canvas, transparentBackground: preset.transparentBackground)
+        let plan = recording.makePlan(project: project, canvas: canvas, transparentBackground: preset.transparentBackground,
+                                      hdr: preset.isHDR)
         let built = try await CompositionBuilder.build(recording, plan: plan, fps: fps)
         try? FileManager.default.removeItem(at: url)
         if preset.codec == .gif {
@@ -126,8 +136,10 @@ public final class Exporter: @unchecked Sendable {
         let reader = try AVAssetReader(asset: built.composition)
         let videoTracks = try await built.composition.loadTracks(withMediaType: .video)
         let audioTracks = try await built.composition.loadTracks(withMediaType: .audio)
+        // HDR: 10 bit 4:2:0 direkt till HEVC Main10 (kompositören ritar HLG i halvflyttal).
         let videoOut = AVAssetReaderVideoCompositionOutput(videoTracks: videoTracks, videoSettings: [
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+            kCVPixelBufferPixelFormatTypeKey as String: preset.isHDR && recording.isHDR
+                ? kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange : kCVPixelFormatType_32BGRA,
             kCVPixelBufferMetalCompatibilityKey as String: true,
         ])
         videoOut.videoComposition = built.videoComposition
@@ -222,7 +234,20 @@ public final class Exporter: @unchecked Sendable {
         case .proresAlpha:
             return [AVVideoCodecKey: AVVideoCodecType.proRes4444, AVVideoWidthKey: canvas.width,
                     AVVideoHeightKey: canvas.height, AVVideoColorPropertiesKey: color]
-        case .hevc:
+        case .hevcHDR where recording.isHDR:
+            return [AVVideoCodecKey: AVVideoCodecType.hevc, AVVideoWidthKey: canvas.width,
+                    AVVideoHeightKey: canvas.height,
+                    AVVideoColorPropertiesKey: [
+                        AVVideoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_2020,
+                        AVVideoTransferFunctionKey: AVVideoTransferFunction_ITU_R_2100_HLG,
+                        AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_2020,
+                    ],
+                    AVVideoCompressionPropertiesKey: [
+                        AVVideoAverageBitRateKey: preset.bitrate(for: canvas, fps: fps),
+                        AVVideoExpectedSourceFrameRateKey: fps,
+                        AVVideoProfileLevelKey: kVTProfileLevel_HEVC_Main10_AutoLevel as String,
+                    ]]
+        case .hevc, .hevcHDR:
             return [AVVideoCodecKey: AVVideoCodecType.hevc, AVVideoWidthKey: canvas.width,
                     AVVideoHeightKey: canvas.height, AVVideoColorPropertiesKey: color,
                     AVVideoCompressionPropertiesKey: [

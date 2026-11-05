@@ -1,6 +1,7 @@
 import Foundation
 import AVFoundation
 import CoreGraphics
+import CoreImage
 
 /// Underlag för tidslinjen: vågformer och miniatyrer, i källtid.
 public enum MediaPreviews {
@@ -41,8 +42,8 @@ public enum MediaPreviews {
 
     /// Miniatyrer av skärmspåret vid jämnt fördelade källtider.
     public static func thumbnails(_ asset: AVURLAsset, duration: Double, count: Int,
-                                  height: CGFloat) async -> [(t: Double, image: CGImage)] {
-        let generator = AVAssetImageGenerator(asset: asset)
+                                  height: CGFloat, hdr: Bool = false) async -> [(t: Double, image: CGImage)] {
+        let generator = stillGenerator(asset, hdr: hdr)
         generator.maximumSize = CGSize(width: height * 4, height: height)
         generator.requestedTimeToleranceBefore = CMTime(seconds: 1, preferredTimescale: 600)
         generator.requestedTimeToleranceAfter = CMTime(seconds: 1, preferredTimescale: 600)
@@ -50,9 +51,32 @@ public enum MediaPreviews {
         for i in 0..<max(count, 1) {
             let t = duration * (Double(i) + 0.5) / Double(max(count, 1))
             if let (image, _) = try? await generator.image(at: CMTime(seconds: t, preferredTimescale: 600)) {
-                result.append((t, image))
+                result.append((t, hdr ? sdrStill(image) : image))
             }
         }
         return result
+    }
+
+    /// En bildgenerator för stillbilder. HDR: bilden hämtas som HDR och görs om med `sdrStill` —
+    /// generatorns egen omvandling till SDR lägger skärmens vitt på grått (som AVFoundations).
+    public static func stillGenerator(_ asset: AVURLAsset, hdr: Bool) -> AVAssetImageGenerator {
+        let generator = AVAssetImageGenerator(asset: asset)
+        if hdr { generator.dynamicRangePolicy = .matchSource }
+        return generator
+    }
+
+    /// En HDR-stillbild ur skärmspåret (PQ, SDR-vitt på 100 nits) som SDR: vitt blir vitt,
+    /// högdagrarna klipps — samma som en SDR-export av en HDR-inspelning.
+    public static func sdrStill(_ image: CGImage) -> CGImage {
+        let lifted = CIImage(cgImage: image)
+            .applyingFilter("CIExposureAdjust", parameters: [kCIInputEVKey: log2(RenderPlan.hdrScreenGain)])
+        let extent = lifted.extent
+        // Via en linjär mellanbild: annars lägger Core Image en egen knä-kurva (se PolishCompositor).
+        let linear = CGColorSpace(name: CGColorSpace.extendedLinearSRGB)!
+        guard let flat = RenderContext.shared.createCGImage(lifted, from: extent, format: .RGBAh, colorSpace: linear),
+              let out = RenderContext.shared.createCGImage(CIImage(cgImage: flat), from: CGRect(origin: .zero, size: extent.size),
+                                                           format: .RGBA8, colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!)
+        else { return image }
+        return out
     }
 }

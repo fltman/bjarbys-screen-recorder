@@ -1752,6 +1752,23 @@
         }
       }
     },
+    "HDR (10 bit)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HDR (10-bit)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HDR (10 bit)"
+          }
+        }
+      }
+    },
     "Hastighet": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2258,6 +2275,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Innehåll"
+          }
+        }
+      }
+    },
+    "Inspelad i HDR (10 bit)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded in HDR (10-bit)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspelad i HDR (10 bit)"
           }
         }
       }

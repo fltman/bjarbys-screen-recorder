@@ -11,6 +11,11 @@ final class AppSettings: ObservableObject {
     @AppStorage("systemAudio") var systemAudio: Bool = true
     @AppStorage("keystrokes") var keystrokes: Bool = false
     @AppStorage("fps") var fps: Int = 60
+    /// HDR (10 bit, BT.2020 PQ). Bara på skärmar som kan visa HDR.
+    @AppStorage("hdr") var hdr: Bool = false
+    static var hdrAvailable: Bool {
+        NSScreen.screens.contains { $0.maximumPotentialExtendedDynamicRangeColorComponentValue > 1 }
+    }
     @AppStorage("countdown") var countdown: Bool = true
     /// whisper.cpp-mappen (med build/bin och models). Tom = leta på de vanliga ställena.
     @AppStorage("whisperRoot") var whisperRoot: String = ""
@@ -97,7 +102,9 @@ final class AppSettings: ObservableObject {
     }
 
     var captureOptions: CaptureOptions {
-        CaptureOptions(fps: fps, systemAudio: systemAudio, microphone: selectedMicrophone,
-                       camera: selectedCamera, keystrokes: keystrokes, apps: appAudio)
+        var o = CaptureOptions(fps: fps, systemAudio: systemAudio, microphone: selectedMicrophone,
+                               camera: selectedCamera, keystrokes: keystrokes, apps: appAudio)
+        o.hdr = hdr && Self.hdrAvailable
+        return o
     }
 }

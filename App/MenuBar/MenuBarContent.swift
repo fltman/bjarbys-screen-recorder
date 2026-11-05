@@ -53,6 +53,9 @@ struct MenuBarContent: View {
             Menu("Inspelning") {
                 Toggle("Spela in kortkommandon", isOn: $settings.keystrokes)
                 Toggle("Nedräkning", isOn: $settings.countdown)
+                if AppSettings.hdrAvailable {
+                    Toggle("HDR (10 bit)", isOn: $settings.hdr)
+                }
                 Picker("Bildfrekvens", selection: $settings.fps) {
                     Text("30 bilder/s").tag(30)
                     Text("60 bilder/s").tag(60)

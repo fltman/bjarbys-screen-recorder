@@ -300,3 +300,30 @@ vänster kanal:
   (`afplay` på AirPods via Bluetooth) som tystnar, inte inspelningen.
 - Tillståndet (Ljudinspelning) gäller den ansvariga processen: från Terminal frågar macOS om
   Terminal; startad som app om appen. Frågan blockerar tappen tills den besvaras.
+
+## HDR (2026-11-05)
+
+Inbyggd XDR-skärm (`maximumPotentialExtendedDynamicRangeColorComponentValue` 16).
+- **ScreenCaptureKits förval** (uppmätt på buffertarna): `captureHDRStreamLocal/CanonicalDisplay`
+  ger `xf44` (4:4:4 10 bit) i Display P3 PQ; `captureHDRRecordingPreservedSDRHDR10` (macOS 26) ger
+  `x420` i BT.2020 PQ, matris 2020 — direkt till HEVC Main10. Vi använder det senare. **Alla tre
+  lägger SDR-vitt på 100 nits** (Y 509 av 64–940, PQ 0,508).
+- **Core Image har SDR-vitt på 203 nits** (BT.2408): linjärt 1,0 → HLG 0,7495, PQ 0,581; PQ 100
+  nits avkodas till 0,492. Renderaren lyfter därför skärmen ×2,03. HLG:s tak är 4,93 (1000/203).
+- `CIToneMapHeadroom` 16 → 4,93 lämnar allt upp till 1,0 orört (1,5 → 1,42, 4 → 2,64, 16 → 4,93);
+  mot 1,0 sänker den SDR-vitt till 0,35 — därför klipps högdagrarna till SDR i stället.
+- ⚠️ **AVFoundation gör om källrutorna till kompositionens färgrymd** om den har färgegenskaper,
+  trots `supportsHDRSourceFrames`: kompositören fick `x420` märkt HLG respektive BT.709. Dess egen
+  PQ → SDR lägger vitt på 197 och 0,2 linjärt på 109. För HDR-inspelningar får kompositionen inga
+  färgegenskaper; rutorna kommer då som PQ och kompositören märker utdata själv.
+- ⚠️ **Core Image lägger en knä-kurva vid utritning till 8-bitars sRGB när en PQ-källa finns i
+  grafen:** linjärt 0,999 blev 229 (0,2 rätt: 124), lika med `toneMapHDRtoSDR` = nej, innehålls-
+  huvudrum 1 eller 0, `CIColorClamp`, `insertingIntermediate`, bitmap eller `CIRenderDestination`.
+  Bara en uttrycklig mellanbild (linjärt RGBAh, intagen som ny bild) ger 255. Görs i bildytans
+  storlek i SDR-kompositören, och för miniatyrer.
+- **Syntetiskt paket** (`--prov-hdr-syntetisk`, HEVC Main10 PQ med 20/100/400 nits): HLG-export
+  0,455 / 0,749 / 0,904 (Core Image: 0,456 / 0,750 / tonmappat 2,64 → 0,905); SDR-export 123 / 253
+  / 253 (klippt); miniatyr 124 / 255 / 255 (generatorns egen SDR: 89 / 186 / 250).
+- **Live** (`--prov-hdr`, eget fönster med 1,0 och 4,0 linjärt via `preferredDynamicRange = .high`):
+  inspelningen 100 respektive 398 nits — 4× även när skärmens huvudrum just då var 2,3 (canonical
+  följer innehållet, inte skärmens ljusstyrka).

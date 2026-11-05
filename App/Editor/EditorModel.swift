@@ -89,7 +89,8 @@ final class EditorModel: ObservableObject {
                                               duration: recording.meta.duration, scale: project.zoomScale)
         }
         self.project = project
-        plan = recording.makePlan(project: project, canvas: Self.canvas(for: project, recording: recording))
+        // En HDR-inspelning förhandsvisas i HDR (HLG) — på en XDR-skärm syns högdagrarna.
+        plan = recording.makePlan(project: project, canvas: Self.canvas(for: project, recording: recording), hdr: true)
         player.actionAtItemEnd = .pause
         timeObserver = player.addPeriodicTimeObserver(forInterval: CMTime(value: 1, timescale: 30), queue: .main) {
             [weak self] t in
@@ -172,7 +173,7 @@ final class EditorModel: ObservableObject {
     private func rebuild(full: Bool) async {
         let project = self.project
         let canvas = Self.canvas(for: project, recording: recording)
-        let newPlan = recording.makePlan(project: project, canvas: canvas)
+        let newPlan = recording.makePlan(project: project, canvas: canvas, hdr: true)
         if full || built == nil {
             let sourceTime = plan.timeMap.source(at: currentTime)
             do {
@@ -211,7 +212,7 @@ final class EditorModel: ObservableObject {
         let d = recording.meta.duration
         if let screen = recording.asset(.screen) {
             let count = max(8, min(60, Int(d / 2)))
-            thumbnails = await MediaPreviews.thumbnails(screen, duration: d, count: count, height: 90)
+            thumbnails = await MediaPreviews.thumbnails(screen, duration: d, count: count, height: 90, hdr: recording.isHDR)
         }
         if let mic = recording.asset(.microphone) {
             micWave = await MediaPreviews.waveform(mic, duration: d, buckets: 1600)

@@ -178,6 +178,10 @@ private struct RecordingCard: View {
             let kinds = Set(item.meta?.tracks.filter { !$0.failed }.map(\.kind) ?? [])
             if kinds.contains(.microphone) { Image(systemName: "mic.fill").help("Mikrofon") }
             if kinds.contains(.camera) { Image(systemName: "video.fill").help("Kamera") }
+            if kinds.contains(.app) { Image(systemName: "app.badge.fill").help("Ljud per app") }
+            if item.meta?.hdr == true {
+                Text(verbatim: "HDR").font(.caption2.weight(.bold)).help("Inspelad i HDR (10 bit)")
+            }
             if FileManager.default.fileExists(atPath: item.bundle.transcriptURL.path) {
                 Image(systemName: "text.quote").help("Transkriberad")
             }

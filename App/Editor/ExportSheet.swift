@@ -23,7 +23,7 @@ struct ExportSheet: View {
             Text("Exportera").font(.title2.weight(.semibold))
 
             VStack(alignment: .leading, spacing: 8) {
-                ForEach(ExportPreset.all) { p in
+                ForEach(ExportPreset.available(hdr: model.recording.isHDR)) { p in
                     let canvas = p.canvas(aspect: model.project.aspect, source: model.recording.sourceSize)
                     let selected = p.id == presetID
                     HStack(alignment: .center, spacing: 12) {
@@ -142,6 +142,7 @@ struct ExportSheet: View {
         switch p.codec {
         case .h264: "play.rectangle"
         case .hevc: "4k.tv"
+        case .hevcHDR: "sun.max"
         case .prores: "film.stack"
         case .proresAlpha: "square.on.square.dashed"
         case .gif: "photo.on.rectangle.angled"

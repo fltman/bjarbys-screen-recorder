@@ -11,7 +11,7 @@ import VideoToolbox
 /// senaste biten.
 public final class TrackWriter: @unchecked Sendable {
     public enum Settings {
-        case screen(width: Int, height: Int, fps: Int)
+        case screen(width: Int, height: Int, fps: Int, hdr: Bool = false)
         case camera
         case audio
     }
@@ -119,9 +119,9 @@ public final class TrackWriter: @unchecked Sendable {
         let mediaType: AVMediaType
         let output: [String: Any]
         switch settings {
-        case let .screen(width, height, fps):
+        case let .screen(width, height, fps, hdr):
             mediaType = .video
-            output = Self.screenSettings(width: width, height: height, fps: fps)
+            output = Self.screenSettings(width: width, height: height, fps: fps, hdr: hdr)
         case .camera:
             mediaType = .video
             let dims = CMVideoFormatDescriptionGetDimensions(format)
@@ -151,25 +151,31 @@ public final class TrackWriter: @unchecked Sendable {
         return Int(min(max(bps, 4_000_000), 40_000_000))
     }
 
-    static func screenSettings(width: Int, height: Int, fps: Int) -> [String: Any] {
+    /// HDR: HEVC Main10 med samma färgegenskaper som ScreenCaptureKits HDR10-rutor (BT.2020 PQ),
+    /// och en fjärdedel mer data för de två extra bitarna.
+    static func screenSettings(width: Int, height: Int, fps: Int, hdr: Bool = false) -> [String: Any] {
         [
             AVVideoCodecKey: AVVideoCodecType.hevc,
             AVVideoWidthKey: width,
             AVVideoHeightKey: height,
-            AVVideoColorPropertiesKey: [
+            AVVideoColorPropertiesKey: hdr ? [
+                AVVideoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_2020,
+                AVVideoTransferFunctionKey: AVVideoTransferFunction_SMPTE_ST_2084_PQ,
+                AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_2020,
+            ] : [
                 AVVideoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_709_2,
                 AVVideoTransferFunctionKey: AVVideoTransferFunction_ITU_R_709_2,
                 AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2,
             ],
             AVVideoCompressionPropertiesKey: [
-                AVVideoAverageBitRateKey: screenBitrate(width: width, height: height, fps: fps),
+                AVVideoAverageBitRateKey: screenBitrate(width: width, height: height, fps: fps) * (hdr ? 5 : 4) / 4,
                 AVVideoExpectedSourceFrameRateKey: fps,
                 // Nyckelbild varannan sekund: snabb sökning i redigeraren och samma gräns
                 // som fragmenten.
                 AVVideoMaxKeyFrameIntervalDurationKey: 2,
                 AVVideoAllowFrameReorderingKey: false,
                 kVTCompressionPropertyKey_RealTime as String: true,
-                AVVideoProfileLevelKey: kVTProfileLevel_HEVC_Main_AutoLevel as String,
+                AVVideoProfileLevelKey: (hdr ? kVTProfileLevel_HEVC_Main10_AutoLevel : kVTProfileLevel_HEVC_Main_AutoLevel) as String,
             ],
         ]
     }

@@ -54,9 +54,10 @@ public struct CaptureTarget: @unchecked Sendable {
         return content.applications.filter { $0.bundleIdentifier == me }
     }
 
-    /// Hela skärmen.
-    public static func display(_ display: SCDisplay, in content: SCShareableContent) -> CaptureTarget {
-        let filter = SCContentFilter(display: display, excludingApplications: ownApplications(in: content),
+    /// Hela skärmen. `includingOwnApp` bara för provlägen som visar något eget som ska spelas in.
+    public static func display(_ display: SCDisplay, in content: SCShareableContent,
+                               includingOwnApp: Bool = false) -> CaptureTarget {
+        let filter = SCContentFilter(display: display, excludingApplications: includingOwnApp ? [] : ownApplications(in: content),
                                      exceptingWindows: [])
         return CaptureTarget(filter: filter, kind: .display, title: displayName(display.displayID),
                              displayID: display.displayID, windowID: nil, contentRect: display.frame,
@@ -136,6 +137,8 @@ public struct CaptureOptions: Sendable {
     /// Appar med eget ljudspår (Core Audio-tappar). När listan inte är tom blir `systemAudio`
     /// "övrigt datorljud": allt utom de valda apparna, också det via en tapp.
     public var apps: [AudioSourceChoice] = []
+    /// HDR: 10 bit BT.2020 PQ i stället för 8 bit sRGB. Bara meningsfullt på en HDR-skärm.
+    public var hdr: Bool = false
 
     public init(fps: Int = 60, systemAudio: Bool = true, microphone: Devices.Device? = nil,
                 camera: Devices.Device? = nil, keystrokes: Bool = false, apps: [AudioSourceChoice] = []) {

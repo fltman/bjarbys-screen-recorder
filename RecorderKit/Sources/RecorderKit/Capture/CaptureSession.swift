@@ -94,6 +94,7 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         bundle = try RecordingBundle.create(in: directory)
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
         meta = RecordingMeta(source: target.metaSource, fps: options.fps, appVersion: version)
+        meta.hdr = options.hdr
         log = try EventLogWriter(url: bundle.eventsURL)
         super.init()
         // meta.json skrivs direkt, så att en krasch lämnar ett identifierbart paket.
@@ -106,7 +107,8 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
     public func start() async throws {
         let size = target.pixelSize
         writers[.screen] = try TrackWriter(kind: .screen, url: bundle.trackURL(.screen),
-                                           settings: .screen(width: size.width, height: size.height, fps: options.fps))
+                                           settings: .screen(width: size.width, height: size.height, fps: options.fps,
+                                                             hdr: options.hdr))
         meta.tracks = [.init(kind: .screen, file: RecordingBundle.fileName(for: .screen), deviceName: target.title)]
         if options.systemAudio {
             writers[.system] = try TrackWriter(kind: .system, url: bundle.trackURL(.system), settings: .audio)
@@ -164,7 +166,9 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
     }
 
     private func makeConfiguration() -> SCStreamConfiguration {
-        let c = SCStreamConfiguration()
+        // HDR: förvalet sätter dynamikomfång, pixelformat (x420), färgrymd (BT.2100 PQ) och
+        // matris. ⚠️ Sätt aldrig en egen färgrymd ovanpå — då tonmappas allt tyst till SDR.
+        let c = options.hdr ? SCStreamConfiguration(preset: .captureHDRRecordingPreservedSDRHDR10) : SCStreamConfiguration()
         let size = target.pixelSize
         c.width = size.width
         c.height = size.height
@@ -172,9 +176,11 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         c.queueDepth = 8
         // Markören ritas tillbaka i efterhand ur markördatan.
         c.showsCursor = false
-        c.pixelFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
-        c.colorSpaceName = CGColorSpace.sRGB
-        c.colorMatrix = CGDisplayStream.yCbCrMatrix_ITU_R_709_2
+        if !options.hdr {
+            c.pixelFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
+            c.colorSpaceName = CGColorSpace.sRGB
+            c.colorMatrix = CGDisplayStream.yCbCrMatrix_ITU_R_709_2
+        }
         if let source = target.sourceRect { c.sourceRect = source }
         c.scalesToFit = true
         c.preservesAspectRatio = true
@@ -281,12 +287,14 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
 
     public static func makeThumbnail(for bundle: RecordingBundle, at seconds: Double) async {
         let asset = AVURLAsset(url: bundle.trackURL(.screen))
-        let generator = AVAssetImageGenerator(asset: asset)
+        let hdr = (try? bundle.readMeta())?.hdr ?? false
+        let generator = MediaPreviews.stillGenerator(asset, hdr: hdr)
         generator.maximumSize = CGSize(width: 640, height: 640)
         generator.appliesPreferredTrackTransform = true
-        guard let (image, _) = try? await generator.image(at: CMTime(seconds: seconds, preferredTimescale: 600)),
+        guard let (still, _) = try? await generator.image(at: CMTime(seconds: seconds, preferredTimescale: 600)),
               let dest = CGImageDestinationCreateWithURL(bundle.thumbnailURL as CFURL, UTType.jpeg.identifier as CFString, 1, nil)
         else { return }
+        let image = hdr ? MediaPreviews.sdrStill(still) : still
         CGImageDestinationAddImage(dest, image, [kCGImageDestinationLossyCompressionQuality: 0.8] as CFDictionary)
         CGImageDestinationFinalize(dest)
     }

@@ -128,11 +128,12 @@ enum MCPServer {
                                     "microphone": ["type": "boolean", "description": "Record the default microphone (default false)."],
                                     "system_audio": ["type": "boolean", "description": "Record computer audio (default true)."],
                                     "keystrokes": ["type": "boolean", "description": "Record keyboard shortcuts (needs Input Monitoring)."],
-                                    "apps": appsArg],
+                                    "apps": appsArg,
+                                    "hdr": ["type": "boolean", "description": "Record in HDR (10-bit BT.2020 PQ; export with preset mp4-4k-hdr for HLG)."]],
                                    required: ["seconds"])],
             ["name": "start_recording", "description": "Start recording the main display. Stop with stop_recording.",
              "inputSchema": schema(["microphone": ["type": "boolean"], "system_audio": ["type": "boolean"], "keystrokes": ["type": "boolean"],
-                                    "apps": appsArg])],
+                                    "apps": appsArg, "hdr": ["type": "boolean"]])],
             ["name": "list_audio_apps", "description": "Apps connected to the audio system right now (bundle id, name, whether they are playing). Use the bundle ids in `apps` to record each app on its own track.",
              "inputSchema": schema([:])],
             ["name": "stop_recording", "description": "Stop the recording started with start_recording.",
@@ -361,6 +362,7 @@ enum MCPServer {
         }
         options.systemAudio = a["system_audio"] as? Bool ?? true
         options.keystrokes = a["keystrokes"] as? Bool ?? false
+        options.hdr = a["hdr"] as? Bool ?? false
         let running = AudioProcesses.apps()
         options.apps = (a["apps"] as? [String] ?? []).map { id in
             AudioSourceChoice(bundleID: id, name: running.first { $0.bundleID == id }?.name ?? id)

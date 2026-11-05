@@ -60,6 +60,29 @@ public final class RenderPlan: @unchecked Sendable {
     let mediaDir: URL?
     /// Videolagren i den ordning deras spår ligger i kompositionen.
     public var videoOverlayIDs: [UUID] { project.overlays.filter { $0.kind == .video }.map(\.id) }
+    /// Inspelningen är HDR (PQ, SDR-vitt på 100 nits).
+    public let sourceHDR: Bool
+    /// Rutorna ritas i HDR (BT.2100 HLG) i stället för SDR (sRGB/BT.709).
+    public let outputHDR: Bool
+
+    /// ScreenCaptureKits HDR10-förval lägger SDR-vitt på 100 nits; Core Image har SDR-vitt
+    /// (1,0 linjärt) på 203 nits, som BT.2408. Uppmätt: Y 509 (PQ 0,508) → 0,492 linjärt.
+    static let hdrScreenGain = 203.0 / 100.0
+    /// HLG:s tak i Core Images linjära skala (1000 nits / 203), uppmätt: 4,93 → HLG 1,0.
+    static let hlgHeadroom: Float = 4.926
+    /// Högdagrarnas tak i inspelningen efter lyftet: en XDR-skärm når 1600 nits = 16 × 100.
+    static let hdrSourceHeadroom: Float = 16
+
+    /// Skärmrutan i Core Images skala: SDR-vitt på 1,0, oavsett inspelning. Till HLG trycks
+    /// högdagrarna ihop med `CIToneMapHeadroom` (lämnar allt upp till 1,0 orört, uppmätt);
+    /// till SDR klipps de vid vitt — en tonmappning mot 1,0 hade sänkt SDR-vitt till 0,35.
+    func prepareScreen(_ image: CIImage) -> CIImage {
+        guard sourceHDR else { return image }
+        let lifted = image.applyingFilter("CIExposureAdjust", parameters: [kCIInputEVKey: log2(Self.hdrScreenGain)])
+        guard outputHDR else { return lifted }
+        return lifted.applyingFilter("CIToneMapHeadroom", parameters: [
+            "inputSourceHeadroom": Self.hdrSourceHeadroom, "inputTargetHeadroom": Self.hlgHeadroom])
+    }
 
     struct Sprite {
         let image: CIImage
@@ -87,8 +110,10 @@ public final class RenderPlan: @unchecked Sendable {
     public init(canvas: CGSize, project: EditProject, meta: RecordingMeta, events: [InputEvent],
                 cursors: CursorCatalog, cursorsDir: URL, hasCamera: Bool, words: [Transcript.Word] = [],
                 transparentBackground: Bool = false, mediaDir: URL? = nil,
-                cursorPath: CursorPath? = nil, cameraPath: CameraPath? = nil) {
+                cursorPath: CursorPath? = nil, cameraPath: CameraPath? = nil, outputHDR: Bool = false) {
         self.transparent = transparentBackground
+        self.sourceHDR = meta.hdr
+        self.outputHDR = outputHDR
         self.mediaDir = mediaDir
         self.canvas = canvas
         self.project = project
@@ -210,6 +235,7 @@ public final class RenderPlan: @unchecked Sendable {
     /// Den färdiga rutan vid utdatatiden `t`.
     public func render(outputTime t: Double, screen: CIImage?, camera: CIImage?, media: [UUID: CIImage] = [:],
                        alternate: CIImage? = nil) -> CIImage {
+        let screen = screen.map(prepareScreen), alternate = alternate.map(prepareScreen)
         let s = timeMap.source(at: t)
         let canvasRect = CGRect(origin: .zero, size: canvas)
         var layer = CIImage.empty()

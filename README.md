@@ -21,6 +21,8 @@ is included; to have the app follow your system language instead, run
   discard. It warns about a silent microphone, a disk running full and tracks that stop.
 - Global shortcuts: ⌃⌥⌘R start/stop, ⌃⌥⌘P pause, ⌃⌥⌘A record an area.
 - The app's own windows never end up in the recording.
+- HDR on HDR displays: 10-bit BT.2020 PQ, exported as HDR (HLG, HEVC 10-bit) or as SDR with
+  white kept white.
 - Audio per app: pick apps (a call, a browser, music) and each gets its own track through Core
   Audio taps, mixable and mutable in the editor; the rest of the computer audio on another.
 - A teleprompter: your script scrolls at reading speed in a box near the camera, visible only
@@ -99,7 +101,7 @@ is included; to have the app follow your system language instead, run
 Backblaze B2) and get the public link on the clipboard. No service in between; the secret key
 lives in the keychain.
 
-**Export:** MP4 (H.264, 1080p), MP4 (HEVC, 4K), ProRes 422, ProRes 4444 with a transparent
+**Export:** MP4 (H.264, 1080p), MP4 (HEVC, 4K), MP4 4K HDR (HEVC 10-bit, HLG; for HDR recordings), ProRes 422, ProRes 4444 with a transparent
 background (to put the polished screen on top of something else in your editor) and GIF.
 
 ## Measured, not assumed
@@ -172,7 +174,7 @@ the screen recording permission of the terminal it runs from.
 
 The recording engine, the editor, export, speech, masking of sensitive text, the flashback
 buffer and control from agents are done (see [`docs/FÄRDPLAN.md`](docs/FÄRDPLAN.md)). Per-app audio
-is in. Next is HDR. Recording at 120 fps (on ProMotion displays) and exporting at 120 are in,
+and HDR are in too. Recording at 120 fps (on ProMotion displays) and exporting at 120 are in,
 but the recording side has not been measured yet.
 
 Built and tested on macOS 26.1 on an Apple M5 only. Not yet tried with a real camera or
