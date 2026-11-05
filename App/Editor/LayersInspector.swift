@@ -219,6 +219,15 @@ struct LayersInspector: View {
                         Text("Nere till höger").tag(Overlay.Corner.bottomRight)
                     }
                 }
+                if [.title, .text, .image, .fact, .qr].contains(o.kind) {
+                    Picker("In", selection: Binding(get: { o.animation }, set: { v in model.updateOverlay(o.id) { $0.animation = v } })) {
+                        Text("Tona").tag(Overlay.Animation.fade)
+                        Text("Glid upp").tag(Overlay.Animation.slide)
+                        Text("Poppa").tag(Overlay.Animation.pop)
+                        if o.kind == .text || o.kind == .title { Text("Skrivmaskin").tag(Overlay.Animation.typewriter) }
+                    }
+                    .help("Hur lagret kommer in i bilden.")
+                }
                 LabeledSlider("Längd", value: Binding(get: { o.duration }, set: { v in model.updateOverlay(o.id) { $0.duration = v } }),
                               range: 1...12, format: "%.1f s")
                 HStack {

@@ -12,18 +12,27 @@ enum OverlayRenderer {
     struct Row { let text: String; let font: NSFont; let color: CGColor }
 
     /// Ett kort med rader text, radbrutna inom `maxWidth`. `accent`: en färgad list till vänster.
+    /// `reveal`: bara så många tecken syns (skrivmaskinen); resten ritas genomskinligt, så att
+    /// kortet har sin fulla storlek från början.
     static func card(_ rows: [Row], maxWidth: CGFloat, padding: CGFloat, radius: CGFloat,
-                     background: CGColor, accent: CGColor? = nil, center: Bool = false) -> CIImage {
+                     background: CGColor, accent: CGColor? = nil, center: Bool = false, reveal: Int? = nil) -> CIImage {
         let bar: CGFloat = accent == nil ? 0 : max(4, padding * 0.28)
         let textWidth = maxWidth - padding * 2 - bar
         // Varje rad som en CTFrame inom bredden; höjden mäts först.
         var frames: [(CTFramesetter, CGSize, NSAttributedString)] = []
+        var left = reveal ?? Int.max
         for row in rows where !row.text.isEmpty {
             let style = NSMutableParagraphStyle()
             style.alignment = center ? .center : .left
             style.lineSpacing = row.font.pointSize * 0.15
-            let attributed = NSAttributedString(string: row.text, attributes: [
+            let attributed = NSMutableAttributedString(string: row.text, attributes: [
                 .font: row.font, .foregroundColor: row.color, .paragraphStyle: style])
+            let length = (row.text as NSString).length
+            if left < length {
+                attributed.addAttribute(.foregroundColor, value: CGColor(gray: 0, alpha: 0),
+                                        range: NSRange(location: max(0, left), length: length - max(0, left)))
+            }
+            left -= length
             let setter = CTFramesetterCreateWithAttributedString(attributed)
             let size = CTFramesetterSuggestFrameSizeWithConstraints(setter, CFRange(), nil,
                                                                      CGSize(width: textWidth, height: .greatestFiniteMagnitude), nil)
@@ -65,13 +74,13 @@ enum OverlayRenderer {
     static func unit(_ canvas: CGSize) -> CGFloat { min(canvas.width, canvas.height) }
 
     /// Rubrikkort mitt i bilden: stor rubrik, valfri underrad.
-    static func title(_ o: Overlay, canvas: CGSize) -> CIImage {
+    static func title(_ o: Overlay, canvas: CGSize, reveal: Int? = nil) -> CIImage {
         let u = unit(canvas)
         var rows = [Row(text: o.title, font: .systemFont(ofSize: u * 0.075, weight: .bold), color: .white)]
         if let sub = o.lines.first { rows.append(Row(text: sub, font: .systemFont(ofSize: u * 0.034, weight: .medium),
                                                      color: CGColor(gray: 1, alpha: 0.82))) }
         return card(rows, maxWidth: canvas.width * 0.7, padding: u * 0.05, radius: u * 0.03,
-                    background: CGColor(red: 0.06, green: 0.06, blue: 0.09, alpha: 0.82), center: true)
+                    background: CGColor(red: 0.06, green: 0.06, blue: 0.09, alpha: 0.82), center: true, reveal: reveal)
     }
 
     /// Faktaruta: rubrik och upp till tre rader, med en indigo list.
@@ -114,17 +123,18 @@ enum OverlayRenderer {
     }
 
     /// Fri text: på en mörk platta, eller skuggad direkt på bilden.
-    static func text(_ o: Overlay, canvas: CGSize) -> CIImage {
+    static func text(_ o: Overlay, canvas: CGSize, reveal: Int? = nil) -> CIImage {
         let u = unit(canvas)
         let maxWidth = canvas.width * CGFloat(min(max(o.frame?.width ?? 0.6, 0.1), 0.95))
         let font = NSFont.systemFont(ofSize: u * 0.045 * o.size, weight: .bold)
         if o.background {
             return card([Row(text: o.title, font: font, color: .white)], maxWidth: maxWidth, padding: u * 0.022 * o.size,
-                        radius: u * 0.016, background: CGColor(red: 0.06, green: 0.06, blue: 0.09, alpha: 0.75), center: true)
+                        radius: u * 0.016, background: CGColor(red: 0.06, green: 0.06, blue: 0.09, alpha: 0.75), center: true,
+                        reveal: reveal)
         }
         // Utan platta: vit text med mjuk skugga, så att den syns mot både ljust och mörkt.
         let plain = card([Row(text: o.title, font: font, color: .white)], maxWidth: maxWidth, padding: u * 0.02,
-                         radius: 0, background: CGColor(gray: 0, alpha: 0), center: true)
+                         radius: 0, background: CGColor(gray: 0, alpha: 0), center: true, reveal: reveal)
         let shadow = plain.applyingFilter("CIColorMatrix", parameters: [
             "inputRVector": CIVector(x: 0, y: 0, z: 0, w: 0), "inputGVector": CIVector(x: 0, y: 0, z: 0, w: 0),
             "inputBVector": CIVector(x: 0, y: 0, z: 0, w: 0), "inputAVector": CIVector(x: 0, y: 0, z: 0, w: 0.75)])

@@ -1990,6 +1990,23 @@
         }
       }
     },
+    "Glid upp": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slide up"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glid upp"
+          }
+        }
+      }
+    },
     "Glöm standardutseendet": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2279,6 +2296,23 @@
         }
       }
     },
+    "Hur lagret kommer in i bilden.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How the layer comes into the picture."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hur lagret kommer in i bilden."
+          }
+        }
+      }
+    },
     "Höger": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2428,6 +2462,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Igår kl. %@"
+          }
+        }
+      }
+    },
+    "In": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In"
           }
         }
       }
@@ -4285,6 +4336,23 @@
         }
       }
     },
+    "Poppa": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pop"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poppa"
+          }
+        }
+      }
+    },
     "Program": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4570,6 +4638,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Skriv eller klistra in det du ska säga."
+          }
+        }
+      }
+    },
+    "Skrivmaskin": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Typewriter"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skrivmaskin"
           }
         }
       }
@@ -5862,6 +5947,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tillgänglighet"
+          }
+        }
+      }
+    },
+    "Tona": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fade"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tona"
           }
         }
       }

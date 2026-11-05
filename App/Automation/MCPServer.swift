@@ -206,6 +206,8 @@ enum MCPServer {
                                         "crop": ["type": "array", "items": ["type": "number"], "minItems": 4, "maxItems": 4,
                                                  "description": "video: the part of the video to show, [x, y, width, height] 0–1 of the video, origin top-left."],
                                         "softness": ["type": "number", "description": "video: soft edges 0–1 (0 = sharp with rounded corners and a shadow)."],
+                                        "animation": ["type": "string", "enum": ["fade", "slide", "pop", "typewriter"],
+                                                      "description": "How the layer comes in (typewriter: text and title only). Default fade."],
                                         "frame": ["type": "array", "items": ["type": "number"], "minItems": 3, "maxItems": 4,
                                                   "description": "text: [centerX, centerY, maxWidth]; image: [x, y, width, height] — 0–1 of the frame, origin top-left."],
                                         "file": ["type": "string", "description": "image: path to the image (copied into the bundle)."],
@@ -631,6 +633,7 @@ enum MCPServer {
                                   title: o["title"] as? String ?? "", lines: o["lines"] as? [String] ?? [],
                                   url: o["url"] as? String ?? "",
                                   corner: Overlay.Corner(rawValue: o["corner"] as? String ?? "") ?? (kind == .qr ? .bottomRight : .topRight))
+            overlay.animation = (o["animation"] as? String).flatMap(Overlay.Animation.init(rawValue:)) ?? .fade
             if let f = (o["frame"] as? [Any])?.compactMap(number), f.count >= 3 {
                 overlay.frame = Rect(x: f[0], y: f[1], width: f[2], height: f.count > 3 ? f[3] : 0)
             }

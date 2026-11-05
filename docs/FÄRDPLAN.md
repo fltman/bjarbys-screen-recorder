@@ -69,6 +69,9 @@ tagning, sedan redigerbar polish, sedan resten.
 
 - Kortkommandon i filmen (2026-11-05): bubbla nere eller uppe i mitten, räknar upp
   upprepningar ("⌘Z ×3"), visas i utdatatid så att 4×-delar inte blinkar förbi.
+- Animerade lager (2026-11-05): In — tona, glid upp, poppa (växer med en liten studs) eller
+  skrivmaskin (text och rubrik, 35 ms per tecken, 0,4–1,5 s; kortet har full storlek från början
+  eftersom resten ritas genomskinligt). MCP: `animation` i `set_overlays`.
 - Ljudnivå vid export (2026-11-05): Som den är / −14 LUFS / −16 LUFS. Hela mixen (eller
   utsnittet) mäts i stereo enligt BS.1770 och varje ljudbuffert skalas; förstärkningen begränsas
   så att topparna stannar under −1 dBFS. MCP: `loudness`.

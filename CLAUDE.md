@@ -140,4 +140,6 @@ för taldetektering). Roten letas upp i `~/Projekt/whisper.cpp` m.fl., eller vä
 - Prov som spelar in skärmens innehåll (HDR-fältet, bildtakten) måste köras med **upplåst**
   skärm: med låsskärmen ritas inga fönster och strömmen ger långa svep av `idle`-rutor som ser ut
   som tappade bilder. Provlägena vägrar då (`ScreenLock.isLocked`).
+- ⚠️ Provinspelningar fångar det som är på skärmen just då (en gång ett pågående Teams-möte med
+  andra i bild): radera direkt, och prova renderingen med syntetiska paket när det går.
 - ⚠️ Disken är nästan full (≈12 GB ledigt nov 2026). Provinspelningar hålls korta och raderas.

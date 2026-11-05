@@ -68,3 +68,18 @@ import Foundation
         #expect(roundTrip.hasSameStyle(as: source) && roundTrip.overlays.isEmpty)
     }
 }
+
+@Suite struct OverlayAnimationTests {
+    @Test func typewriterRevealsOverTime() throws {
+        var o = Overlay(kind: .text, at: 0, title: "Hej världen")      // 11 tecken → 0,4 s (minimum)
+        #expect(OverlayTrack.typewriterReveal(o, elapsed: 0) == nil)    // tona: ingen skrivmaskin
+        o.animation = .typewriter
+        #expect(OverlayTrack.typewriterReveal(o, elapsed: 0) == 0)
+        #expect(OverlayTrack.typewriterReveal(o, elapsed: 0.2) == 5)
+        #expect(OverlayTrack.typewriterReveal(o, elapsed: 0.5) == nil)  // allt syns
+        var fact = Overlay(kind: .fact, at: 0, title: "Fakta"); fact.animation = .typewriter
+        #expect(OverlayTrack.typewriterReveal(fact, elapsed: 0) == nil)  // bara text och rubrik
+        let decoded = try BundleJSON.decoder.decode(Overlay.self, from: Data("{}".utf8))
+        #expect(decoded.animation == .fade)
+    }
+}

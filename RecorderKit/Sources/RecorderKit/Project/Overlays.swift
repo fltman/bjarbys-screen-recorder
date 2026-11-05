@@ -54,6 +54,9 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
     /// Video: hastighet (0,25–4). `duration` är fortfarande tiden i filmen; videon spelar
     /// `duration × speed` sekunder av filen.
     public var speed: Double
+    /// Hur lagret kommer in: tonas, glider upp, poppar fram, eller skrivs fram (text och rubrik).
+    public var animation: Animation
+    public enum Animation: String, Codable, Sendable, CaseIterable { case fade, slide, pop, typewriter }
 
     public init(id: UUID = UUID(), kind: Kind, at: Double, duration: Double = 4, title: String = "",
                 lines: [String] = [], url: String = "", target: Rect? = nil, corner: Corner = .topRight,
@@ -63,6 +66,7 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
         self.frame = frame; self.file = file; self.size = size; self.background = background
         self.offset = 0; self.volume = 1
         self.crop = nil; self.softness = 0; self.speed = 1
+        self.animation = .fade
     }
 
     /// Täcker hela bildytan (helbild): ritas utan hörn och skugga, och fyller.
@@ -91,6 +95,7 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
         crop = c.value(.crop, nil)
         softness = c.value(.softness, 0)
         speed = c.value(.speed, 1)
+        animation = c.value(.animation, .fade)
     }
 }
 
@@ -137,14 +142,25 @@ public struct OverlayTrack: Sendable {
             .compactMap { i, c in timeMap.output(at: c.at).map { (c, $0, i) } }
     }
 
-    /// Det som syns vid utdatatiden `t`, med opacitet och infadningens förlopp (0–1).
-    public func visible(at t: Double) -> [(overlay: Overlay, opacity: Double, entrance: Double)] {
+    /// Det som syns vid utdatatiden `t`, med opacitet, infadningens förlopp (0–1) och tiden sedan
+    /// lagret började synas (för animationerna).
+    public func visible(at t: Double) -> [(overlay: Overlay, opacity: Double, entrance: Double, elapsed: Double)] {
         placed.compactMap { p in
             guard t >= p.start, t < p.end else { return nil }
             let entrance = min(1, (t - p.start) / Self.fadeIn)
             let opacity = min(entrance, min(1, (p.end - t) / Self.fadeOut))
-            return (p.overlay, opacity, entrance)
+            return (p.overlay, opacity, entrance, t - p.start)
         }
+    }
+
+    /// Skrivmaskinen: hur många tecken (rubrik, sedan raderna) som syns efter `elapsed` sekunder,
+    /// eller nil när allt syns. 35 ms per tecken, mellan 0,4 och 1,5 s för hela texten.
+    public static func typewriterReveal(_ o: Overlay, elapsed: Double) -> Int? {
+        guard o.animation == .typewriter, o.kind == .text || o.kind == .title else { return nil }
+        let total = o.title.count + o.lines.joined().count
+        let duration = min(1.5, max(0.4, 0.035 * Double(total)))
+        let n = Int(Double(total) * min(1, elapsed / duration))
+        return n < total ? n : nil
     }
 
     /// Kapitelraden vid `t`: kapitlet, dess nummer (från 1), antalet och opacitet.

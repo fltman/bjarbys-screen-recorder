@@ -61,7 +61,8 @@ is included; to have the app follow your system language instead, run
 - Layers: title cards, callouts around the button you clicked, fact boxes, QR codes, free
   text anywhere, images (logos, product shots), video inserts (picture-in-picture or full
   frame, with their sound, cropped, with soft edges, at 0.25–4× speed), chapters with a banner, and extra audio
-  (music ducked under speech, narration, effects).
+  (music ducked under speech, narration, effects). Layers can fade, slide up or pop in, and text
+  and titles can be typed out character by character.
 - Transitions at the cuts (crossfade, through black, blur with a zoom punch, flash), set for
   the whole video or per cut, with the sound crossfaded too and a short fade at every cut so
   nothing clicks; fades at the start and end.

@@ -435,17 +435,32 @@ public final class RenderPlan: @unchecked Sendable {
                 continue
             }
             let key = "\(o.kind.rawValue)|\(o.id)|\(o.title)|\(o.lines.joined(separator: "¦"))|\(o.url)"
+            let reveal = OverlayTrack.typewriterReveal(o, elapsed: shown.elapsed)
             let key2 = key + "|\(o.file)|\(o.size)|\(o.background)|\(o.frame.map { "\($0.width)x\($0.height)" } ?? "")"
-            let image = overlayImages.image(for: key2) { overlayImage(o) }
+                + (reveal.map { "|r\($0)" } ?? "")
+            let image = overlayImages.image(for: key2) { overlayImage(o, reveal: reveal) }
             let e = image.extent
-            let slide = (1 - Self.easeOut(shown.entrance)) * u * 0.02
+            // In: tona (en liten glidning), glid upp (längre), poppa (växer med en liten studs).
+            let slide: CGFloat
+            switch o.animation {
+            case .slide: slide = (1 - Self.easeOut(min(1, shown.elapsed / 0.45))) * u * 0.08
+            case .pop, .typewriter: slide = 0
+            case .fade: slide = (1 - Self.easeOut(shown.entrance)) * u * 0.02
+            }
             if o.kind == .title {
                 out = Self.withAlpha(CIImage(color: CIColor(red: 0, green: 0, blue: 0, alpha: 0.38)).cropped(to: canvasRect),
                                      shown.opacity).composited(over: out)
             }
             var origin = placement(of: o, size: e.size)
             origin.y -= slide
-            let placed = image.transformed(by: CGAffineTransform(translationX: origin.x.rounded() - e.minX, y: origin.y.rounded() - e.minY))
+            var placed = image.transformed(by: CGAffineTransform(translationX: origin.x.rounded() - e.minX, y: origin.y.rounded() - e.minY))
+            if o.animation == .pop, shown.elapsed < 0.4 {
+                let k = 0.8 + 0.2 * Self.easeOutBack(min(1, shown.elapsed / 0.4))
+                let c = CGPoint(x: origin.x + e.width / 2, y: origin.y + e.height / 2)
+                placed = placed.transformed(by: CGAffineTransform(translationX: -c.x, y: -c.y)
+                    .concatenating(CGAffineTransform(scaleX: k, y: k))
+                    .concatenating(CGAffineTransform(translationX: c.x, y: c.y)))
+            }
             out = Self.withAlpha(placed, shown.opacity).composited(over: out)
         }
 
@@ -767,11 +782,11 @@ public final class RenderPlan: @unchecked Sendable {
         return placed.composited(over: shadow)
     }
 
-    func overlayImage(_ o: Overlay) -> CIImage {
+    func overlayImage(_ o: Overlay, reveal: Int? = nil) -> CIImage {
         switch o.kind {
-        case .title: OverlayRenderer.title(o, canvas: canvas)
+        case .title: OverlayRenderer.title(o, canvas: canvas, reveal: reveal)
         case .qr: OverlayRenderer.qr(o, canvas: canvas)
-        case .text: OverlayRenderer.text(o, canvas: canvas)
+        case .text: OverlayRenderer.text(o, canvas: canvas, reveal: reveal)
         case .image: OverlayRenderer.image(o, mediaDir: mediaDir, canvas: canvas)
         default: OverlayRenderer.fact(o, canvas: canvas)
         }
@@ -1071,6 +1086,11 @@ public final class RenderPlan: @unchecked Sendable {
     }
 
     static func easeOut(_ x: Double) -> Double { 1 - pow(1 - min(max(x, 0), 1), 3) }
+    /// Ut med en liten översläng (som en studs), 0 → 1.
+    static func easeOutBack(_ x: Double) -> Double {
+        let c1 = 1.70158, c3 = c1 + 1, t = min(max(x, 0), 1)
+        return 1 + c3 * pow(t - 1, 3) + c1 * pow(t - 1, 2)
+    }
 
     static func sameCorner(_ a: Overlay.Corner, _ b: EditProject.CameraStyle.Corner) -> Bool {
         switch (a, b) {
