@@ -21,6 +21,7 @@ struct LayersInspector: View {
                 }
             }
             chapters
+            if !model.recording.markers.isEmpty { markers }
             overlays
             audio
         }
@@ -58,6 +59,35 @@ struct LayersInspector: View {
                 Toggle("Kapitelrad i bild", isOn: Binding(get: { model.project.showsChapterBanner },
                                                           set: { v in model.update { $0.showsChapterBanner = v } }))
                     .controlSize(.small)
+            }
+        }
+    }
+
+    // MARK: - Markeringar
+
+    /// Markeringarna som sattes under inspelningen (⌃⌥⌘M): hoppa dit, gör kapitel eller dela.
+    private var markers: some View {
+        Section2("Markeringar", systemImage: "flag") {
+            let times = model.recording.markers
+            Text("\(times.count) satta under inspelningen.").font(.caption).foregroundStyle(.secondary)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(times, id: \.self) { m in
+                        Button { seek(source: m) } label: {
+                            Label(model.timeMap.output(at: m).map(TransportTime.format) ?? String(localized: "bortklippt"), systemImage: "flag.fill")
+                        }
+                        .buttonStyle(.bordered).controlSize(.small).tint(.orange)
+                    }
+                }
+            }
+            HStack {
+                Button("Gör till kapitel") {
+                    model.update { $0.addChapters(at: times, title: String(localized: "Markering")) }
+                }
+                .controlSize(.small)
+                Button("Dela vid markeringarna") { model.update { $0.split(at: times) } }
+                    .controlSize(.small)
+                    .help("Delar delarna där markeringarna sitter — sedan kan du ta bort eller trimma det som blev fel.")
             }
         }
     }

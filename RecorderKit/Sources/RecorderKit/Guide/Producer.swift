@@ -32,6 +32,10 @@ public enum Producer {
             }.joined(separator: "; "))
         }
 
+        if !rec.markers.isEmpty {
+            out.append("Markers set by the presenter while recording (something to look at here — a retake, a new section): "
+                       + rec.markers.map(fmt).joined(separator: ", "))
+        }
         // Skrivande (bara när och var, aldrig vad): skurar med skrivmarkörens område.
         var bursts: [(start: Double, end: Double, area: CGRect?)] = []
         for e in rec.events where e.k == .typing {

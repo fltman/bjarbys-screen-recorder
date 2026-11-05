@@ -49,6 +49,8 @@ public struct LoadedRecording: @unchecked Sendable {
     }
 
     public var hasCamera: Bool { assets[.camera] != nil }
+    /// Markeringarna som sattes under inspelningen (källtid).
+    public var markers: [Double] { events.filter { $0.k == .marker }.map(\.t).sorted() }
     public var hasMicrophone: Bool { assets[.microphone] != nil }
     public var hasSystemAudio: Bool { assets[.system] != nil }
     /// Datorljud av något slag: allt i ett spår, eller apparna var för sig.

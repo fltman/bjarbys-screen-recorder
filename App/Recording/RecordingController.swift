@@ -21,6 +21,8 @@ final class RecordingController: ObservableObject {
     @Published private(set) var sourceTitle = ""
     /// Pennan är på (rita på skärmen).
     @Published private(set) var isDrawing = false
+    /// Markeringar satta i den här inspelningen.
+    @Published private(set) var markerCount = 0
 
     let settings: AppSettings
     let library: LibraryModel
@@ -158,6 +160,7 @@ final class RecordingController: ObservableObject {
             }
             self.session = session
             try await session.start()
+            markerCount = 0
             phase = .recording
             showHUD(on: target.displayID)
             showTeleprompter(on: target.displayID)
@@ -190,6 +193,13 @@ final class RecordingController: ObservableObject {
             session.pause()
             teleprompter?.model.pause()
         }
+    }
+
+    /// Sätter en markering (något att se över i redigeraren). HUD:ens räknare bekräftar — inget
+    /// ljud, mikrofonen hade tagit upp det.
+    func addMarker() {
+        guard phase == .recording, session?.logMarker() != nil else { return }
+        markerCount += 1
     }
 
     /// Pennan på eller av (bara under inspelning).

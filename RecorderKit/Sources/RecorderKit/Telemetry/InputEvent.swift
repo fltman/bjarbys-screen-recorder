@@ -24,6 +24,8 @@ public struct InputEvent: Codable, Equatable, Sendable {
         /// Någon skrev (vanlig text): bara tiden och, med Tillgänglighet, `rect` = skrivmarkörens
         /// ram (eller fältets). Vilken tangent det var sparas aldrig. Högst fyra i sekunden.
         case typing
+        /// En markering som sattes under inspelningen (⌃⌥⌘M): något att se över här.
+        case marker
         case unknown
     }
 

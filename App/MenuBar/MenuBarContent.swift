@@ -16,6 +16,8 @@ struct MenuBarContent: View {
             Button(recorder.status.isPaused ? "Fortsätt" : "Pausa") { recorder.togglePause() }
             Button(recorder.isDrawing ? "Sluta rita" : "Rita på skärmen") { recorder.toggleDrawing() }
                 .keyboardShortcut(hotKeys.binding(.draw).keyboardShortcut)
+            Button("Sätt en markering") { recorder.addMarker() }
+                .keyboardShortcut(hotKeys.binding(.marker).keyboardShortcut)
             Divider()
         } else {
             // Kortkommandona visas i menyn (de globala gäller också när menyn är stängd).

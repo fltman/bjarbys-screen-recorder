@@ -66,6 +66,13 @@ struct HUDView: View {
                     .tint(controller.isDrawing ? .red : nil)
                     .help(controller.isDrawing ? "Sluta rita (Esc)"
                                                : "Rita på skärmen (\(HotKeys.shared.binding(.draw).display)) — 1–5 byter färg, syns inte i bild förrän i redigeraren")
+                    Button { controller.addMarker() } label: {
+                        HStack(spacing: 2) {
+                            Image(systemName: "flag.fill")
+                            if controller.markerCount > 0 { Text(verbatim: "\(controller.markerCount)").monospacedDigit() }
+                        }
+                    }
+                    .help("Sätt en markering (\(HotKeys.shared.binding(.marker).display)) — något att se över i redigeraren")
                     Button { controller.togglePause() } label: {
                         Image(systemName: s.isPaused ? "play.fill" : "pause.fill")
                     }

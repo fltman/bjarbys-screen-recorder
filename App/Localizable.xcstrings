@@ -290,6 +290,23 @@
         }
       }
     },
+    "%lld satta under inspelningen.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld set during the recording."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld satta under inspelningen."
+          }
+        }
+      }
+    },
     "%lld streck, ritade under inspelningen. De zoomar med bilden och tonas bort.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1072,6 +1089,23 @@
         }
       }
     },
+    "Dela vid markeringarna": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split at Markers"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dela vid markeringarna"
+          }
+        }
+      }
+    },
     "Dela vid spelhuvudet (⌘B)": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1102,6 +1136,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dela …"
+          }
+        }
+      }
+    },
+    "Delar delarna där markeringarna sitter — sedan kan du ta bort eller trimma det som blev fel.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Splits the parts where the markers are — then you can delete or trim what went wrong."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delar delarna där markeringarna sitter — sedan kan du ta bort eller trimma det som blev fel."
           }
         }
       }
@@ -2377,6 +2428,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gör om förslagen"
+          }
+        }
+      }
+    },
+    "Gör till kapitel": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make Chapters"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gör till kapitel"
           }
         }
       }
@@ -4111,6 +4179,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Markering"
+          }
+        }
+      }
+    },
+    "Markeringar": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markers"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markeringar"
           }
         }
       }
@@ -6359,6 +6444,40 @@
         }
       }
     },
+    "Sätt en markering": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set a Marker"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sätt en markering"
+          }
+        }
+      }
+    },
+    "Sätt en markering (%@) — något att se över i redigeraren": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set a marker (%@) — something to look at in the editor"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sätt en markering (%@) — något att se över i redigeraren"
+          }
+        }
+      }
+    },
     "Sök i inspelningen": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -7460,6 +7579,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zoom"
+          }
+        }
+      }
+    },
+    "bortklippt": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cut"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bortklippt"
           }
         }
       }

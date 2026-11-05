@@ -58,6 +58,7 @@ En JSON-rad per händelse. `t` = sekunder på tidslinjen. Koordinater i globala 
 | `frame` | `rect` = fönstrets nya ram (bara fönsterinspelning) |
 | `element` | `rect` = ramen för gränssnittselementet under ett klick (Accessibility), `label` = roll och namn ("knapp «Exportera»") |
 | `typing` | någon skrev vanlig text: bara tiden och (med Tillgänglighet) `rect` = skrivmarkörens ram eller fältets. Vilken tangent sparas aldrig; högst fyra i sekunden |
+| `marker` | en markering satt under inspelningen (⌃⌥⌘M): bara `t` |
 | `ink` | ett streck ritat med pennan: `t` = när det började, `pts` = `[dt, x, y, …]` platt (dt i s från `t`, globala punkter), `color` = `#RRGGBB`. Var aldrig med i bilden; ritas i efterhand |
 | `pause`, `resume` | — |
 

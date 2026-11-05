@@ -375,6 +375,17 @@ struct TimelineView: View {
                      at: CGPoint(x: px + 12, y: 5), anchor: .leading)
         }
 
+        // Markeringar från inspelningen: orange flaggor nere på linjalen.
+        for m in model.recording.markers {
+            guard let t = model.editTimeMap.output(at: m) else { continue }
+            let px = x(t, pps)
+            ctx.fill(Path(CGRect(x: px - 0.5, y: 0, width: 1, height: clipY + clipH)), with: .color(.orange.opacity(0.55)))
+            var flag = Path()
+            flag.move(to: CGPoint(x: px, y: 9)); flag.addLine(to: CGPoint(x: px + 7, y: 12)); flag.addLine(to: CGPoint(x: px, y: 15))
+            flag.closeSubpath()
+            ctx.fill(flag, with: .color(.orange))
+        }
+
         // Masker: där något döljs i den redigerade filmen.
         if let y = maskY {
             for mask in model.project.masks {

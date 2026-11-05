@@ -77,6 +77,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             hk.register(.area) { app.recorder.recordArea() }
             hk.register(.flashback) { app.flashback.save() }
             hk.register(.draw) { app.recorder.toggleDrawing() }
+            hk.register(.marker) { app.recorder.addMarker() }
             app.flashback.apply()
             Task {
                 _ = await app.library.recoverUnfinished(excluding: nil)

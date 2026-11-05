@@ -5,6 +5,31 @@ import Foundation
 extension EditProject {
     static let epsilon = 0.001
 
+    /// Delar delarna vid källtiderna (markeringar): varje del som en tid hamnar inne i (inte
+    /// närmare än 0,1 s en kant) blir två, med samma fart och kameralayout. Inget tas bort.
+    public mutating func split(at times: [Double]) {
+        for s in times.sorted() {
+            guard let i = segments.firstIndex(where: { s > $0.start + 0.1 && s < $0.end - 0.1 }) else { continue }
+            var right = segments[i]
+            right.id = UUID()
+            right.start = s
+            right.transitionIn = nil
+            segments[i].end = s
+            segments.insert(right, at: i + 1)
+        }
+    }
+
+    /// Kapitel vid källtiderna, utom där ett kapitel redan finns inom 1 s. Rubrikerna numreras
+    /// efter `title` ("Markering 1", …).
+    public mutating func addChapters(at times: [Double], title: String) {
+        var n = 0
+        for s in times.sorted() where !chapters.contains(where: { abs($0.at - s) < 1 }) {
+            n += 1
+            chapters.append(Chapter(at: s, title: "\(title) \(n)"))
+        }
+        chapters.sort { $0.at < $1.at }
+    }
+
     /// Klipper bort källintervallet `range` ur alla delar det berör.
     public mutating func cut(_ range: ClosedRange<Double>) {
         let a = range.lowerBound, b = range.upperBound

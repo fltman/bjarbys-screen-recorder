@@ -20,7 +20,10 @@ is included; to have the app follow your system language instead, run
 - A 3-2-1 countdown, then a floating panel with time, level meters, pause, stop and
   discard. It warns about a silent microphone, a disk running full and tracks that stop.
 - Global shortcuts: ⌃⌥⌘R start/stop, ⌃⌥⌘P pause, ⌃⌥⌘A record an area, ⌃⌥⌘S save the
-  flashback, ⌃⌥⌘D draw — all changeable under Settings › Keyboard Shortcuts.
+  flashback, ⌃⌥⌘D draw, ⌃⌥⌘M set a marker — all changeable under Settings › Keyboard Shortcuts.
+- Markers: press ⌃⌥⌘M (or the flag in the panel) when something should be looked at later — a
+  retake, a new section. In the editor they are flags on the timeline, and one click turns them
+  into chapters or splits the parts there.
 - A pen: draw on the screen while you record to circle or point at something (1–5 change colour,
   Esc stops). The strokes are saved as data, not burned in — in the film they zoom with the
   picture, fade like they did on screen, and can be switched off.

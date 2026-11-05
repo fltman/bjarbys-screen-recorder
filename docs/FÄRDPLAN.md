@@ -84,6 +84,11 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Markeringar (2026-11-05): ⌃⌥⌘M, HUD:ens flagga (med räknare) eller menyn sätter en `marker`
+  under inspelningen (inte under paus; inget ljud, mikrofonen hade tagit upp det). I redigeraren:
+  orange flaggor i tidslinjen, och Lager › Markeringar — hoppa dit, Gör till kapitel ("Markering
+  1", … utom där ett kapitel redan finns inom 1 s) eller Dela vid markeringarna (delar inne i
+  delarna, med samma fart). Producentens underlag listar dem.
 - Ansiktet i mitten (2026-11-05): Stil › Kamera › Håll ansiktet i mitten. Första gången går
   Vision igenom kameraspåret (4 rutor/s, 640 px, största ansiktet), luckor fylls med närmaste
   fynd och banan jämnas ut (±0,75 s); sparas i `derived/camera-faces.json`. Bubblans utsnitt

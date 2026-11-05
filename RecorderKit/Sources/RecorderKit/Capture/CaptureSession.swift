@@ -49,6 +49,15 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
     public var onStatus: ((Status) -> Void)?
     /// Appens egna paneler, där klick inte ska loggas (globala punkter, origo uppe till vänster).
     public func setIgnoredRegions(_ rects: [CGRect]) { input?.setIgnoredRegions(rects) }
+    /// Sätter en markering just nu (inte under paus). Returnerar tiden, eller nil.
+    @discardableResult
+    public func logMarker() -> Double? {
+        guard clock.isStarted, !clock.isPaused else { return nil }
+        let t = clock.elapsed
+        log.append(InputEvent(t: t, k: .marker))
+        return t
+    }
+
     /// Pennan på eller av (musens nedtryck blir då inte klick).
     public func setDrawing(_ on: Bool) { input?.setDrawing(on) }
 

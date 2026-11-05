@@ -87,7 +87,7 @@ struct HotKeyBinding: Codable, Equatable, Hashable {
 
 /// Det som har ett globalt kortkommando.
 enum HotKeyAction: UInt32, CaseIterable, Identifiable {
-    case toggleRecording = 1, pause = 2, area = 3, flashback = 4, draw = 5
+    case toggleRecording = 1, pause = 2, area = 3, flashback = 4, draw = 5, marker = 6
     var id: UInt32 { rawValue }
 
     var title: LocalizedStringKey {
@@ -97,6 +97,7 @@ enum HotKeyAction: UInt32, CaseIterable, Identifiable {
         case .area: "Spela in område"
         case .flashback: "Spara flashback"
         case .draw: "Rita på skärmen"
+        case .marker: "Sätt en markering"
         }
     }
 
@@ -107,6 +108,7 @@ enum HotKeyAction: UInt32, CaseIterable, Identifiable {
         case .area: HotKeyBinding(keyCode: UInt32(kVK_ANSI_A), modifiers: HotKeyBinding.standardModifiers, key: "A")
         case .flashback: HotKeyBinding(keyCode: UInt32(kVK_ANSI_S), modifiers: HotKeyBinding.standardModifiers, key: "S")
         case .draw: HotKeyBinding(keyCode: UInt32(kVK_ANSI_D), modifiers: HotKeyBinding.standardModifiers, key: "D")
+        case .marker: HotKeyBinding(keyCode: UInt32(kVK_ANSI_M), modifiers: HotKeyBinding.standardModifiers, key: "M")
         }
     }
 }
