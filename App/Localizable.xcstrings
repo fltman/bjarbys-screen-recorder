@@ -919,6 +919,23 @@
         }
       }
     },
+    "De valda läggs efter varandra i tidsordning i en ny inspelning. Originalen rörs inte. Upplösningen måste vara densamma.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected recordings are joined one after the other, oldest first, in a new recording. The originals are left untouched. They must have the same resolution."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De valda läggs efter varandra i tidsordning i en ny inspelning. Originalen rörs inte. Upplösningen måste vara densamma."
+          }
+        }
+      }
+    },
     "Dela": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4132,6 +4149,23 @@
         }
       }
     },
+    "Olika upplösning (%@) — välj inspelningar av samma storlek.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Different resolutions (%@) — choose recordings of the same size."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olika upplösning (%@) — välj inspelningar av samma storlek."
+          }
+        }
+      }
+    },
     "Oläslig meta.json": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4893,6 +4927,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "Släng tagningen"
+          }
+        }
+      }
+    },
+    "Slå ihop %lld": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join %lld"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slå ihop %lld"
+          }
+        }
+      }
+    },
+    "Slå ihop inspelningar": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join Recordings"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slå ihop inspelningar"
+          }
+        }
+      }
+    },
+    "Slå ihop med andra …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join with Others…"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slå ihop med andra …"
+          }
+        }
+      }
+    },
+    "Slår ihop …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Joining…"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slår ihop …"
           }
         }
       }

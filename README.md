@@ -56,6 +56,8 @@ is included; to have the app follow your system language instead, run
   move it; Q and W trim the start and end of the part under the playhead to the playhead.
 - Even out the whole film's audio on export to −14 LUFS (YouTube) or −16 LUFS (podcasts),
   measured per BS.1770 and checked against ffmpeg, with peaks kept under −1 dBFS.
+- Join takes: pick recordings in the library and they become one, one after another, without
+  re-encoding. Clicks, cursors and transcripts follow; the originals stay as they are.
 - Mark an excerpt with I and O (X clears) and export only that, e.g. a short social clip, with
   its captions; or save the finished frame at the playhead as a 4K PNG (a thumbnail).
 - Layers: title cards, callouts around the button you clicked, fact boxes, QR codes, free
@@ -113,7 +115,7 @@ is included; to have the app follow your system language instead, run
 
 **Control from agents, scripts and Shortcuts**
 - An MCP server built into the app: `--mcp` gives agents such as Claude Code tools to record
-  the screen, transcribe, edit (format, Reel, captions, cuts, dead time, noise, loudness,
+  the screen, join takes, transcribe, edit (format, Reel, captions, cuts, dead time, noise, loudness,
   hiding sensitive text), render frames to look at, make a step-by-step guide, take polished
   screenshots of an app's window, make a bug report, and export.
 - A URL scheme (`skarminspelare://spela-in`, `…/stoppa`, `…/paus`, `…/oppna?sokvag=…`) and

@@ -75,10 +75,23 @@ private struct RecordBar: View {
 private struct LibraryGrid: View {
     @EnvironmentObject private var app: AppModel
     @ObservedObject var library: LibraryModel
+    /// Ihopslagningen: vilka som är valda (nil = rutan stängd).
+    @State private var merging: Set<URL>?
 
     private let columns = [GridItem(.adaptive(minimum: 230, maximum: 320), spacing: 18)]
 
     var body: some View {
+        content
+            .sheet(isPresented: Binding(get: { merging != nil }, set: { if !$0 { merging = nil } })) {
+                MergeSheet(library: library, selected: merging ?? []) { merged in
+                    merging = nil
+                    library.reload()
+                    if let merged { app.openEditor(merged) }
+                }
+            }
+    }
+
+    @ViewBuilder private var content: some View {
         if library.items.isEmpty {
             VStack(spacing: 10) {
                 Image(systemName: "record.circle")
@@ -99,6 +112,7 @@ private struct LibraryGrid: View {
                             .contextMenu {
                                 Button("Öppna") { app.openEditor(item.bundle) }
                                 Button("Visa i Finder") { library.revealInFinder(item) }
+                                Button("Slå ihop med andra …") { merging = [item.bundle.url] }
                                 Divider()
                                 Button("Flytta till papperskorgen", role: .destructive) { library.moveToTrash(item) }
                             }
@@ -217,6 +231,80 @@ private struct Thumbnail: View {
         } else {
             Rectangle().fill(Color.secondary.opacity(0.15))
                 .overlay(Image(systemName: "film").foregroundStyle(.secondary))
+        }
+    }
+}
+
+/// Slå ihop inspelningar: välj vilka, i tidsordning (äldst först), och få en ny inspelning.
+struct MergeSheet: View {
+    @ObservedObject var library: LibraryModel
+    @State var selected: Set<URL>
+    let done: (RecordingBundle?) -> Void
+    @State private var working = false
+    @State private var error: String?
+
+    private var items: [RecordingLibrary.Item] {
+        library.items.filter { $0.meta?.finished == true }
+            .sorted { ($0.meta?.createdAt ?? .distantPast) < ($1.meta?.createdAt ?? .distantPast) }
+    }
+
+    /// Upplösningarna bland de valda (ihopslagningen kodar inte om, så de måste vara lika).
+    private var sizes: [String] {
+        Set(items.filter { selected.contains($0.bundle.url) }.compactMap { $0.meta.map { "\($0.source.pixelWidth)×\($0.source.pixelHeight)" } }).sorted()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Slå ihop inspelningar").font(.title2.weight(.semibold))
+            Text("De valda läggs efter varandra i tidsordning i en ny inspelning. Originalen rörs inte. Upplösningen måste vara densamma.")
+                .font(.callout).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            List(items) { item in
+                Toggle(isOn: Binding(get: { selected.contains(item.bundle.url) }, set: { on in
+                    if on { selected.insert(item.bundle.url) } else { selected.remove(item.bundle.url) }
+                })) {
+                    HStack {
+                        Text(verbatim: RecordingCard.title(for: item))
+                        Spacer()
+                        if let m = item.meta {
+                            Text(verbatim: "\(m.source.pixelWidth)×\(m.source.pixelHeight)").font(.caption).foregroundStyle(.secondary)
+                            Text(RecordingController.duration(m.duration)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            .frame(height: 280)
+            if let error {
+                Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+            } else if sizes.count > 1 {
+                Label("Olika upplösning (\(sizes.joined(separator: ", "))) — välj inspelningar av samma storlek.",
+                      systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+            }
+            HStack {
+                if working { ProgressView().controlSize(.small); Text("Slår ihop …").foregroundStyle(.secondary) }
+                Spacer()
+                Button("Avbryt", role: .cancel) { done(nil) }.disabled(working)
+                Button("Slå ihop \(selected.count)") { merge() }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(selected.count < 2 || sizes.count > 1 || working)
+            }
+        }
+        .padding(22)
+        .frame(width: 560)
+    }
+
+    private func merge() {
+        let bundles = items.filter { selected.contains($0.bundle.url) }.map(\.bundle)
+        working = true
+        error = nil
+        Task {
+            do {
+                let merged = try await RecordingMerger.merge(bundles, into: library.directory)
+                done(merged)
+            } catch {
+                self.error = error.localizedDescription
+                working = false
+            }
         }
     }
 }

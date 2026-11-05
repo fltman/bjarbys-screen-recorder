@@ -126,6 +126,26 @@ enum TestMode {
                     print(lines.joined(separator: "\n"))
                     code = 0
                 } catch { print(error.localizedDescription); code = 1 }
+            } else if let i = args.firstIndex(of: "--prov-slaihop"), args.count > i + 3 {
+                // Slår ihop paketen (i den givna ordningen) till ett nytt i mappen och mäter resultatet.
+                let bundles = args[(i + 2)...].prefix { !$0.hasPrefix("--") }.map { RecordingBundle(url: URL(fileURLWithPath: $0)) }
+                do {
+                    let merged = try await RecordingMerger.merge(Array(bundles), into: URL(fileURLWithPath: args[i + 1]))
+                    let meta = try merged.readMeta()
+                    var lines = ["paket: \(merged.url.path)", String(format: "längd: %.3f s", meta.duration)]
+                    for t in meta.tracks {
+                        let asset = AVURLAsset(url: merged.url(for: t), options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
+                        let d = (try? await asset.load(.duration))?.seconds ?? -1
+                        let n = (try? await asset.loadTracks(withMediaType: t.kind == .screen || t.kind == .camera ? .video : .audio).count) ?? 0
+                        lines.append(String(format: "  %@ %@: start %.3f, längd %.3f s, %d spår", t.kind.rawValue, t.file, t.start, d, n))
+                    }
+                    let events = merged.readEvents()
+                    lines.append("händelser: \(events.count), första \(events.first.map { String(format: "%.3f", $0.t) } ?? "–"), sista \(events.last.map { String(format: "%.3f", $0.t) } ?? "–")")
+                    lines.append("markörbilder: \(merged.readCursors().entries.count)")
+                    if let tr = merged.readTranscript() { lines.append("ord: \(tr.words.count), sista slutar \(String(format: "%.3f", tr.words.last?.end ?? 0))") }
+                    print(lines.joined(separator: "\n"))
+                    code = 0
+                } catch { print(error.localizedDescription); code = 1 }
             } else if let i = args.firstIndex(of: "--prov-bildfrekvens"), args.count > i + 1 {
                 let fps = args.count > i + 2 ? Int(args[i + 2]) ?? 120 : 120
                 code = await FrameRateTest.run(out: URL(fileURLWithPath: args[i + 1]), fps: fps)
@@ -422,6 +442,8 @@ enum TestMode {
             try await shot("manus", NSSize(width: 560, height: 460), ScriptEditorView(settings: app.settings))
             try await shot("delning", NSSize(width: 520, height: 520), SharingSettingsView())
             try await shot("kortkommandon", NSSize(width: 520, height: 300), HotKeySettingsView())
+            try await shot("sla-ihop", NSSize(width: 560, height: 470),
+                           MergeSheet(library: app.library, selected: Set(app.library.items.prefix(2).map(\.bundle.url))) { _ in })
             let model = EditorModel(recording: try LoadedRecording.load(RecordingBundle(url: bundle)))
             for _ in 0..<40 where model.thumbnails.isEmpty || model.player.currentItem == nil {
                 try await Task.sleep(for: .milliseconds(100))

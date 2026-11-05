@@ -140,6 +140,10 @@ enum MCPServer {
              "inputSchema": schema([:])],
             ["name": "stop_recording", "description": "Stop the recording started with start_recording.",
              "inputSchema": schema([:])],
+            ["name": "merge_recordings",
+             "description": "Join takes into one new recording, one after the other in the given order (no re-encoding). Events, cursors and transcripts follow. The originals are not changed. All must have the same resolution and the same HDR/SDR.",
+             "inputSchema": schema(["recordings": ["type": "array", "items": recordingArg, "minItems": 2]],
+                                   required: ["recordings"])],
             ["name": "transcribe",
              "description": "Transcribe speech locally with whisper.cpp (KB-Whisper for Swedish). Saves transcript.json and returns the text with timestamps.",
              "inputSchema": schema(["recording": recordingArg,
@@ -312,6 +316,13 @@ enum MCPServer {
             active = nil
             let meta = await s.stop()
             return describe(s.bundle, meta: meta)
+        case "merge_recordings":
+            let refs = a["recordings"] as? [String] ?? []
+            guard refs.count >= 2 else { throw ToolError("Give at least two recordings.") }
+            let bundles = try refs.map { try resolve(["recording": $0]).bundle }
+            guard Set(bundles.map(\.url)).count == bundles.count else { throw ToolError("The same recording is given twice.") }
+            let merged = try await RecordingMerger.merge(bundles, into: RecordingLibrary.defaultDirectory)
+            return describe(merged, meta: try merged.readMeta())
         case "transcribe": return try await transcribe(a)
         case "edit_recording": return try await edit(a)
         case "render_frames": return try await renderFrames(a)

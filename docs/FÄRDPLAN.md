@@ -84,6 +84,12 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Slå ihop inspelningar (2026-11-05): Biblioteket › högerklick › Slå ihop med andra … lägger de
+  valda efter varandra i tidsordning i ett nytt paket. Spåren kopieras rakt över (passthrough,
+  ingen omkodning; ett spår som saknas i en tagning blir en lucka), händelserna flyttas i tid och
+  mot den första tagningens ram, varje tagning börjar med en `frame`-händelse, markörbilder och
+  transkript följer med (en ny tagning börjar en ny undertextrad). Samma upplösning och samma
+  HDR/SDR krävs. `RecorderKit/Project/RecordingMerger.swift`; MCP `merge_recordings`.
 - Utsnitt och stillbild (2026-11-05): I och O sätter in- och utpunkt, X tar bort (tonat i
   tidslinjen); exporten kan ta bara utsnittet (alla förval, ljudet tonas 20 ms i kanterna, .srt
   räknad från utsnittets början; MCP `range`). Exportfönstrets Mer › Spara bild vid spelhuvudet

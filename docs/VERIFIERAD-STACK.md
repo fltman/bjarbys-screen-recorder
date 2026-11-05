@@ -306,6 +306,17 @@ växer fram. ⚠️ Först förstorades den råa skärmbilden — en mask hade s
 den maskade (provat med ifylld och pixlad mask: ingen läsbar text i luppen). ⚠️ En svart ruta
 som bakgrund i `CIBlendWithMask` gav svarta hörn runt cirkeln; bakgrunden ska vara `.empty()`.
 
+## Slå ihop inspelningar (2026-11-05)
+
+- `AVMutableComposition` + `AVAssetExportPresetPassthrough` till .mov: tre syntetiska tagningar
+  (2,5 + 1,5 + 3 s, testbild 30 bilder/s, toner 440/660/880 Hz) blev exakt 7,000 s och 210 rutor;
+  tonerna låg där de skulle (438/658/878 Hz uppmätt vid 1,0/3,0/5,5 s). Ett appspår som bara fanns
+  i mittentagningen fick `start_time` 2,5 i filen (tom redigering före), samma konvention som
+  kamerans senare start — kompositionen läser det i inspelningens tid utan omräkning.
+- Luckor läggs in uttryckligen (`insertEmptyTimeRange`), så att varje tagning hamnar på sin
+  plats även när ett spår saknas i en tagning (oprövat utan: vi förlitar oss inte på hur
+  `insertTimeRange` bortom spårets slut beter sig).
+
 ## Utsnitt (2026-11-05)
 
 `--prov-exportera … --utsnitt 1.5,3.0` på en film på 5 s med en 440 Hz-ton: MP4 och ProRes 1,500 s
