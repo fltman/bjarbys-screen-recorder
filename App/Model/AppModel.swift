@@ -48,6 +48,23 @@ final class AppModel: ObservableObject {
     }
 
     private var scriptWindow: NSWindow?
+    private var sharingWindow: NSWindow?
+
+    func showSharingSettings() {
+        if sharingWindow == nil {
+            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 520, height: 520),
+                             styleMask: [.titled, .closable], backing: .buffered, defer: false)
+            w.title = String(localized: "Delning")
+            w.isReleasedWhenClosed = false
+            let host = NSHostingController(rootView: SharingSettingsView())
+            host.sizingOptions = [.preferredContentSize]
+            w.contentViewController = host
+            w.center()
+            sharingWindow = w
+        }
+        NSApp.activate()
+        sharingWindow?.makeKeyAndOrderFront(nil)
+    }
 
     func showScriptEditor() {
         if scriptWindow == nil {

@@ -12,6 +12,8 @@ struct ExportSheet: View {
     @State private var finishedURL: URL?
     @State private var error: String?
     @AppStorage("exportSubtitles") private var subtitles = true
+    @State private var uploading: Double?
+    @State private var sharedURL: URL?
 
     private var preset: ExportPreset { ExportPreset.all.first { $0.id == presetID } ?? ExportPreset.all[0] }
 
@@ -67,6 +69,13 @@ struct ExportSheet: View {
                         .help("En bild per klick och kortkommando, med det du sa som text. Markdown och HTML.")
                 }
                 if let finishedURL {
+                    if let sharedURL {
+                        Text(sharedURL.absoluteString).font(.caption).textSelection(.enabled).lineLimit(1)
+                    } else if let uploading {
+                        ProgressView(value: uploading).frame(width: 120)
+                    } else if SharingStore.isReady {
+                        Button("Ladda upp och kopiera länk") { upload(finishedURL) }
+                    }
                     Button("Visa i Finder") { NSWorkspace.shared.activateFileViewerSelecting([finishedURL]) }
                 }
                 Spacer()
@@ -93,6 +102,18 @@ struct ExportSheet: View {
         if let type = UTType(filenameExtension: preset.fileExtension) { panel.allowedContentTypes = [type] }
         guard panel.runModal() == .OK, let url = panel.url else { return }
         start(url)
+    }
+
+    private func upload(_ file: URL) {
+        uploading = 0
+        Task {
+            do {
+                sharedURL = try await SharingStore.share(file) { p in Task { @MainActor in uploading = p } }
+            } catch {
+                self.error = error.localizedDescription
+            }
+            uploading = nil
+        }
     }
 
     private func makeBugReport() {

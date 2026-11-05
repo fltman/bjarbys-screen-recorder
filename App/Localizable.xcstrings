@@ -307,6 +307,23 @@
         }
       }
     },
+    "Adress": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endpoint"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adress"
+          }
+        }
+      }
+    },
     "Apples röstisolering: brus, fläktar och tangentbord tas bort, rösten blir kvar.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -643,6 +660,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dela vid spelhuvudet (⌘B)"
+          }
+        }
+      }
+    },
+    "Delning": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sharing"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delning"
+          }
+        }
+      }
+    },
+    "Delning …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sharing …"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delning …"
+          }
+        }
+      }
+    },
+    "Delningen är inte inställd (adress, hink, nyckel och publik adress behövs).": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sharing is not set up (endpoint, bucket, key and public address are needed)."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delningen är inte inställd (adress, hink, nyckel och publik adress behövs)."
+          }
+        }
+      }
+    },
+    "Den hemliga nyckeln sparas i nyckelringen. Ge nyckeln rätt att skriva i hinken och inget annat.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The secret key is stored in the keychain. Give the key permission to write to the bucket and nothing else."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den hemliga nyckeln sparas i nyckelringen. Ge nyckeln rätt att skriva i hinken och inget annat."
           }
         }
       }
@@ -1463,6 +1548,40 @@
         }
       }
     },
+    "Hemlig nyckel": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Secret key"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hemlig nyckel"
+          }
+        }
+      }
+    },
+    "Hink": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bucket"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hink"
+          }
+        }
+      }
+    },
     "Hittar inte whisper.cpp. Välj mappen med build/bin/whisper-cli och models/.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2177,6 +2296,40 @@
         }
       }
     },
+    "Ladda upp exporterade filmer till din egen S3-kompatibla lagring (Cloudflare R2, AWS S3, MinIO, Backblaze B2) och få en länk i urklipp.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upload exported videos to your own S3-compatible storage (Cloudflare R2, AWS S3, MinIO, Backblaze B2) and get a link on the clipboard."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ladda upp exporterade filmer till din egen S3-kompatibla lagring (Cloudflare R2, AWS S3, MinIO, Backblaze B2) och få en länk i urklipp."
+          }
+        }
+      }
+    },
+    "Ladda upp och kopiera länk": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upload and copy link"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ladda upp och kopiera länk"
+          }
+        }
+      }
+    },
     "Ljud": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2258,6 +2411,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Manus …"
+          }
+        }
+      }
+    },
+    "Mapp i hinken": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder in the bucket"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mapp i hinken"
           }
         }
       }
@@ -2585,6 +2755,23 @@
         }
       }
     },
+    "Nyckel-id": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access key ID"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nyckel-id"
+          }
+        }
+      }
+    },
     "Nycklar och lösenord": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2802,6 +2989,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Program"
+          }
+        }
+      }
+    },
+    "Publik adress": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Public address"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publik adress"
+          }
+        }
+      }
+    },
+    "Region": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Region"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Region"
           }
         }
       }
@@ -3176,6 +3397,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sparar …"
+          }
+        }
+      }
+    },
+    "Sparat": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sparat"
           }
         }
       }
@@ -4026,6 +4264,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Uppe till vänster"
+          }
+        }
+      }
+    },
+    "Uppladdningen misslyckades (%lld): %@": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The upload failed (%lld): %@"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uppladdningen misslyckades (%lld): %@"
           }
         }
       }

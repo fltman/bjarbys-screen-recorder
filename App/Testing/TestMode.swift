@@ -81,6 +81,16 @@ enum TestMode {
                 }
                 print(#"{"fil":"\#(args[i + 1])"}"#)
                 code = 0
+            } else if let i = args.firstIndex(of: "--prov-uppladdning"), args.count > i + 2 {
+                // Mot en lokal provserver med påhittade provnycklar — aldrig riktiga.
+                let config = S3Config(endpoint: args[i + 2], bucket: "provhink", region: "auto", accessKeyID: "PROVNYCKEL",
+                                      publicBaseURL: "https://media.exempel.test", prefix: "prov")
+                do {
+                    let link = try await S3Uploader.upload(URL(fileURLWithPath: args[i + 1]), config: config, secret: "provhemlighet")
+                    print(#"{"lank":"\#(link.absoluteString)"}"#); code = 0
+                } catch {
+                    print(#"{"fel":"\#(error.localizedDescription)"}"#); code = 1
+                }
             } else if let i = args.firstIndex(of: "--prov-ljudstyrka"), args.count > i + 1 {
                 let m = try? await Loudness.measure(AVURLAsset(url: URL(fileURLWithPath: args[i + 1])))
                 print(m.map { String(format: #"{"lufs":%.2f,"topp_dbfs":%.2f,"forstarkning_db":%.2f}"#, $0.integrated,

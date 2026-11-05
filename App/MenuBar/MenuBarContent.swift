@@ -60,6 +60,7 @@ struct MenuBarContent: View {
         }
         Divider()
         Button("Bibliotek …") { app.showLibrary() }
+        Button("Delning …") { app.showSharingSettings() }
         Button("Behörigheter …") { app.showPermissions() }
         Divider()
         Button("Avsluta Bjarbys skärminspelare") { NSApplication.shared.terminate(nil) }

@@ -77,6 +77,10 @@ is included; to have the app follow your system language instead, run
 - A URL scheme (`skarminspelare://spela-in`, `…/stoppa`, `…/paus`, `…/oppna?sokvag=…`) and
   Shortcuts actions for the app itself.
 
+**Sharing:** upload an export to your own S3-compatible bucket (Cloudflare R2, AWS S3, MinIO,
+Backblaze B2) and get the public link on the clipboard. No service in between; the secret key
+lives in the keychain.
+
 **Export:** MP4 (H.264, 1080p), MP4 (HEVC, 4K), ProRes 422, ProRes 4444 with a transparent
 background (to put the polished screen on top of something else in your editor) and GIF.
 

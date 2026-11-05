@@ -183,7 +183,8 @@ enum MCPServer {
              "inputSchema": schema(["recording": recordingArg,
                                     "preset": ["type": "string", "enum": ExportPreset.all.map(\.id)],
                                     "path": ["type": "string", "description": "Output file (default: ~/Movies/<name>.<ext>)."],
-                                    "subtitles": ["type": "boolean", "description": "Also write an .srt next to the video (default true if transcribed)."]],
+                                    "subtitles": ["type": "boolean", "description": "Also write an .srt next to the video (default true if transcribed)."],
+                                    "upload": ["type": "boolean", "description": "Upload to the S3/R2 bucket set up under Sharing in the app and return the public link."]],
                                    required: ["recording"])],
         ]
     }
@@ -497,6 +498,13 @@ enum MCPServer {
             let srt = url.deletingPathExtension().appendingPathExtension("srt")
             try Captions(words: words, timeMap: TimeMap(segments: project.segments)).srt.write(to: srt, atomically: true, encoding: .utf8)
             text += "\nSubtitles: \(srt.path)"
+        }
+        if a["upload"] as? Bool == true {
+            guard SharingStore.isReady else {
+                throw ToolError(text + "\nNot uploaded: sharing is not set up (Sharing … in the app's menu).")
+            }
+            let link = try await SharingStore.share(url)
+            text += "\nLink (copied to the clipboard): \(link.absoluteString)"
         }
         return text
     }

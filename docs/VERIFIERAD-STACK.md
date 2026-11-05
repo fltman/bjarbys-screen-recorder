@@ -206,3 +206,13 @@ Via MCP på ett provpaket (källa: fönster «Finder», ett klick med elementnam
 rapport med "Program: Finder 26.1 (1828.1.8)", "macOS 26.1.0, Mac17,2", två steg med tid och
 tal, film 0,57 MB, guide, 42 rader `log show` för Finder, zip 1,1 MB (`ditto -c -k --keepParent`).
 `log show` utan admin fungerar; privata fält är redigerade av macOS.
+
+## Delning till S3/R2 (2026-11-05)
+
+- SigV4 kontrollerad mot AWS publicerade exempel: IAM ListUsers (signeringsnyckel
+  c4afb1cc…, kanonisk begäran f536975d…, signatur 5d672d79…) och S3 GET Object (signatur
+  f0e8bdb8…). ⚠️ S3-dokumentationens exempelnyckel är `…MDENG/bPxR…`, IAM-exemplets `…MDENG+bPxR…`;
+  med fel nyckel blir signaturen fel fast koden är rätt.
+- Uppladdning mot en lokal PUT-server med påhittade provnycklar: sökvägsstil
+  `/hink/prefix/ÅÅÅÅ-MM-DD-namn-slump.mp4` (å→a), hela kroppen (300 000 byte), `UNSIGNED-PAYLOAD`,
+  publik länk tillbaka. Inte provat mot riktig R2/S3 (kräver användarens nycklar).
