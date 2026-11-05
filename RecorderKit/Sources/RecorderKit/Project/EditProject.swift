@@ -181,9 +181,10 @@ public struct EditProject: Codable, Equatable, Sendable {
         /// Skapad automatiskt. Ändrar användaren den blir den manuell och överlever när de
         /// automatiska skapas om.
         public var isAuto: Bool
-        /// Kameran zoomar, eller en lupp följer markören medan kameran står still.
+        /// Kameran zoomar, en lupp följer markören, eller en strålkastare dämpar allt utom området
+        /// runt markören — i de två senare står kameran still.
         public var style: Style
-        public enum Style: String, Codable, Sendable, CaseIterable { case camera, lens }
+        public enum Style: String, Codable, Sendable, CaseIterable { case camera, lens, spotlight }
 
         public init(id: UUID = UUID(), start: Double, end: Double, scale: Double,
                     centerX: Double, centerY: Double, followsCursor: Bool = true, isAuto: Bool = false, style: Style = .camera) {

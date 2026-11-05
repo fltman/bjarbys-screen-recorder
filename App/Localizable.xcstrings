@@ -2925,6 +2925,23 @@
         }
       }
     },
+    "Kameran zoomar in, ett förstoringsglas följer markören, eller allt utom området runt markören dämpas.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The camera zooms in, a magnifier follows the cursor, or everything but the area around the cursor is dimmed."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kameran zoomar in, ett förstoringsglas följer markören, eller allt utom området runt markören dämpas."
+          }
+        }
+      }
+    },
     "Kapitel": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -5386,6 +5403,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Storlek"
+          }
+        }
+      }
+    },
+    "Strålkastare": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spotlight"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strålkastare"
           }
         }
       }

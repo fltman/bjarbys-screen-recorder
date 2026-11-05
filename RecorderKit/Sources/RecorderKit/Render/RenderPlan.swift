@@ -289,7 +289,8 @@ public final class RenderPlan: @unchecked Sendable {
             ])
         }
 
-        // Luppen: under markören, ovanpå skärmen.
+        // Strålkastaren och luppen: under markören, ovanpå skärmen.
+        if let spot = spotlight(at: s) { layer = spot.composited(over: layer) }
         if let maskedScreen, let lens = lens(at: s, placed: maskedScreen) { layer = lens.composited(over: layer) }
 
         // Markören och klicken ritas i skärmytan och zoomar med innehållet.
@@ -858,6 +859,25 @@ public final class RenderPlan: @unchecked Sendable {
                                       color: CIColor(red: 0, green: 0, blue: 0, alpha: 0.45))
             .applyingGaussianBlur(sigma: radius * 0.12).cropped(to: disk.insetBy(dx: -radius * 0.5, dy: -radius * 0.5))
         return glass.composited(over: rim).composited(over: shadow)
+    }
+
+    /// Strålkastaren: skärmytan dämpas (55 % svart) utom en mjuk cirkel kring markören (22 % av
+    /// skärmhöjden). Tonas in och ut i blockets ändar.
+    func spotlight(at s: Double) -> CIImage? {
+        guard cursorPath.hasData,
+              let z = project.zooms.first(where: { $0.style == .spotlight && s >= $0.start - Self.lensRamp && s <= $0.end + Self.lensRamp })
+        else { return nil }
+        let k = Self.easeOut(min(1, max(0, (s - (z.start - Self.lensRamp)) / Self.lensRamp), max(0, ((z.end + Self.lensRamp) - s) / Self.lensRamp)))
+        guard k > 0.01 else { return nil }
+        let c = point(cursorPath.position(at: s))
+        let r = screenRect.height * 0.22
+        let dim = CIFilter.radialGradient()
+        dim.center = c
+        dim.radius0 = Float(r * 0.85)
+        dim.radius1 = Float(r * 1.25)
+        dim.color0 = CIColor(red: 0, green: 0, blue: 0, alpha: 0)
+        dim.color1 = CIColor(red: 0, green: 0, blue: 0, alpha: 0.55 * k)
+        return dim.outputImage?.cropped(to: screenRect)
     }
 
     // MARK: - Kameralayout per del

@@ -25,6 +25,21 @@ struct TimelineView: View {
     }
     /// Var pekaren är medan en del flyttas (för spöket och insättningsmärket).
     @State private var moveX: CGFloat = 0
+    /// Var en dragen kant fäste, för den gula linjen.
+    @State private var snapX: CGFloat?
+
+    /// Fäster en utdatatid mot spelhuvudet, in- och utpunkterna, snitten mellan delar och filmens
+    /// ändar när den är inom 6 px. ⌘ stänger av.
+    private func snapped(_ time: Double, pps: Double) -> Double {
+        guard !NSEvent.modifierFlags.contains(.command) else { snapX = nil; return time }
+        var candidates = [0, model.duration, model.currentTime]
+        candidates += [model.markIn, model.markOut].compactMap { $0 }
+        for p in model.editTimeMap.pieces { candidates += [p.outputStart, p.outputEnd] }
+        let best = candidates.min { abs($0 - time) < abs($1 - time) } ?? time
+        if abs(best - time) * pps <= 6 { snapX = x(best, pps); return best }
+        snapX = nil
+        return time
+    }
     @State private var moveStartX: CGFloat = 0
 
     /// Platsen bland de andra delarna där den flyttade delen hamnar, och märkets x.
@@ -244,17 +259,23 @@ struct TimelineView: View {
             ctx.fill(Path(CGRect(x: target.x - 1.5, y: clipY - 4, width: 3, height: clipH + 8)), with: .color(.accentColor))
         }
 
+        // Fästlinjen medan något dras.
+        if let snapX {
+            ctx.fill(Path(CGRect(x: snapX - 0.75, y: 0, width: 1.5, height: size.height)), with: .color(.yellow))
+        }
+
         // Zoomblock.
         for zoom in model.project.zooms {
             guard let r = outputRange(of: zoom) else { continue }
             let rect = CGRect(x: x(r.lowerBound, pps), y: zoomY, width: max(6, CGFloat((r.upperBound - r.lowerBound) * pps)), height: zoomH)
             let shape = RoundedRectangle(cornerRadius: 6).path(in: rect)
-            let base: Color = zoom.style == .lens ? .teal : (zoom.isAuto ? .purple : .orange)
+            let base: Color = zoom.style == .lens ? .teal : (zoom.style == .spotlight ? .yellow : (zoom.isAuto ? .purple : .orange))
             let selected = zoom.id == model.selectedZoomID
             ctx.fill(shape, with: .color(base.opacity(selected ? 0.55 : 0.32)))
             ctx.stroke(shape, with: .color(base.opacity(selected ? 1 : 0.7)), lineWidth: selected ? 2 : 1)
             if rect.width > 44 {
-                let label = zoom.style == .lens ? AppLocale.format("◎ %.1f×", zoom.scale) : AppLocale.format("%.1f×", zoom.scale)
+                let label = zoom.style == .lens ? AppLocale.format("◎ %.1f×", zoom.scale)
+                    : (zoom.style == .spotlight ? "☀︎" : AppLocale.format("%.1f×", zoom.scale))
                 ctx.draw(Text(label).font(.caption.weight(.semibold)), at: CGPoint(x: rect.midX, y: rect.midY))
             }
             if selected {
@@ -533,7 +554,7 @@ struct TimelineView: View {
         case .scrub, .none:
             model.scrub(to: t(value.location.x, pps))
         case let .move(id, start, end, outStart):
-            let newOut = max(0, outStart + Double(value.translation.width) / pps)
+            let newOut = max(0, snapped(outStart + Double(value.translation.width) / pps, pps: pps))
             let newStart = map.source(at: newOut)
             let length = end - start
             model.updateZoom(id) { z in
@@ -541,17 +562,18 @@ struct TimelineView: View {
                 z.end = z.start + length
             }
         case let .resizeStart(id):
-            let s = map.source(at: t(value.location.x, pps))
+            let s = map.source(at: snapped(t(value.location.x, pps), pps: pps))
             model.updateZoom(id) { $0.start = s }
         case let .resizeEnd(id):
-            let s = map.source(at: t(value.location.x, pps))
+            let s = map.source(at: snapped(t(value.location.x, pps), pps: pps))
             model.updateZoom(id) { $0.end = s }
         case let .moveOverlay(id, outStart):
-            let newOut = max(0, min(model.duration - 0.2, outStart + Double(value.translation.width) / pps))
+            let newOut = max(0, min(model.duration - 0.2, snapped(outStart + Double(value.translation.width) / pps, pps: pps)))
             model.updateOverlay(id) { $0.at = map.source(at: newOut) }
         case let .resizeOverlay(id, duration):
-            let d = max(0.5, duration + Double(value.translation.width) / pps)
-            model.updateOverlay(id) { $0.duration = d }
+            let start = model.project.overlays.first { $0.id == id }.flatMap { map.output(at: $0.at) } ?? 0
+            let end = snapped(start + duration + Double(value.translation.width) / pps, pps: pps)
+            model.updateOverlay(id) { $0.duration = max(0.5, end - start) }
         case .moveSegment:
             moveX = value.location.x
         case let .trimStart(id, start, speed):
@@ -569,6 +591,7 @@ struct TimelineView: View {
     /// När en del trimmats: spelhuvudet till den nya kanten, så att den första (eller sista)
     /// bilden syns.
     private func dragEnded() {
+        snapX = nil
         if case let .moveSegment(id, _) = drag {
             // Ett klick utan dragning spolar dit, som i resten av tidslinjen.
             if abs(moveX - moveStartX) < 3 {

@@ -73,7 +73,7 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 | Fält | Betydelse |
 |---|---|
 | `segments[]` | delarna som är med, i ordning: `start`, `end`, `speed`, `transitionIn` (övergången in i delen; saknas = projektets), `cameraLayout` (`bubble`, `large`, `split`, `hidden`; saknas = projektets) |
-| `zooms[]` | `start`, `end`, `scale`, `centerX`/`centerY` (0–1), `followsCursor`, `isAuto`, `style` (`camera` = kameran zoomar, `lens` = en lupp följer markören) |
+| `zooms[]` | `start`, `end`, `scale`, `centerX`/`centerY` (0–1), `followsCursor`, `isAuto`, `style` (`camera` = kameran zoomar, `lens` = en lupp följer markören, `spotlight` = allt utom området runt markören dämpas) |
 | `autoZoom`, `zoomScale` | föreslå zoomar ur klicken, och hur mycket |
 | `background` | `kind` (`gradient`, `solid`, `blur`), `colorA`, `colorB`, `angle` |
 | `padding`, `cornerRadius`, `shadow` | ram runt skärmen, andelar |

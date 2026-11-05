@@ -110,11 +110,14 @@ struct InspectorView: View {
             Picker("Sort", selection: Binding(get: { zoom.style }, set: { v in model.updateZoom(zoom.id) { $0.style = v } })) {
                 Text("Kamera").tag(EditProject.ZoomSegment.Style.camera)
                 Text("Lupp").tag(EditProject.ZoomSegment.Style.lens)
+                Text("Strålkastare").tag(EditProject.ZoomSegment.Style.spotlight)
             }
             .pickerStyle(.segmented)
-            .help("Kameran zoomar in, eller ett förstoringsglas följer markören medan bilden står still.")
-            LabeledSlider("Förstoring", value: Binding(get: { zoom.scale }, set: { v in model.updateZoom(zoom.id) { $0.scale = v } }),
-                          range: 1.1...5, format: "%.1f×")
+            .help("Kameran zoomar in, ett förstoringsglas följer markören, eller allt utom området runt markören dämpas.")
+            if zoom.style != .spotlight {
+                LabeledSlider("Förstoring", value: Binding(get: { zoom.scale }, set: { v in model.updateZoom(zoom.id) { $0.scale = v } }),
+                              range: 1.1...5, format: "%.1f×")
+            }
             if zoom.style == .camera {
                 Toggle("Följ markören", isOn: Binding(get: { zoom.followsCursor },
                                                       set: { v in model.updateZoom(zoom.id) { $0.followsCursor = v } }))

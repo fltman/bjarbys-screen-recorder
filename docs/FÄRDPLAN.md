@@ -69,6 +69,9 @@ tagning, sedan redigerbar polish, sedan resten.
 
 - Kortkommandon i filmen (2026-11-05): bubbla nere eller uppe i mitten, räknar upp
   upprepningar ("⌘Z ×3"), visas i utdatatid så att 4×-delar inte blinkar förbi.
+- Strålkastare och fästpunkter (2026-11-05): zoomblockets tredje sort dämpar skärmytan (55 %)
+  utom en mjuk cirkel kring markören. Zoomblock och lager som dras i tidslinjen fäster (6 px)
+  mot spelhuvudet, I/O, snitten och filmens ändar, med en gul linje; ⌘ stänger av.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
