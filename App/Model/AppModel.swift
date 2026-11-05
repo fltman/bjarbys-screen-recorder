@@ -26,6 +26,8 @@ final class AppModel: ObservableObject {
             PluginStore.shared.fire(Plugins.recordingFinished, payload: ["recording": bundle.url.path])
         }
         recorder.onNeedsPermissions = { [weak self] in self?.showPermissions() }
+        // Exportfönstret frågar om ffmpeg har en AV1-kodare: ta reda på det i bakgrunden direkt.
+        FFmpeg.warmUp()
     }
 
     func showLibrary() {

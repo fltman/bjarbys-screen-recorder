@@ -1482,33 +1482,45 @@ public final class RenderPlan: @unchecked Sendable {
                             look: EditProject.CaptionStyle.Look = .box) -> CIImage {
         let outline = look == .outline
         // Utan platta: lite större och fetare, så att konturen bär texten.
-        let fontSize = (captionFontSize(canvas: canvas, size: size) * (outline ? 1.15 : 1)).rounded()
-        let font = NSFont.systemFont(ofSize: fontSize, weight: outline ? .heavy : .semibold)
-        var wordIndex = 0
-        let lines = text.split(separator: "\n").map { line -> CTLine in
-            let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: CGColor(red: 1, green: 1, blue: 1, alpha: 1)]
-            let attributed = NSMutableAttributedString(string: String(line), attributes: attributes)
-            // Orden på raden, i ordning; det markerade får egen färg.
-            let ns = String(line) as NSString
-            var location = 0
-            for word in String(line).split(separator: " ", omittingEmptySubsequences: true) {
-                let r = ns.range(of: String(word), range: NSRange(location: location, length: ns.length - location))
-                if r.location != NSNotFound {
-                    if wordIndex == highlight { attributed.addAttribute(.foregroundColor, value: captionHighlight, range: r) }
-                    location = r.location + r.length
+        var fontSize = (captionFontSize(canvas: canvas, size: size) * (outline ? 1.15 : 1)).rounded()
+        func layout(_ fontSize: CGFloat) -> (font: NSFont, lines: [CTLine], stroke: [CTLine], widths: [CGFloat]) {
+            let font = NSFont.systemFont(ofSize: fontSize, weight: outline ? .heavy : .semibold)
+            var wordIndex = 0
+            let lines = text.split(separator: "\n").map { line -> CTLine in
+                let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: CGColor(red: 1, green: 1, blue: 1, alpha: 1)]
+                let attributed = NSMutableAttributedString(string: String(line), attributes: attributes)
+                // Orden på raden, i ordning; det markerade får egen färg.
+                let ns = String(line) as NSString
+                var location = 0
+                for word in String(line).split(separator: " ", omittingEmptySubsequences: true) {
+                    let r = ns.range(of: String(word), range: NSRange(location: location, length: ns.length - location))
+                    if r.location != NSNotFound {
+                        if wordIndex == highlight { attributed.addAttribute(.foregroundColor, value: captionHighlight, range: r) }
+                        location = r.location + r.length
+                    }
+                    wordIndex += 1
                 }
-                wordIndex += 1
+                return CTLineCreateWithAttributedString(attributed)
             }
-            return CTLineCreateWithAttributedString(attributed)
+            // Konturen ritas för sig, under fyllningen: SF har överlappande konturer i glyferna, och
+            // fyllning + kontur i ett pass gav synliga inre streck (i en "2:a").
+            let stroke: [CTLine] = outline ? text.split(separator: "\n").map { line in
+                CTLineCreateWithAttributedString(NSAttributedString(string: String(line), attributes: [
+                    .font: font, .strokeColor: CGColor(red: 0, green: 0, blue: 0, alpha: 1), .strokeWidth: 18]))
+            } : []
+            return (font, lines, stroke, lines.map { CTLineGetBoundsWithOptions($0, .useOpticalBounds).width })
         }
+        var laid = layout(fontSize)
+        // En rad är högst 42 tecken, men i smal bild (1:1, 9:16) blir det bredare än bilden —
+        // uppmätt: konturtext vid 100 % klipptes i båda kanterna. Då krymper texten tills den ryms.
+        let room = canvas.width * 0.9 - 2 * (fontSize * (outline ? 0.3 : 0.6)).rounded()
+        if let widest = laid.widths.max(), widest > room, room > 0 {
+            fontSize = (fontSize * room / widest).rounded(.down)
+            laid = layout(fontSize)
+        }
+        let font = laid.font, lines = laid.lines, strokeLines = laid.stroke, widths = laid.widths
+        _ = font
         guard !lines.isEmpty else { return CIImage.empty() }
-        // Konturen ritas för sig, under fyllningen: SF har överlappande konturer i glyferna, och
-        // fyllning + kontur i ett pass gav synliga inre streck (i en "2:a").
-        let strokeLines: [CTLine] = outline ? text.split(separator: "\n").map { line in
-            CTLineCreateWithAttributedString(NSAttributedString(string: String(line), attributes: [
-                .font: font, .strokeColor: CGColor(red: 0, green: 0, blue: 0, alpha: 1), .strokeWidth: 18]))
-        } : []
-        let widths = lines.map { CTLineGetBoundsWithOptions($0, .useOpticalBounds).width }
         let lineHeight = (fontSize * 1.28).rounded()
         let padX = (fontSize * (outline ? 0.3 : 0.6)).rounded(), padY = (fontSize * (outline ? 0.12 : 0.38)).rounded()
         let width = (min(widths.max() ?? 0, canvas.width * 0.9) + padX * 2).rounded(.up)

@@ -572,8 +572,10 @@ struct InspectorView: View {
             let dead = canFind ? model.deadTime(minimum: deadMinimum) : []
             let total = dead.map { $0.upperBound - $0.lowerBound }.reduce(0, +)
             HStack {
-                Button(dead.isEmpty ? String(localized: "Ingen dödtid") :
-                        String(localized: "Klipp bort \(dead.count) pauser (\(AppLocale.format("%.1f", total)) s)")) {
+                let seconds = AppLocale.format("%.1f", total)
+                Button(dead.isEmpty ? String(localized: "Ingen dödtid")
+                       : dead.count == 1 ? String(localized: "Klipp bort 1 paus (\(seconds) s)")
+                       : String(localized: "Klipp bort \(dead.count) pauser (\(seconds) s)")) {
                     model.removeDeadTime(minimum: deadMinimum)
                 }
                 .disabled(dead.isEmpty)

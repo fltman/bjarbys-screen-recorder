@@ -14,10 +14,19 @@ public enum FFmpeg {
         return nil
     }()
 
+    /// Tar reda på ffmpeg och dess AV1-kodare i bakgrunden, så att exportfönstret inte väntar.
+    public static func warmUp() {
+        DispatchQueue.global(qos: .utility).async { _ = av1Encoder }
+    }
+
     /// AV1-kodarna i den ordning de föredras (snabbast först).
     static let av1Preference = ["libsvtav1", "librav1e", "libaom-av1"]
 
     /// Den bästa AV1-kodaren ffmpeg har, eller nil (ingen ffmpeg, eller ingen AV1-kodare i den).
+    /// Väntar med en semafor, inte `waitUntilExit()`: den snurrar körslingan, och på huvudtråden
+    /// hann SwiftUI då rita om exportfönstret och fråga efter värdet igen mitt i initieringen
+    /// (krasch i `dispatch_once`, 5 av 7 gånger i `--prov-vyer`). Appen frågar redan vid start,
+    /// i bakgrunden (`warmUp`).
     public static let av1Encoder: String? = {
         guard let executable else { return nil }
         let p = Process()
@@ -26,9 +35,11 @@ public enum FFmpeg {
         let out = Pipe()
         p.standardOutput = out
         p.standardError = FileHandle.nullDevice
+        let done = DispatchSemaphore(value: 0)
+        p.terminationHandler = { _ in done.signal() }
         guard (try? p.run()) != nil else { return nil }
         let data = out.fileHandleForReading.readDataToEndOfFile()
-        p.waitUntilExit()
+        done.wait()
         let text = String(decoding: data, as: UTF8.self)
         let names = Set(text.split(separator: "\n").compactMap { line -> String? in
             let cols = line.split(separator: " ", omittingEmptySubsequences: true)

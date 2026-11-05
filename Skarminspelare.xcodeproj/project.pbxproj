@@ -68,6 +68,7 @@
 				AA0000000000000000000040 /* Sources */,
 				AA0000000000000000000041 /* Frameworks */,
 				AA0000000000000000000042 /* Resources */,
+				AA00000000000000000000F0 /* Whisper-verktygen */,
 			);
 			buildRules = (
 			);
@@ -131,6 +132,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		AA00000000000000000000F0 /* Whisper-verktygen */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Whisper-verktygen";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "# whisper.cpp:s verktyg (scripts/build-whisper.sh) följer med appen i Contents/Helpers,\n# signerade med hardened runtime (och säker tidsstämpel i ett arkiv, för notariseringen).\nHJALP=\"$SRCROOT/build/whisper-static\"\nUT=\"$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Helpers\"\nif [ ! -x \"$HJALP/bin/whisper-cli\" ] || [ ! -x \"$HJALP/bin/vad-speech-segments\" ]; then\n    echo \"warning: whisper-verktygen saknas (scripts/build-whisper.sh) - appen byggs utan dem\"\n    exit 0\nfi\nmkdir -p \"$UT\" \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/Licenses\"\ncp -f \"$HJALP/bin/whisper-cli\" \"$HJALP/bin/vad-speech-segments\" \"$UT/\"\ncp -f \"$HJALP/LICENSE\" \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/Licenses/whisper.cpp-LICENSE.txt\"\nTS=\"--timestamp=none\"\nif [ \"$ACTION\" = \"install\" ]; then TS=\"--timestamp\"; fi\nfor h in \"$UT/whisper-cli\" \"$UT/vad-speech-segments\"; do\n    codesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY:--}\" --options runtime $TS \"$h\"\ndone\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		AA0000000000000000000040 /* Sources */ = {
@@ -198,6 +221,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = V783A2L763;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Config/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -226,6 +250,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = V783A2L763;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Config/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

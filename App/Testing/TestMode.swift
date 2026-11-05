@@ -586,6 +586,15 @@ enum TestMode {
 
     /// Ritar appens fönster och paneler utanför skärmen, för att granska utseendet.
     static func viewSnapshots(out: URL, bundle: URL, time: Double? = nil, allDark: Bool = false) async -> Int32 {
+        // Vyerna ändrar inspektörens flik (en ny mask väljer Dölj, flikbilderna går igenom alla):
+        // användarens eget val sparas här och återställs efteråt.
+        let chosenTab = UserDefaults.standard.object(forKey: "inspectorTab")
+        defer {
+            if let chosenTab { UserDefaults.standard.set(chosenTab, forKey: "inspectorTab") }
+            else { UserDefaults.standard.removeObject(forKey: "inspectorTab") }
+            // Provläget avslutas direkt efteråt: skriv innan processen tar slut.
+            UserDefaults.standard.synchronize()
+        }
         do {
             try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
             func shot<V: View>(_ name: String, _ size: NSSize, _ view: V, dark: Bool = false) async throws {
@@ -648,7 +657,6 @@ enum TestMode {
                 UserDefaults.standard.set(tab.rawValue, forKey: "inspectorTab")
                 try await shot("inspektor-\(tab.rawValue)", NSSize(width: 310, height: 860), InspectorView(model: model))
             }
-            UserDefaults.standard.set(InspectorView.Tab.style.rawValue, forKey: "inspectorTab")
             model.markIn = min(1, model.duration * 0.25); model.markOut = min(3, model.duration * 0.75)
             try await shot("export", NSSize(width: 560, height: 720), ExportSheet(model: model))
             try await shot("export-flera", NSSize(width: 560, height: 760), ExportSheet(model: model, extra: ["mp4-4k", "ljud-m4a"]))

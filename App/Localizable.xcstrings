@@ -4285,6 +4285,23 @@
         }
       }
     },
+    "Klipp bort 1 paus (%@ s)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cut 1 pause (%@ s)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klipp bort 1 paus (%@ s)"
+          }
+        }
+      }
+    },
     "Klipp bort de markerade orden ur filmen (⌫)": {
       "extractionState": "extracted_with_value",
       "localizations": {
