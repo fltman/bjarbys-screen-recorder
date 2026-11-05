@@ -27,6 +27,27 @@ import Foundation
         #expect(decoded?.displays.isEmpty == true)
     }
 
+    @Test func aSmallerDisplayGetsAZoomThatFillsTheFrame() {
+        var m = meta(); m.duration = 6
+        // Markören i A (0–2 s), sedan i B (2,5–6 s).
+        var events: [InputEvent] = []
+        for i in 0..<120 {
+            let t = Double(i) * 0.05
+            events.append(InputEvent(t: t, k: .move, x: t < 2.2 ? 300 : 1300, y: 280))
+        }
+        let mapping = ContentMapping(meta: m, events: events)
+        let cursor = CursorPath(events: events, mapping: mapping, duration: 6, style: .init())
+        // 16:9 som fyller: höjden styr, 60 % av bredden syns.
+        let zooms = RenderPlan.displayZooms(meta: m, cursor: cursor, visible: CGSize(width: 0.6, height: 1), avoiding: [])
+        #expect(zooms.count == 1)
+        let z = zooms[0]
+        #expect(abs(z.scale - 1.5) < 1e-9 && abs(z.centerX - 0.8) < 1e-9 && abs(z.centerY - 280.0 / 540) < 1e-9)
+        #expect(z.start > 1.8 && z.start < 2.6 && z.end > 5.8)
+        // En egen zoom samtidigt går före.
+        #expect(RenderPlan.displayZooms(meta: m, cursor: cursor, visible: CGSize(width: 0.6, height: 1),
+                                        avoiding: [.init(start: 3, end: 4, scale: 2, centerX: 0.5, centerY: 0.5)]).isEmpty)
+    }
+
     @Test func theCursorIsNormalizedOnTheWholeDesktop() {
         let mapping = ContentMapping(meta: meta(), events: [])
         let p = mapping.normalize(CGPoint(x: 1280, y: 280), at: 0)  // mitt i B

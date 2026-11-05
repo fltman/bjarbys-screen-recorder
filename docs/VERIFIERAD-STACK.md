@@ -319,6 +319,8 @@ som bakgrund i `CIBlendWithMask` gav svarta hörn runt cirkeln; bakgrunden ska v
 - Påhittat paket (A 960×540 pt + B 640×360 pt till höger, 100 pt ned): skrivbordet 3200×1080 px
   med skärmarna rätt placerade; i 16:9 med "fyll och följ" visar bilden A, står kvar inom
   säkerhetszonen och glider över till B när markören går dit (mitt 0,30 → 0,70).
+- Med zoom per skärm: när markören står på B (640×360 pt) zoomar bilden 1,5× mitt på B, som då
+  fyller 16:9-rutan; A (960×540, lika hög som skrivbordet) visas utan zoom.
 - ⚠️ −12780 igen: extraskärmarnas `AVURLAsset` skapades i en beräknad egenskap och släpptes
   medan kompositionen använde dem. De läses nu en gång och hålls i `LoadedRecording`.
 

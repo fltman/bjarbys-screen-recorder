@@ -104,7 +104,9 @@ tagning, sedan redigerbar polish, sedan resten.
   klocka; `meta.displays` och `source` = det virtuella skrivbordet. I renderingen läggs skärmarna
   ihop på sina platser (spår 700+ i kompositionen) innan allt annat — markör, klick, zoom, pennan
   och masker räknar redan i globala punkter. Nya projekt: 16:9 som fyller och följer markören,
-  dvs en skärm i taget med glidning över gränsen. Ihopslagning av sådana paket vägras än.
+  dvs en skärm i taget med glidning över gränsen. Står markören minst 0,8 s på en skärm som är
+  mindre än bildfönstret zoomar kameran så att den skärmen fyller bilden (räknas i renderplanen,
+  sparas inte; egna zoomar går före). Ihopslagning av sådana paket vägras än.
   ⚠️ Inspelningen med flera skärmar är inte provad live (datorn har en skärm); renderingen är
   provad med ett påhittat paket med två skärmar.
 - Insticksprogram (2026-11-05): mappar med `plugin.json` och ett körbart program i

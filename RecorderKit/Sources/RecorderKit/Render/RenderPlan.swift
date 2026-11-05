@@ -175,8 +175,11 @@ public final class RenderPlan: @unchecked Sendable {
         screenRect = CGRect(x: ((canvas.width - w) / 2).rounded(), y: top, width: w, height: h)
         frameRect = CGRect(x: screenRect.minX, y: screenRect.minY, width: w, height: h + bar)
         let visible = CGSize(width: min(1, canvas.width / w), height: min(1, canvas.height / h))
-        // Luppar zoomar inte kameran; de ritas för sig (`lens`).
-        self.cameraPath = cameraPath ?? CameraPath(zooms: project.zooms.filter { $0.style == .camera }, cursor: cursorPath, duration: meta.duration,
+        // Luppar zoomar inte kameran; de ritas för sig (`lens`). Flera skärmar som följs: en zoom
+        // per skärm markören står på, så att den skärmen fyller bilden (räknas här, sparas inte).
+        let manual = project.zooms.filter { $0.style == .camera }
+        let displayZooms = fills ? Self.displayZooms(meta: meta, cursor: cursorPath, visible: visible, avoiding: manual) : []
+        self.cameraPath = cameraPath ?? CameraPath(zooms: manual + displayZooms, cursor: cursorPath, duration: meta.duration,
                                                    visible: visible, followAtRest: fills)
 
         let radius = fills ? 0 : project.cornerRadius * min(w, h)
@@ -942,6 +945,43 @@ public final class RenderPlan: @unchecked Sendable {
             let r = d.contentRect
             let w = r.width * scale, h = r.height * scale
             return CGRect(x: (r.x - union.x) * scale, y: height - (r.y - union.y) * scale - h, width: w, height: h)
+        }
+    }
+
+    /// Flera skärmar i "fyll och följ": medan markören står på en skärm som är mindre än
+    /// bildfönstret zoomar kameran så att den skärmen fyller bilden. Stunder kortare än 0,8 s
+    /// räknas inte (markören passerar bara); egna zoomar går före.
+    static func displayZooms(meta: RecordingMeta, cursor: CursorPath, visible: CGSize,
+                             avoiding manual: [EditProject.ZoomSegment]) -> [EditProject.ZoomSegment] {
+        guard meta.displays.count > 1, cursor.hasData, meta.duration > 0 else { return [] }
+        let union = meta.source.contentRect
+        guard union.width > 0, union.height > 0 else { return [] }
+        let rects = meta.displays.map { d in
+            CGRect(x: (d.contentRect.x - union.x) / union.width, y: (d.contentRect.y - union.y) / union.height,
+                   width: d.contentRect.width / union.width, height: d.contentRect.height / union.height)
+        }
+        // Vilken skärm markören är på, 10 gånger i sekunden.
+        let step = 0.1
+        var spans: [(display: Int, start: Double, end: Double)] = []
+        var t = 0.0
+        while t < meta.duration {
+            let p = cursor.position(at: t)
+            if let i = rects.firstIndex(where: { $0.contains(p) }) {
+                if let last = spans.last, last.display == i, t - last.end <= step * 1.5 { spans[spans.count - 1].end = t }
+                else { spans.append((i, t, t)) }
+            }
+            t += step
+        }
+        return spans.compactMap { s in
+            guard s.end - s.start >= 0.8 else { return nil }
+            let r = rects[s.display]
+            // Zoomen som får fönstret (visible/z) att rymmas i skärmen.
+            let z = max(visible.width / r.width, visible.height / r.height)
+            guard z > 1.01 else { return nil }
+            let start = max(0, s.start - 0.3), end = min(meta.duration, s.end + step)
+            guard !manual.contains(where: { $0.start < end && start < $0.end }) else { return nil }
+            return EditProject.ZoomSegment(start: start, end: end, scale: z, centerX: r.midX, centerY: r.midY,
+                                           followsCursor: false, isAuto: true)
         }
     }
 
