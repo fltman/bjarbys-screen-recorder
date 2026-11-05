@@ -37,6 +37,7 @@ is included; to have the app follow your system language instead, run
 - Zooms suggested from your clicks, with a spring-driven camera that keeps the cursor in
   a safe zone and looks ahead. Move them, resize them, delete them or add your own on the
   timeline.
+- Optional motion blur while the camera zooms and pans, like a real camera at 1/120 s.
 - The cursor is drawn back on a smoothed path, at any size, with click rings, and hides
   when it stands still.
 - Gradient, solid or blurred backgrounds, padding, rounded corners, shadow, and 16:9,

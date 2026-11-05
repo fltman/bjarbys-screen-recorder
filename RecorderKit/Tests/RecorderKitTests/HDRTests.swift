@@ -65,3 +65,33 @@ import CoreVideo
         #expect(abs(linear(sdr, x: 25) - 4.0) < 0.1)
     }
 }
+
+@Suite struct MotionBlurTests {
+    private func plan(segments: [EditProject.ClipSegment]) throws -> RenderPlan {
+        var meta = RecordingMeta(source: .init(kind: .display, title: "", displayID: 0, windowID: nil,
+                                               contentRect: Rect(x: 0, y: 0, width: 960, height: 540), pixelScale: 2,
+                                               pixelWidth: 1920, pixelHeight: 1080), fps: 60, appVersion: "t")
+        meta.duration = 8
+        var project = try BundleJSON.decoder.decode(EditProject.self, from: Data("{}".utf8))
+        project.segments = segments
+        project.zooms = [.init(start: 1, end: 5, scale: 2, centerX: 0.3, centerY: 0.3, followsCursor: false)]
+        project.motionBlur = true
+        return RenderPlan(canvas: CGSize(width: 1920, height: 1080), project: project, meta: meta, events: [],
+                          cursors: CursorCatalog(), cursorsDir: FileManager.default.temporaryDirectory, hasCamera: false)
+    }
+
+    /// Stilla före zoomen och mitt i den, rörelse under in- och utzoomningen, ingenting i ett snitt.
+    @Test func motionFollowsTheCamera() throws {
+        let p = try plan(segments: [.init(start: 0, end: 8)])
+        func amount(_ t: Double) -> Double {
+            guard let m = p.cameraMotion(t: t, s: p.timeMap.source(at: t)) else { return 0 }
+            return hypot(m.shift.dx, m.shift.dy) + abs(m.zoomRatio - 1) * 1000
+        }
+        #expect(amount(0.5) < 0.01)
+        let ramp = stride(from: 0.6, through: 2.5, by: 0.05).map(amount).max() ?? 0
+        #expect(ramp > 1)
+        #expect(amount(3.5) < 0.05)
+        let cut = try plan(segments: [.init(start: 0, end: 2), .init(start: 4, end: 8)])
+        #expect(cut.cameraMotion(t: 2.005, s: cut.timeMap.source(at: 2.005)) == nil)
+    }
+}

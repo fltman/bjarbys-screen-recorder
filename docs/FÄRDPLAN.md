@@ -19,7 +19,7 @@ tagning, sedan redigerbar polish, sedan resten.
   skärmen, rutorna och exporten är provade, men ingen har suttit och klickat i den än.
 - Kameraspåret är inte provat med en riktig kamera (koden finns, provet kördes utan).
 - Fönsterinspelning där fönstret flyttas under inspelningen (`frame`-händelser) är inte provad.
-- Rörelseoskärpa vid panorering; gifski om ImageIO-GIF:en bandar.
+- gifski om ImageIO-GIF:en bandar.
 
 ## Byggt efter fas 2
 
@@ -72,6 +72,9 @@ tagning, sedan redigerbar polish, sedan resten.
 
 - Kortkommandon i filmen (2026-11-05): bubbla nere eller uppe i mitten, räknar upp
   upprepningar ("⌘Z ×3"), visas i utdatatid så att 4×-delar inte blinkar förbi.
+- Rörelseoskärpa (2026-11-05): valfri under Rörelse › Zoom (`motionBlur`). Kamerans rörelse
+  under 1/60 s ger riktad oskärpa vid panorering och radiell vid zoom, slutare halva rutan,
+  högst 18 px vid 1080p; ingenting i snitt eller när kameran står still.
 - Ändringsbara kortkommandon (2026-11-05): Inställningar › Kortkommandon …, ett fält per
   åtgärd; tryck den nya kombinationen (⌘, ⌃ eller ⌥, eller en F-tangent). Krockar inom appen
   byter plats; upptagna av andra program varnas. Menyerna och panelerna visar de valda.

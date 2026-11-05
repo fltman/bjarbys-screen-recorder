@@ -327,15 +327,10 @@ public final class RenderPlan: @unchecked Sendable {
         if let shadow { layer = layer.composited(over: shadow) }
 
         // Zoomen: punkten `center` i innehållet hamnar mitt i skärmytan, förstorad `zoom` gånger.
-        let (zoom, rawCenter) = cameraPath.viewport(at: s)
-        let center = coverageClamped(rawCenter, zoom: zoom)
-        if zoom > 1.0005 || fills {
-            let p = point(center)
-            let transform = CGAffineTransform(translationX: -p.x, y: -p.y)
-                .concatenating(CGAffineTransform(scaleX: zoom, y: zoom))
-                .concatenating(CGAffineTransform(translationX: screenRect.midX, y: screenRect.midY))
+        if let transform = cameraTransform(at: s) {
             layer = layer.transformed(by: transform)
         }
+        if project.motionBlur { layer = motionBlurred(layer, t: t, s: s) }
 
         var out = layer.composited(over: backgroundImage(screen: screen))
 
@@ -732,6 +727,58 @@ public final class RenderPlan: @unchecked Sendable {
         }
         let image = overlayImage(o)
         return CGRect(origin: placement(of: o, size: image.extent.size), size: image.extent.size)
+    }
+
+    /// Slutaren öppen halva rutan, och oskärpans längsta sträcka i pixlar vid 1080p.
+    static let shutter: Double = 0.5
+    static let maxBlur: Double = 18
+
+    /// Kamerans transform vid källtiden `s` (zoom och panorering), eller nil när den står i
+    /// utgångsläget.
+    func cameraTransform(at s: Double) -> CGAffineTransform? {
+        let (zoom, raw) = cameraPath.viewport(at: s)
+        guard zoom > 1.0005 || fills else { return nil }
+        let p = point(coverageClamped(raw, zoom: zoom))
+        return CGAffineTransform(translationX: -p.x, y: -p.y)
+            .concatenating(CGAffineTransform(scaleX: zoom, y: zoom))
+            .concatenating(CGAffineTransform(translationX: screenRect.midX, y: screenRect.midY))
+    }
+
+    /// Hur kameran rört sig den senaste 1/60 sekunden (utdatatid): förflyttningen av punkten mitt
+    /// i skärmytan och zoomens förhållande. Nil i ett snitt (källtiden hoppar) eller utan rörelse.
+    func cameraMotion(t: Double, s: Double) -> (shift: CGVector, zoomRatio: Double)? {
+        let s0 = timeMap.source(at: max(0, t - 1.0 / 60))
+        guard s0 < s, s - s0 < 0.1 else { return nil }
+        let now = cameraTransform(at: s) ?? .identity, before = cameraTransform(at: s0) ?? .identity
+        let c = CGPoint(x: screenRect.midX, y: screenRect.midY)
+        let prev = c.applying(now.inverted()).applying(before)
+        return (CGVector(dx: c.x - prev.x, dy: c.y - prev.y), Double(now.a / max(before.a, 0.0001)))
+    }
+
+    /// Rörelseoskärpa: längs panoreringen (`CIMotionBlur`) och ut från mitten vid zoom
+    /// (`CIZoomBlur`), som en slutare öppen halva rutan (180° vid 60 bilder/s), med tak så att
+    /// texten går att ana även i en snabb zoom. Ingenting när kameran står still.
+    func motionBlurred(_ image: CIImage, t: Double, s: Double) -> CIImage {
+        guard let motion = cameraMotion(t: t, s: s) else { return image }
+        let extent = image.extent
+        let unit = min(canvas.width, canvas.height) / 1080
+        var out = image
+        let length = min(Self.maxBlur * unit, hypot(motion.shift.dx, motion.shift.dy) * Self.shutter)
+        if length > 0.75 {
+            // Uppmätt: radien r ger ett streck på ~4,7 r (åt båda håll).
+            out = out.clampedToExtent().applyingFilter("CIMotionBlur", parameters: [
+                kCIInputRadiusKey: length / 4.7, kCIInputAngleKey: atan2(motion.shift.dy, motion.shift.dx),
+            ]).cropped(to: extent)
+        }
+        // Strecket i skärmytans hörn; CIZoomBlur drar ut en punkt ~0,023 × avståndet × mängden (uppmätt).
+        let reach = hypot(screenRect.width, screenRect.height) / 2
+        let radial = min(Self.maxBlur * unit, abs(motion.zoomRatio - 1) * reach * Self.shutter)
+        if radial > 0.75 {
+            out = out.applyingFilter("CIZoomBlur", parameters: [
+                kCIInputCenterKey: CIVector(x: screenRect.midX, y: screenRect.midY), "inputAmount": radial / (0.023 * reach),
+            ]).cropped(to: extent)
+        }
+        return out
     }
 
     /// Var en innehållsrektangel (0–1) syns i bildytan vid källtiden `s`, med zoomen.

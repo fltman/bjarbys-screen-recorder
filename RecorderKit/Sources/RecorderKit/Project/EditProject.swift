@@ -41,6 +41,8 @@ public struct EditProject: Codable, Equatable, Sendable {
     public var transition: Transition
     /// Tona in från svart i början och ut till svart i slutet.
     public var fadeInOut: Bool
+    /// Rörelseoskärpa när kameran zoomar och panorerar (som en kamera med slutartid 1/60 s).
+    public var motionBlur: Bool
 
     public init() {
         schemaVersion = RecorderKit.formatVersion
@@ -66,6 +68,7 @@ public struct EditProject: Codable, Equatable, Sendable {
         audioClips = []
         transition = Transition()
         fadeInOut = false
+        motionBlur = false
     }
 
     /// Ett nytt projekt för en inspelning: allt med, i normal hastighet.
@@ -101,6 +104,7 @@ public struct EditProject: Codable, Equatable, Sendable {
         audioClips = c.value(.audioClips, d.audioClips)
         transition = c.value(.transition, d.transition)
         fadeInOut = c.value(.fadeInOut, d.fadeInOut)
+        motionBlur = c.value(.motionBlur, d.motionBlur)
     }
 
     // MARK: - Delar

@@ -279,6 +279,16 @@ vänster kanal:
 - ⚠️ Första mätningen visade ingen övertoning: den kördes mot en appbinär byggd före ändringen
   (`test.sh` bygger bara paketet). Mät alltid efter xcodebuild.
 
+## Rörelseoskärpa (2026-11-05)
+
+- Core Images filter är inte i pixlar: `CIMotionBlur` med radie r ger ett streck på ~4,7 r
+  (åt båda håll); `CIZoomBlur` drar ut en punkt ~0,023 × avståndet till mitten × `inputAmount`
+  (mängd 10 på 500 px avstånd: 115 px). Första försöket med radien som halva längden och mängden
+  i pixlar gjorde en snabb inzoomning (1 → 2,5× på 0,3 s) till oläsliga strimmor.
+- Kalibrerat: slutare halva rutan (1/120 s), högst 18 px vid 1080p — texten går att ana mitt i
+  samma zoom (provinspelning, ruta 0,95 s). Enhetsprov: stilla före och mitt i zoomen, rörelse i
+  rampen, ingenting i ett snitt.
+
 ## Ljud per app (2026-11-05)
 
 `--prov-appljud`: två `afplay` (440 och 660 Hz, volym 0,15) samtidigt; den ena får ett eget spår

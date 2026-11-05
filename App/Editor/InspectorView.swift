@@ -249,6 +249,8 @@ struct InspectorView: View {
                 Button("Ny zoom vid spelhuvudet") { model.addZoomAtPlayhead() }
             }
             .controlSize(.small)
+            Toggle("Rörelseoskärpa", isOn: binding(\.motionBlur))
+                .help("Oskärpa längs kamerans rörelse när den zoomar och panorerar, som med en riktig kamera.")
             let auto = model.project.zooms.filter(\.isAuto).count
             let own = model.project.zooms.count - auto
             Text("\(auto) föreslagna, \(own) egna. Dra blocken i tidslinjen för att flytta dem, dra i kanterna för att ändra längd.")

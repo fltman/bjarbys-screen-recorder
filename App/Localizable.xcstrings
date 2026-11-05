@@ -3639,6 +3639,23 @@
         }
       }
     },
+    "Oskärpa längs kamerans rörelse när den zoomar och panorerar, som med en riktig kamera.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blur along the camera movement while it zooms and pans, like a real camera."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oskärpa längs kamerans rörelse när den zoomar och panorerar, som med en riktig kamera."
+          }
+        }
+      }
+    },
     "Pausa": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3958,6 +3975,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rörelse"
+          }
+        }
+      }
+    },
+    "Rörelseoskärpa": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Motion blur"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rörelseoskärpa"
           }
         }
       }
