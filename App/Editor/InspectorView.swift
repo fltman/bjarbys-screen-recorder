@@ -122,7 +122,7 @@ struct InspectorView: View {
     private func segmentSection(_ seg: EditProject.ClipSegment) -> some View {
         Section2("Markerad del", systemImage: "film") {
             Picker("Hastighet", selection: Binding(get: { seg.speed }, set: { model.setSpeed($0, for: seg.id) })) {
-                ForEach([0.5, 1, 1.5, 2, 4, 8], id: \.self) { Text(AppLocale.format("%g×", $0)).tag($0) }
+                ForEach([0.25, 0.5, 1, 1.5, 2, 4, 8], id: \.self) { Text(AppLocale.format("%g×", $0)).tag($0) }
             }
             Text("\(AppLocale.format("%.1f", seg.duration)) s i inspelningen").font(.caption).foregroundStyle(.secondary)
             // Övergången in i delen (inte för den första).

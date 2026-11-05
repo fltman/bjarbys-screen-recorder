@@ -293,6 +293,17 @@ vänster kanal:
 - ⚠️ Första mätningen visade ingen övertoning: den kördes mot en appbinär byggd före ändringen
   (`test.sh` bygger bara paketet). Mät alltid efter xcodebuild.
 
+## Videoinslag: hastighet, beskärning, mjuka kanter (2026-11-05)
+
+- Hastighet: en provvideo med rutans nummer binärt i åtta fält (30 bilder/s), inlagd vid 0,5 s med
+  `offset` 0,5 och `speed` 2. Renderat vid 0,75 / 1,0 / 1,5 s: källruta 30 / 45 / 75 — exakt det
+  väntade (offset + förfluten tid × 2). Ljudet skalas lika (`scaleTimeRange`, spektral tonhöjd).
+- Beskärning [0,25, 0, 0,5, 1] av en 16:9-video: mittersta hälften, 8:9, inpassad i ramen med
+  rundade hörn och skugga; förhandsvisningens dragram följer det som syns (videons storlek läses
+  en gång per fil). Mjuka kanter 1: masken krymps och suddas, skuggan tas bort.
+- ⚠️ Att läsa rutnummer ur ljusstyrka gick inte: videonivåer, BT.709 och sRGB på vägen gör
+  mappningen olinjär (±4 rutor). Binära fält är exakta.
+
 ## Fönster som flyttas (2026-11-05)
 
 `--prov-fonsterflytt`: eget fönster (600×400 pt, röd ruta) inspelat som fönster i 3 s, flyttat

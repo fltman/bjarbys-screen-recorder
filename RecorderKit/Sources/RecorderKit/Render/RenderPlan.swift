@@ -3,6 +3,8 @@ import AppKit
 import CoreImage
 import CoreImage.CIFilterBuiltins
 import Metal
+import AVFoundation
+import os
 
 /// Den delade Core Image-kontexten, på GPU:n. Rutorna stannar i IOSurface/Metal hela vägen.
 public enum RenderContext {
@@ -667,8 +669,16 @@ public final class RenderPlan: @unchecked Sendable {
 
     /// En videoruta i sin ram: helbild fyller bildytan; bild-i-bild passas in med hörn och skugga.
     func videoLayer(_ frame: CIImage, _ o: Overlay) -> CIImage {
-        let e = frame.extent
-        let moved = frame.transformed(by: CGAffineTransform(translationX: -e.minX, y: -e.minY))
+        let full = frame.extent
+        // Utsnittet (origo uppe till vänster i lagret, nere till vänster i Core Image).
+        var source = frame
+        if let c = o.crop {
+            let r = CGRect(x: full.minX + full.width * c.x, y: full.minY + full.height * (1 - c.y - c.height),
+                           width: full.width * c.width, height: full.height * c.height).integral.intersection(full)
+            if r.width > 1, r.height > 1 { source = frame.cropped(to: r) }
+        }
+        let e = source.extent
+        let moved = source.transformed(by: CGAffineTransform(translationX: -e.minX, y: -e.minY))
         let canvasRect = CGRect(origin: .zero, size: canvas)
         if o.isFullFrame {
             let k = max(canvas.width / e.width, canvas.height / e.height)
@@ -682,8 +692,17 @@ public final class RenderPlan: @unchecked Sendable {
         let size = CGSize(width: e.width * k, height: e.height * k)
         let rect = CGRect(x: box.midX - size.width / 2, y: box.midY - size.height / 2, width: size.width, height: size.height)
         let radius = min(size.width, size.height) * 0.05
-        let placed = moved.transformed(by: CGAffineTransform(scaleX: k, y: k))
+        let scaled = moved.transformed(by: CGAffineTransform(scaleX: k, y: k))
             .transformed(by: CGAffineTransform(translationX: rect.minX, y: rect.minY))
+        // Mjuka kanter: masken krymps och suddas, och skuggan tas bort (den hade fått en hård kant).
+        if o.softness > 0.01 {
+            let feather = min(size.width, size.height) * 0.12 * min(1, o.softness)
+            let mask = Self.roundedRect(rect.insetBy(dx: feather, dy: feather), radius: radius + feather, color: .white)
+                .applyingGaussianBlur(sigma: feather / 2).cropped(to: rect)
+            return scaled.applyingFilter("CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: CIImage.empty(),
+                                                                       kCIInputMaskImageKey: mask])
+        }
+        let placed = scaled
             .applyingFilter("CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: CIImage.empty(),
                                                             kCIInputMaskImageKey: Self.roundedRect(rect, radius: radius, color: .white)])
         let u = OverlayRenderer.unit(canvas)
@@ -735,14 +754,44 @@ public final class RenderPlan: @unchecked Sendable {
     public func frame(of o: Overlay) -> CGRect? {
         guard o.kind != .callout else { return nil }
         if o.kind == .video {
-            // Helbild täcker allt med avsikt; bild-i-bild räknas med sin ram.
+            // Helbild täcker allt med avsikt; bild-i-bild räknas med det som syns: videons
+            // (beskurna) bild inpassad i ramen.
             guard !o.isFullFrame, let f = o.frame else { return nil }
-            return CGRect(x: canvas.width * f.x, y: canvas.height * (1 - f.y - f.height),
-                          width: canvas.width * f.width, height: canvas.height * f.height)
+            let box = CGRect(x: canvas.width * f.x, y: canvas.height * (1 - f.y - f.height),
+                             width: canvas.width * f.width, height: canvas.height * f.height)
+            guard let mediaDir, let size = Self.videoSize(mediaDir.appendingPathComponent(o.file)) else { return box }
+            let c = o.crop ?? Rect(x: 0, y: 0, width: 1, height: 1)
+            let w = size.width * c.width, h = size.height * c.height
+            guard w > 0, h > 0 else { return box }
+            let k = min(box.width / w, box.height / h)
+            return CGRect(x: box.midX - w * k / 2, y: box.midY - h * k / 2, width: w * k, height: h * k)
         }
         let image = overlayImage(o)
         return CGRect(origin: placement(of: o, size: image.extent.size), size: image.extent.size)
     }
+
+    /// Videofilernas bildstorlek (med rotation), sparad per fil.
+    private static let videoSizes = OSAllocatedUnfairLock(initialState: [URL: CGSize]())
+
+    static func videoSize(_ url: URL) -> CGSize? {
+        if let hit = videoSizes.withLock({ $0[url] }) { return hit }
+        let asset = AVURLAsset(url: url)
+        let box = SizeBox()
+        let done = DispatchSemaphore(value: 0)
+        Task.detached {
+            if let track = try? await asset.loadTracks(withMediaType: .video).first,
+               let (natural, transform) = try? await track.load(.naturalSize, .preferredTransform) {
+                let r = CGRect(origin: .zero, size: natural).applying(transform)
+                box.size = CGSize(width: abs(r.width), height: abs(r.height))
+            }
+            done.signal()
+        }
+        _ = done.wait(timeout: .now() + 2)
+        guard let size = box.size else { return nil }
+        videoSizes.withLock { $0[url] = size }
+        return size
+    }
+    private final class SizeBox: @unchecked Sendable { var size: CGSize? }
 
     /// Slutaren öppen halva rutan, och oskärpans längsta sträcka i pixlar vid 1080p.
     static let shutter: Double = 0.5

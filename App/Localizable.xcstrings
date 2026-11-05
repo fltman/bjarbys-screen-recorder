@@ -562,6 +562,23 @@
         }
       }
     },
+    "Beskär": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crop"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beskär"
+          }
+        }
+      }
+    },
     "Bibliotek …": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1973,6 +1990,23 @@
         }
       }
     },
+    "Höger": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Höger"
+          }
+        }
+      }
+    },
     "Högerklicka här.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3346,6 +3380,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mitt, sidled"
+          }
+        }
+      }
+    },
+    "Mjuka kanter": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soft edges"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mjuka kanter"
           }
         }
       }
@@ -5645,6 +5696,23 @@
         }
       }
     },
+    "Visa hela": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show all"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visa hela"
+          }
+        }
+      }
+    },
     "Visa i Finder": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -5811,6 +5879,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Välj whisper.cpp-mappen …"
+          }
+        }
+      }
+    },
+    "Vänster": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vänster"
           }
         }
       }

@@ -413,7 +413,7 @@ enum TestMode {
             model.persists = false
             model.addMaskAtPlayhead()
             try await shot("redigerare-mask", NSSize(width: 1400, height: 860), EditorView(model: model))
-            model.selectedOverlayID = model.project.overlays.first { $0.kind == .fact }?.id
+            model.selectedOverlayID = (model.project.overlays.first { $0.kind == .fact } ?? model.project.overlays.first)?.id
             for tab in InspectorView.Tab.allCases {
                 UserDefaults.standard.set(tab.rawValue, forKey: "inspectorTab")
                 try await shot("inspektor-\(tab.rawValue)", NSSize(width: 310, height: 860), InspectorView(model: model))

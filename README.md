@@ -48,7 +48,7 @@ is included; to have the app follow your system language instead, run
 - Split, delete and change the speed of parts of the recording, with undo.
 - Layers: title cards, callouts around the button you clicked, fact boxes, QR codes, free
   text anywhere, images (logos, product shots), video inserts (picture-in-picture or full
-  frame, with their sound), chapters with a banner, and extra audio
+  frame, with their sound, cropped, with soft edges, at 0.25–4× speed), chapters with a banner, and extra audio
   (music ducked under speech, narration, effects).
 - Transitions at the cuts (crossfade, through black, blur with a zoom punch, flash), set for
   the whole video or per cut, with the sound crossfaded too and a short fade at every cut so

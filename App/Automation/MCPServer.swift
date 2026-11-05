@@ -197,6 +197,10 @@ enum MCPServer {
                                         "kind": ["type": "string", "enum": ["title", "callout", "fact", "qr", "text", "image", "video"]],
                                         "offset": ["type": "number", "description": "video: where in the file to start (s)."],
                                         "volume": ["type": "number", "description": "video: its audio volume (0 = silent)."],
+                                        "speed": ["type": "number", "description": "video: playback speed 0.25–4 (duration stays the time in the film)."],
+                                        "crop": ["type": "array", "items": ["type": "number"], "minItems": 4, "maxItems": 4,
+                                                 "description": "video: the part of the video to show, [x, y, width, height] 0–1 of the video, origin top-left."],
+                                        "softness": ["type": "number", "description": "video: soft edges 0–1 (0 = sharp with rounded corners and a shadow)."],
                                         "frame": ["type": "array", "items": ["type": "number"], "minItems": 3, "maxItems": 4,
                                                   "description": "text: [centerX, centerY, maxWidth]; image: [x, y, width, height] — 0–1 of the frame, origin top-left."],
                                         "file": ["type": "string", "description": "image: path to the image (copied into the bundle)."],
@@ -633,8 +637,13 @@ enum MCPServer {
                 overlay.file = name
                 overlay.offset = number(o["offset"]) ?? 0
                 overlay.volume = number(o["volume"]) ?? 1
+                overlay.speed = max(0.25, min(4, number(o["speed"]) ?? 1))
+                overlay.softness = max(0, min(1, number(o["softness"]) ?? 0))
+                if let c = (o["crop"] as? [Any])?.compactMap(number), c.count == 4 {
+                    overlay.crop = Rect(x: max(0, c[0]), y: max(0, c[1]), width: min(1, c[2]), height: min(1, c[3]))
+                }
                 if overlay.frame == nil { overlay.frame = Rect(x: 0, y: 0, width: 1, height: 1) }
-                if o["duration"] == nil, let length = videoLength(src) { overlay.duration = max(0.5, length - overlay.offset) }
+                if o["duration"] == nil, let length = videoLength(src) { overlay.duration = max(0.5, (length - overlay.offset) / overlay.speed) }
             }
             if kind == .image {
                 guard let path = o["file"] as? String,

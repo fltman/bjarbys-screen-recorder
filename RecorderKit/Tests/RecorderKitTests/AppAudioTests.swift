@@ -36,3 +36,14 @@ import Foundation
         #expect(AudioProcesses.objectIDs(for: .init(bundleID: "", name: "afplay", pids: [13]), in: ps) == [4])
     }
 }
+
+@Suite struct VideoInsertTests {
+    @Test func cropSoftnessAndSpeedDefaults() throws {
+        let o = try BundleJSON.decoder.decode(Overlay.self, from: Data(#"{"kind":"video","file":"v.mov"}"#.utf8))
+        #expect(o.crop == nil && o.softness == 0 && o.speed == 1)
+        var c = o
+        c.crop = Rect(x: 0.25, y: 0, width: 0.5, height: 1); c.softness = 0.4; c.speed = 2
+        let back = try BundleJSON.decoder.decode(Overlay.self, from: BundleJSON.encoder.encode(c))
+        #expect(back.crop == c.crop && back.softness == 0.4 && back.speed == 2)
+    }
+}

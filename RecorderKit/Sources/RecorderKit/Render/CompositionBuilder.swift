@@ -232,15 +232,20 @@ public enum CompositionBuilder {
                                                           preferredTrackID: videoOverlayTrackBase + CMPersistentTrackID(i)) else { continue }
             let start = CMTime(seconds: at, preferredTimescale: timescale)
             let from = available.start + CMTime(seconds: max(0, o.offset), preferredTimescale: timescale)
-            let length = CMTimeMinimum(CMTimeMinimum(CMTime(seconds: o.duration, preferredTimescale: timescale),
-                                                     available.end - from), cursor - start)
+            // I filmen `duration` s (högst till filmens slut); ur filen `duration × speed` s.
+            let speed = max(0.25, min(4, o.speed))
+            let wanted = min(o.duration, (cursor - start).seconds) * speed
+            let length = CMTimeMinimum(CMTime(seconds: wanted, preferredTimescale: timescale), available.end - from)
             guard length > .zero else { continue }
             let range = CMTimeRange(start: from, duration: length)
+            let shown = CMTime(seconds: length.seconds / speed, preferredTimescale: timescale)
             try? track.insertTimeRange(range, of: source, at: start)
+            if abs(speed - 1) > 0.001 { track.scaleTimeRange(CMTimeRange(start: start, duration: length), toDuration: shown) }
             if o.volume > 0, let sound = try? await asset.loadTracks(withMediaType: .audio).first,
                let audioTrack = composition.addMutableTrack(withMediaType: .audio,
                                                             preferredTrackID: videoAudioTrackBase + CMPersistentTrackID(i)) {
                 try? audioTrack.insertTimeRange(range, of: sound, at: start)
+                if abs(speed - 1) > 0.001 { audioTrack.scaleTimeRange(CMTimeRange(start: start, duration: length), toDuration: shown) }
             }
         }
 

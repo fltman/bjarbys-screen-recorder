@@ -47,6 +47,13 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
     public var offset: Double
     /// Video: ljudets volym (0 = tyst).
     public var volume: Double
+    /// Video: utsnittet av videons bild (0–1, origo uppe till vänster), nil = hela.
+    public var crop: Rect?
+    /// Video: mjuka kanter, 0 = skarpa (med rundade hörn och skugga) till 1 = mycket mjuka.
+    public var softness: Double
+    /// Video: hastighet (0,25–4). `duration` är fortfarande tiden i filmen; videon spelar
+    /// `duration × speed` sekunder av filen.
+    public var speed: Double
 
     public init(id: UUID = UUID(), kind: Kind, at: Double, duration: Double = 4, title: String = "",
                 lines: [String] = [], url: String = "", target: Rect? = nil, corner: Corner = .topRight,
@@ -55,6 +62,7 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
         self.lines = lines; self.url = url; self.target = target; self.corner = corner
         self.frame = frame; self.file = file; self.size = size; self.background = background
         self.offset = 0; self.volume = 1
+        self.crop = nil; self.softness = 0; self.speed = 1
     }
 
     /// Täcker hela bildytan (helbild): ritas utan hörn och skugga, och fyller.
@@ -80,6 +88,9 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
         background = c.value(.background, true)
         offset = c.value(.offset, 0)
         volume = c.value(.volume, 1)
+        crop = c.value(.crop, nil)
+        softness = c.value(.softness, 0)
+        speed = c.value(.speed, 1)
     }
 }
 

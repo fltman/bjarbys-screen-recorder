@@ -107,6 +107,46 @@ struct LayersInspector: View {
         }
     }
 
+    /// Beskärning av ett videoinslag: hur mycket som tas bort från varje kant (0–45 %).
+    @ViewBuilder private func cropControls(_ o: Overlay) -> some View {
+        let c = o.crop ?? Rect(x: 0, y: 0, width: 1, height: 1)
+        DisclosureGroup("Beskär") {
+            LabeledSlider("Vänster", value: cropBinding(o, c, .left), range: 0...0.45, format: "%.0f %%", scale: 100)
+            LabeledSlider("Höger", value: cropBinding(o, c, .right), range: 0...0.45, format: "%.0f %%", scale: 100)
+            LabeledSlider("Uppe", value: cropBinding(o, c, .top), range: 0...0.45, format: "%.0f %%", scale: 100)
+            LabeledSlider("Nere", value: cropBinding(o, c, .bottom), range: 0...0.45, format: "%.0f %%", scale: 100)
+            if o.crop != nil {
+                Button("Visa hela") { model.updateOverlay(o.id) { $0.crop = nil } }.controlSize(.small)
+            }
+        }
+    }
+
+    private enum Edge { case left, right, top, bottom }
+
+    private func cropBinding(_ o: Overlay, _ c: Rect, _ edge: Edge) -> Binding<Double> {
+        Binding(get: {
+            switch edge {
+            case .left: c.x
+            case .right: 1 - c.x - c.width
+            case .top: c.y
+            case .bottom: 1 - c.y - c.height
+            }
+        }, set: { v in
+            model.updateOverlay(o.id) { ov in
+                var r = ov.crop ?? Rect(x: 0, y: 0, width: 1, height: 1)
+                let right = 1 - r.x - r.width, bottom = 1 - r.y - r.height
+                switch edge {
+                case .left: r.x = v; r.width = 1 - v - right
+                case .right: r.width = 1 - r.x - v
+                case .top: r.y = v; r.height = 1 - v - bottom
+                case .bottom: r.height = 1 - r.y - v
+                }
+                r.width = max(0.1, r.width); r.height = max(0.1, r.height)
+                ov.crop = (r.x < 0.001 && r.y < 0.001 && r.width > 0.999 && r.height > 0.999) ? nil : r
+            }
+        })
+    }
+
     private func overlayRow(_ o: Overlay) -> some View {
         let selected = model.selectedOverlayID == o.id
         return VStack(alignment: .leading, spacing: 6) {
@@ -147,6 +187,16 @@ struct LayersInspector: View {
                     }))
                     LabeledSlider("Ljud", value: Binding(get: { o.volume }, set: { v in model.updateOverlay(o.id) { $0.volume = v } }),
                                   range: 0...1.5, format: "%.0f %%", scale: 100)
+                    Picker("Hastighet", selection: Binding(get: { o.speed }, set: { v in
+                        // Samma del av filen: längden i filmen ändras med farten.
+                        model.updateOverlay(o.id) { $0.duration = max(0.3, $0.duration * $0.speed / v); $0.speed = v }
+                    })) {
+                        ForEach([0.25, 0.5, 0.75, 1, 1.5, 2, 4], id: \.self) { Text(AppLocale.format("%g×", $0)).tag($0) }
+                    }
+                    cropControls(o)
+                    LabeledSlider("Mjuka kanter", value: Binding(get: { o.softness }, set: { v in model.updateOverlay(o.id) { $0.softness = v } }),
+                                  range: 0...1, format: "%.0f %%", scale: 100)
+                        .disabled(o.isFullFrame)
                 }
                 if o.kind == .text || o.kind == .image || (o.kind == .video && !o.isFullFrame) {
                     let f = o.frame ?? Rect(x: 0.5, y: 0.5, width: 0.5, height: 0.3)
