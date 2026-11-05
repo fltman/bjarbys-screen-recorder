@@ -7,14 +7,16 @@ cd "$(dirname "$0")/.."
 
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 KONFIG="${1:-Release}"
+# Bygger du en egen kopia: sätt din egen identitet och ditt team-id.
 IDENTITET="${SKARMINSPELARE_SIGNERING:-Developer ID Application: Brattoo AB (V783A2L763)}"
+TEAM="${SKARMINSPELARE_TEAM:-V783A2L763}"
 APP_UT="dist/Bjarbys skärminspelare.app"
 
 echo "→ bygger ($KONFIG)"
 xcodebuild -project Skarminspelare.xcodeproj -scheme Skarminspelare \
     -configuration "$KONFIG" -derivedDataPath build \
     -destination 'platform=macOS,arch=arm64' \
-    CODE_SIGN_IDENTITY="$IDENTITET" \
+    CODE_SIGN_IDENTITY="$IDENTITET" DEVELOPMENT_TEAM="$TEAM" \
     -quiet build
 
 BYGGD="build/Build/Products/$KONFIG/Skarminspelare.app"
