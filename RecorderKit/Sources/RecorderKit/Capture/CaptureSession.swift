@@ -59,6 +59,10 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
     public var onAutoStop: ((StopReason) -> Void)?
 
     private var stream: SCStream?
+    /// Filtret strömmen använder: målets, eller ett städat (utan skrivbordssymboler/notiser).
+    private var filter: SCContentFilter?
+    private var cleanTimer: Timer?
+    private var exceptedFinderWindows: Set<CGWindowID> = []
     private var streamClock: CMClock?
     private var writers: [RecordingMeta.TrackKind: TrackWriter] = [:]
     private let log: EventLogWriter
@@ -136,9 +140,11 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
             }
         }
 
+        filter = await cleanFilter() ?? target.filter
         let stream = try makeStream()
         try await stream.startCapture()
         self.stream = stream
+        startCleanWatch()
         streamClock = stream.synchronizationClock
 
         camera?.onFrame = { [weak self] buffer, host in self?.handleCamera(buffer, host: host) }
@@ -198,7 +204,7 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
     }
 
     private func makeStream() throws -> SCStream {
-        let stream = SCStream(filter: target.filter, configuration: makeConfiguration(), delegate: self)
+        let stream = SCStream(filter: filter ?? target.filter, configuration: makeConfiguration(), delegate: self)
         try stream.addStreamOutput(self, type: .screen, sampleHandlerQueue: videoQueue)
         if options.systemAudioFromStream {
             try stream.addStreamOutput(self, type: .audio, sampleHandlerQueue: audioQueue)
@@ -207,6 +213,59 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
             try stream.addStreamOutput(self, type: .microphone, sampleHandlerQueue: micQueue)
         }
         return stream
+    }
+
+    // MARK: - Städad inspelning
+
+    /// Ett filter utan skrivbordssymboler och/eller notiser, för skärm och område. Skrivbords-
+    /// symbolerna ligger i ett eget helskärmsfönster från Finder (på skrivbordsnivå, uppmätt) och
+    /// skrivbordsbilden ritas av Dock, så Finder utesluts men dess vanliga fönster tas med.
+    /// Notiser och skrivbordswidgets kommer från notisappen (och t.ex. Teams egen).
+    private func cleanFilter() async -> SCContentFilter? {
+        guard options.hideDesktopIcons || options.hideNotifications,
+              target.kind == .display || target.kind == .area,
+              let content = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false),
+              let display = content.displays.first(where: { $0.displayID == target.displayID }) else { return nil }
+        let own = Bundle.main.bundleIdentifier ?? ""
+        var apps = content.applications.filter { $0.bundleIdentifier == own }
+        if options.hideNotifications {
+            apps += content.applications.filter { $0.bundleIdentifier.lowercased().contains("notificationcenter") }
+        }
+        var excepted: [SCWindow] = []
+        if options.hideDesktopIcons {
+            apps += content.applications.filter { $0.bundleIdentifier == "com.apple.finder" }
+            excepted = Self.finderWindows(content)
+        }
+        exceptedFinderWindows = Set(excepted.map(\.windowID))
+        return SCContentFilter(display: display, excludingApplications: apps, exceptingWindows: excepted)
+    }
+
+    /// Finders vanliga fönster (allt utom skrivbordet).
+    static func finderWindows(_ content: SCShareableContent) -> [SCWindow] {
+        content.windows.filter {
+            $0.owningApplication?.bundleIdentifier == "com.apple.finder" && $0.windowLayer > Int(CGWindowLevelForKey(.desktopIconWindow))
+        }
+    }
+
+    /// Nya Finderfönster under inspelningen tas med: listan kontrolleras varannan sekund och
+    /// filtret byts när den ändrats.
+    @MainActor
+    private func startCleanWatch() {
+        guard options.hideDesktopIcons, filter !== target.filter else { return }
+        let t = Timer(timeInterval: 2, repeats: true) { [weak self] _ in
+            Task { @MainActor in await self?.refreshCleanFilter() }
+        }
+        RunLoop.main.add(t, forMode: .common)
+        cleanTimer = t
+    }
+
+    @MainActor
+    private func refreshCleanFilter() async {
+        guard let content = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false) else { return }
+        let now = Set(Self.finderWindows(content).map(\.windowID))
+        guard now != exceptedFinderWindows, let fresh = await cleanFilter() else { return }
+        filter = fresh
+        try? await stream?.updateContentFilter(fresh)
     }
 
     // MARK: - Paus
@@ -235,6 +294,8 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         let end = clock.elapsed
         if let origin = clock.origin { meta.startHostTime = origin.seconds }
 
+        cleanTimer?.invalidate()
+        cleanTimer = nil
         input?.stop()
         cursorSampler?.stop()
         windowTracker?.stop()

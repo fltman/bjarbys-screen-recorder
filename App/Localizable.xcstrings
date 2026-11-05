@@ -1225,6 +1225,23 @@
         }
       }
     },
+    "Dölj notiser och widgets": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Notifications and Widgets"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dölj notiser och widgets"
+          }
+        }
+      }
+    },
     "Dölj när den står still": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1238,6 +1255,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dölj när den står still"
+          }
+        }
+      }
+    },
+    "Dölj skrivbordssymboler": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Desktop Icons"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dölj skrivbordssymboler"
           }
         }
       }

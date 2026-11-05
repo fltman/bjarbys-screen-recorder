@@ -139,6 +139,10 @@ public struct CaptureOptions: Sendable {
     public var apps: [AudioSourceChoice] = []
     /// HDR: 10 bit BT.2020 PQ i stället för 8 bit sRGB. Bara meningsfullt på en HDR-skärm.
     public var hdr: Bool = false
+    /// Städad inspelning (skärm och område): skrivbordssymbolerna, respektive notiser och
+    /// skrivbordswidgets, hålls utanför inspelningen. Skärmen och systemet ändras inte.
+    public var hideDesktopIcons: Bool = false
+    public var hideNotifications: Bool = false
 
     public init(fps: Int = 60, systemAudio: Bool = true, microphone: Devices.Device? = nil,
                 camera: Devices.Device? = nil, keystrokes: Bool = false, apps: [AudioSourceChoice] = []) {

@@ -7,7 +7,7 @@ import SwiftUI
 
 /// Provlägen som körs direkt ur appbinären, utan gränssnitt:
 ///
-///     Skarminspelare --prov-inspelning 5 [--mik] [--kamera] [--katalog <mapp>]
+///     Skarminspelare --prov-inspelning 5 [--mik] [--kamera] [--stadad] [--katalog <mapp>]
 ///     Skarminspelare --prov-aterstall <mapp>
 ///     Skarminspelare --prov-transkribera <paket> [--modell <fil>] [--sprak sv]
 ///     Skarminspelare --prov-ljudstyrka <ljudfil>
@@ -177,6 +177,8 @@ enum TestMode {
             options.camera = Devices.cameras().first
         }
         options.systemAudio = !args.contains("--utan-datorljud")
+        options.hideDesktopIcons = args.contains("--stadad")
+        options.hideNotifications = args.contains("--stadad")
         do {
             let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
             guard let display = content.displays.first(where: { $0.displayID == CGMainDisplayID() }) ?? content.displays.first else {

@@ -13,6 +13,9 @@ final class AppSettings: ObservableObject {
     @AppStorage("fps") var fps: Int = 60
     /// HDR (10 bit, BT.2020 PQ). Bara på skärmar som kan visa HDR.
     @AppStorage("hdr") var hdr: Bool = false
+    /// Städad inspelning: skrivbordssymboler och notiser hålls utanför (skärm och område).
+    @AppStorage("hideDesktopIcons") var hideDesktopIcons: Bool = false
+    @AppStorage("hideNotifications") var hideNotifications: Bool = false
     static var hdrAvailable: Bool {
         NSScreen.screens.contains { $0.maximumPotentialExtendedDynamicRangeColorComponentValue > 1 }
     }
@@ -105,6 +108,8 @@ final class AppSettings: ObservableObject {
         var o = CaptureOptions(fps: fps, systemAudio: systemAudio, microphone: selectedMicrophone,
                                camera: selectedCamera, keystrokes: keystrokes, apps: appAudio)
         o.hdr = hdr && Self.hdrAvailable
+        o.hideDesktopIcons = hideDesktopIcons
+        o.hideNotifications = hideNotifications
         return o
     }
 }

@@ -21,7 +21,8 @@ is included; to have the app follow your system language instead, run
   discard. It warns about a silent microphone, a disk running full and tracks that stop.
 - Global shortcuts: ⌃⌥⌘R start/stop, ⌃⌥⌘P pause, ⌃⌥⌘A record an area, ⌃⌥⌘S save the
   flashback — all changeable under Settings › Keyboard Shortcuts.
-- The app's own windows never end up in the recording.
+- The app's own windows never end up in the recording, and on request neither do desktop icons,
+  notifications or desktop widgets — without touching your desktop or system settings.
 - HDR on HDR displays: 10-bit BT.2020 PQ, exported as HDR (HLG, HEVC 10-bit) or as SDR with
   white kept white.
 - Audio per app: pick apps (a call, a browser, music) and each gets its own track through Core

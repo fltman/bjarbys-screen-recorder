@@ -293,6 +293,16 @@ vänster kanal:
 - ⚠️ Första mätningen visade ingen övertoning: den kördes mot en appbinär byggd före ändringen
   (`test.sh` bygger bara paketet). Mät alltid efter xcodebuild.
 
+## Städad inspelning (2026-11-05)
+
+- Fönsterlistan: skrivbordssymbolerna är ett helskärmsfönster från Finder på
+  `kCGDesktopIconWindowLevel` (−2147483603); skrivbordsbilden ett fönster från Dock
+  ("Wallpaper-", −2147483624); skrivbordswidgets och notiser fönster från
+  `com.apple.notificationcenterui` (även Teams har en egen `…notificationcenter`).
+- `--prov-inspelning 1 --stadad` mot en vanlig: en skrivbordssymbol nere till höger syns i den
+  vanliga men inte i den städade (där syns skrivbordsbilden); Finders fönster och Docken finns i
+  båda. En provnotis (osascript) syns i den vanliga men inte i den städade.
+
 ## Kamerabakgrund (2026-11-05)
 
 Syntetiskt kameraspår (testbild 1280×720, ingen person), bubbla 40 %, export MP4 1080p av 4 s:

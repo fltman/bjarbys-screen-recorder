@@ -57,6 +57,9 @@ struct MenuBarContent: View {
                 if AppSettings.hdrAvailable {
                     Toggle("HDR (10 bit)", isOn: $settings.hdr)
                 }
+                Divider()
+                Toggle("Dölj skrivbordssymboler", isOn: $settings.hideDesktopIcons)
+                Toggle("Dölj notiser och widgets", isOn: $settings.hideNotifications)
                 Picker("Bildfrekvens", selection: $settings.fps) {
                     Text("30 bilder/s").tag(30)
                     Text("60 bilder/s").tag(60)

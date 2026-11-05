@@ -69,6 +69,10 @@ tagning, sedan redigerbar polish, sedan resten.
 
 - Kortkommandon i filmen (2026-11-05): bubbla nere eller uppe i mitten, räknar upp
   upprepningar ("⌘Z ×3"), visas i utdatatid så att 4×-delar inte blinkar förbi.
+- Städad inspelning (2026-11-05): Inspelning › Dölj skrivbordssymboler / Dölj notiser och widgets
+  (skärm och område; MCP `hide_desktop_icons`, `hide_notifications`). Ingenting på skärmen eller i
+  systemet ändras: Finder och notisapparna utesluts ur filtret, Finders vanliga fönster tas med
+  och filtret byts när nya Finderfönster öppnas.
 - Kamerabakgrund (2026-11-05): Stil › Kamera › Bakgrund — som den är, suddig eller borttagen
   (filmens bakgrund, något mörkare, bakom personen). `VNGeneratePersonSegmentationRequest`
   (balanserad) på en nedskalad kopia per ruta, mjuk maskkant. MCP: `camera_backdrop`.
