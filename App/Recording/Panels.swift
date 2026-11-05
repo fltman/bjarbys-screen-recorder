@@ -60,6 +60,12 @@ struct HUDView: View {
                         .tint(.red)
                     Button("Avbryt") { confirmDiscard = false }
                 } else {
+                    Button { controller.toggleDrawing() } label: {
+                        Image(systemName: controller.isDrawing ? "pencil.tip.crop.circle.fill" : "pencil.tip")
+                    }
+                    .tint(controller.isDrawing ? .red : nil)
+                    .help(controller.isDrawing ? "Sluta rita (Esc)"
+                                               : "Rita på skärmen (\(HotKeys.shared.binding(.draw).display)) — 1–5 byter färg, syns inte i bild förrän i redigeraren")
                     Button { controller.togglePause() } label: {
                         Image(systemName: s.isPaused ? "play.fill" : "pause.fill")
                     }

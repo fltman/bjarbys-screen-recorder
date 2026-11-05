@@ -74,6 +74,8 @@ public final class RenderPlan: @unchecked Sendable {
     let cameraStart: Double
     /// Rutorna ritas i HDR (BT.2100 HLG) i stället för SDR (sRGB/BT.709).
     public let outputHDR: Bool
+    /// Strecken som ritades på skärmen under inspelningen.
+    public let inkTrack: InkTrack
 
     /// ScreenCaptureKits HDR10-förval lägger SDR-vitt på 100 nits; Core Image har SDR-vitt
     /// (1,0 linjärt) på 203 nits, som BT.2408. Uppmätt: Y 509 (PQ 0,508) → 0,492 linjärt.
@@ -135,6 +137,7 @@ public final class RenderPlan: @unchecked Sendable {
         let cursorPath = cursorPath ?? CursorPath(events: events, mapping: mapping, duration: meta.duration,
                                                   style: project.cursor)
         self.cursorPath = cursorPath
+        inkTrack = InkTrack(events: events, mapping: mapping)
 
         // Skärmytan: marginal runt om, källans proportioner, centrerad. I Reel-läge täcker den
         // hela bildytan och sticker ut på ena axeln; kameran visar då en del av den.
@@ -292,6 +295,13 @@ public final class RenderPlan: @unchecked Sendable {
         // Strålkastaren och luppen: under markören, ovanpå skärmen.
         if let spot = spotlight(at: s) { layer = spot.composited(over: layer) }
         if let maskedScreen, let lens = lens(at: s, placed: maskedScreen) { layer = lens.composited(over: layer) }
+
+        // Pennans streck: i innehållet (zoomar med det), under markören.
+        if project.showsInk && !inkTrack.isEmpty {
+            for shown in inkTrack.visible(at: s, hold: project.inkHold) {
+                layer = Self.withAlpha(inkImage(shown.stroke, count: shown.count, at: s), shown.opacity).composited(over: layer)
+            }
+        }
 
         // Markören och klicken ritas i skärmytan och zoomar med innehållet.
         let k = screenRect.width / sourceSize.width * pixelsPerPoint
@@ -839,6 +849,47 @@ public final class RenderPlan: @unchecked Sendable {
         }
         let image = overlayImage(o)
         return CGRect(origin: placement(of: o, size: image.extent.size), size: image.extent.size)
+    }
+
+    // MARK: - Pennan
+
+    /// Ett streck (de första `count` punkterna) som bild i bildytans koordinater. Ritas i den
+    /// upplösning zoomen kräver just då (annars blir det suddigt förstorat); ett färdigt streck
+    /// ritas en gång per upplösning till en IOSurface och återanvänds medan det ligger kvar.
+    func inkImage(_ stroke: InkStroke, count: Int, at s: Double) -> CIImage {
+        let zoom = cameraPath.viewport(at: s).scale
+        let r = min(4, max(1, (zoom * 2).rounded(.up) / 2))
+        let make = { () -> CIImage in
+            let width = InkTrack.widthFraction * self.screenRect.height
+            let path = InkTrack.path(stroke.points.prefix(count)) { self.point($0) }
+            let box = path.boundingBoxOfPath.insetBy(dx: -width, dy: -width).integral
+            let w = Int(box.width * r), h = Int(box.height * r)
+            guard w > 0, h > 0, w * h < 40_000_000,
+                  let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return CIImage.empty() }
+            ctx.scaleBy(x: r, y: r)
+            ctx.translateBy(x: -box.minX, y: -box.minY)
+            ctx.addPath(path)
+            let c = Self.color(hex: stroke.color)
+            ctx.setStrokeColor(CGColor(srgbRed: c.red, green: c.green, blue: c.blue, alpha: 1))
+            ctx.setLineWidth(width)
+            ctx.setLineCap(.round)
+            ctx.setLineJoin(.round)
+            ctx.strokePath()
+            guard let cg = ctx.makeImage() else { return CIImage.empty() }
+            let image = CIImage(cgImage: cg)
+                .transformed(by: CGAffineTransform(scaleX: 1 / r, y: 1 / r))
+                .transformed(by: CGAffineTransform(translationX: box.minX, y: box.minY))
+            return image
+        }
+        guard count >= stroke.points.count else { return make() }
+        return overlayImages.image(for: "ink|\(stroke.id)|\(r)") {
+            let image = make()
+            return image.extent.isEmpty ? image : Self.prerender(image.transformed(by: CGAffineTransform(scaleX: r, y: r)),
+                                                                 extent: image.extent.applying(CGAffineTransform(scaleX: r, y: r)).integral)
+                .transformed(by: CGAffineTransform(scaleX: 1 / r, y: 1 / r))
+        }
     }
 
     // MARK: - Lupp

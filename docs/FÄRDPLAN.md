@@ -84,6 +84,13 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Pennan (2026-11-05): rita på skärmen under inspelningen (⌃⌥⌘D, HUD:ens penna, menyn; 1–5
+  färg, Esc slutar). Ett genomskinligt fönster per skärm tar emot musen; strecken syns direkt och
+  tonas bort efter 3 s, men appen är utesluten ur inspelningen, så de sparas som `ink`-händelser
+  och ritas av renderaren — i innehållet (zoomar med det, skarpa i zoomens upplösning), under
+  markören, avstängbara och med valfri tid kvar (Rörelse › Pennan; MCP `ink`, `ink_hold`).
+  Medan pennan är på blir musens drag rörelser (markören följer pennan) och nedtrycken loggas
+  inte (annars hade strecken blivit klick och zoomar). Producentens underlag listar strecken.
 - Bara ljudet (2026-11-05): exportens förval Ljud M4A (AAC 256 kbit/s), Ljud WAV (24 bit, 48 kHz)
   och Ljudspår var för sig — en mapp med en WAV per källa (mikrofon och datorljud med sina
   B-spår, varje app, berättarröst, musik, ljudeffekter, videoinslag, klick), lika långa som

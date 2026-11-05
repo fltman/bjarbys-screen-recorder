@@ -57,6 +57,7 @@ struct InspectorView: View {
                     case .motion:
                         autoZoomSection
                         cursorSection
+                        if !model.plan.inkTrack.isEmpty { inkSection }
                         shortcutSection
                     case .layers:
                         LayersInspector(model: model)
@@ -304,6 +305,18 @@ struct InspectorView: View {
             if !model.plan.cursorPath.hasData {
                 Text("Ingen markördata i den här inspelningen.").font(.caption).foregroundStyle(.secondary)
             }
+        }
+    }
+
+    /// Det som ritades med pennan under inspelningen (bara när det finns något).
+    private var inkSection: some View {
+        Section2("Pennan", systemImage: "pencil.tip") {
+            Toggle("Visa det som ritades", isOn: binding(\.showsInk))
+            if model.project.showsInk {
+                LabeledSlider("Ligger kvar", value: binding(\.inkHold), range: 0.5...15, format: "%.1f s")
+            }
+            Text("\(model.plan.inkTrack.strokes.count) streck, ritade under inspelningen. De zoomar med bilden och tonas bort.")
+                .font(.caption).foregroundStyle(.secondary)
         }
     }
 

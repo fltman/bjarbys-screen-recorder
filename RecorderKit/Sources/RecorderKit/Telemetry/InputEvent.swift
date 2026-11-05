@@ -17,6 +17,10 @@ public struct InputEvent: Codable, Equatable, Sendable {
         /// Ramen för gränssnittselementet under ett klick (via Accessibility).
         case element
         case pause, resume
+        /// Ett streck som ritades på skärmen (pennan under inspelningen): `t` är när det började,
+        /// `pts` punkterna platt som `[dt, x, y, dt, x, y, …]` (dt i s från `t`, globala punkter)
+        /// och `color` färgen som `#RRGGBB`.
+        case ink
         case unknown
     }
 
@@ -36,13 +40,15 @@ public struct InputEvent: Codable, Equatable, Sendable {
     public var label: String?
     public var cursor: String?
     public var rect: Rect?
+    public var pts: [Double]?
+    public var color: String?
 
     public init(t: Double, k: Kind, x: Double? = nil, y: Double? = nil, b: Int? = nil, n: Int? = nil,
                 dx: Double? = nil, dy: Double? = nil, code: Int? = nil, label: String? = nil,
-                cursor: String? = nil, rect: Rect? = nil) {
+                cursor: String? = nil, rect: Rect? = nil, pts: [Double]? = nil, color: String? = nil) {
         self.t = t; self.k = k; self.x = x; self.y = y; self.b = b; self.n = n
         self.dx = dx; self.dy = dy; self.code = code; self.label = label
-        self.cursor = cursor; self.rect = rect
+        self.cursor = cursor; self.rect = rect; self.pts = pts; self.color = color
     }
 
     public init(from decoder: Decoder) throws {
@@ -54,6 +60,7 @@ public struct InputEvent: Codable, Equatable, Sendable {
         dx = c.value(.dx, nil); dy = c.value(.dy, nil)
         code = c.value(.code, nil); label = c.value(.label, nil)
         cursor = c.value(.cursor, nil); rect = c.value(.rect, nil)
+        pts = c.value(.pts, nil); color = c.value(.color, nil)
     }
 
     public var point: CGPoint? {

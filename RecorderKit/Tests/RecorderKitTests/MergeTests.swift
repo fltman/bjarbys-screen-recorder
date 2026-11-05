@@ -41,6 +41,7 @@ import CoreVideo
         try bundle.writeMeta(meta)
         let log = try EventLogWriter(url: bundle.eventsURL)
         log.append(InputEvent(t: seconds / 2, k: .down, x: x + 10, y: 5, b: 0, n: 1))
+        log.append(InputEvent(t: 0.1, k: .ink, pts: [0, x + 5, 5, 0.1, x + 15, 6]))
         log.close()
         try bundle.saveTranscript(Transcript(model: "prov", language: "sv", words: [
             .init(start: 0.1, end: 0.3, text: word), .init(start: 0.4, end: 0.6, text: word)]))
@@ -69,6 +70,10 @@ import CoreVideo
         let downs = merged.readEvents().filter { $0.k == .down }
         #expect(downs.map(\.t) == [0.5, 1.75])
         #expect(downs.map { $0.x ?? -1 } == [10, 10])
+        // Pennans punkter flyttas likadant.
+        let ink = merged.readEvents().filter { $0.k == .ink }
+        #expect(ink.map(\.t) == [0.1, 1.1])
+        #expect(ink.map { $0.pts ?? [] } == [[0, 5, 5, 0.1, 15, 6], [0, 5, 5, 0.1, 15, 6]])
         // En ram vid andra tagningens början.
         #expect(merged.readEvents().contains { $0.k == .frame && $0.t == 1.0 })
 

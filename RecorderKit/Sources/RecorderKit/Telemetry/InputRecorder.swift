@@ -22,6 +22,10 @@ public final class InputRecorder: @unchecked Sendable {
     private let ignored = OSAllocatedUnfairLock(initialState: [CGRect]())
     public func setIgnoredRegions(_ rects: [CGRect]) { ignored.withLock { $0 = rects } }
     private func isIgnored(_ p: CGPoint) -> Bool { ignored.withLock { $0.contains { $0.contains(p) } } }
+    /// Pennan är på: musens drag är ritande (loggas som rörelse, så att markören följer pennan),
+    /// och nedtryck, släpp och scroll loggas inte — annars blev strecken klick och zoomar.
+    private let drawing = OSAllocatedUnfairLock(initialState: false)
+    public func setDrawing(_ on: Bool) { drawing.withLock { $0 = on } }
 
     private var tap: CFMachPort?
     private var thread: Thread?
@@ -133,21 +137,23 @@ public final class InputRecorder: @unchecked Sendable {
             lastMove = t
             log.append(InputEvent(t: t, k: .move, x: p.x, y: p.y))
         case .leftMouseDragged, .rightMouseDragged, .otherMouseDragged:
-            guard t - lastMove >= 1.0 / 240, !isIgnored(p) else { return }
+            let isDrawing = drawing.withLock { $0 }
+            guard t - lastMove >= 1.0 / 240, isDrawing || !isIgnored(p) else { return }
             lastMove = t
-            log.append(InputEvent(t: t, k: .drag, x: p.x, y: p.y, b: Self.button(type)))
+            log.append(isDrawing ? InputEvent(t: t, k: .move, x: p.x, y: p.y)
+                                 : InputEvent(t: t, k: .drag, x: p.x, y: p.y, b: Self.button(type)))
         case .leftMouseDown, .rightMouseDown, .otherMouseDown:
-            guard !isIgnored(p) else { return }
+            guard !isIgnored(p), !drawing.withLock({ $0 }) else { return }
             let clicks = Int(event.getIntegerValueField(.mouseEventClickState))
             log.append(InputEvent(t: t, k: .down, x: p.x, y: p.y, b: Self.button(type), n: clicks))
             onMouseDown?(p, t)
         case .leftMouseUp, .rightMouseUp, .otherMouseUp:
-            guard !isIgnored(p) else { return }
+            guard !isIgnored(p), !drawing.withLock({ $0 }) else { return }
             log.append(InputEvent(t: t, k: .up, x: p.x, y: p.y, b: Self.button(type)))
         case .scrollWheel:
             let dy = Double(event.getIntegerValueField(.scrollWheelEventPointDeltaAxis1))
             let dx = Double(event.getIntegerValueField(.scrollWheelEventPointDeltaAxis2))
-            guard dx != 0 || dy != 0, !isIgnored(p) else { return }
+            guard dx != 0 || dy != 0, !isIgnored(p), !drawing.withLock({ $0 }) else { return }
             log.append(InputEvent(t: t, k: .scroll, x: p.x, y: p.y, dx: dx, dy: dy))
         case .keyDown:
             guard let label = Self.shortcutLabel(event) else { return }

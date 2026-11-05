@@ -19,6 +19,8 @@ final class RecordingController: ObservableObject {
     @Published private(set) var phase: Phase = .idle
     @Published private(set) var status = CaptureSession.Status()
     @Published private(set) var sourceTitle = ""
+    /// Pennan är på (rita på skärmen).
+    @Published private(set) var isDrawing = false
 
     let settings: AppSettings
     let library: LibraryModel
@@ -33,10 +35,20 @@ final class RecordingController: ObservableObject {
     private var cameraPanel: CameraPreviewPanel?
     private var teleprompter: TeleprompterPanel?
     private var areaSelector: AreaSelector?
+    private let ink = InkOverlay()
 
     init(settings: AppSettings, library: LibraryModel) {
         self.settings = settings
         self.library = library
+        ink.now = { [weak self] in
+            guard let session = self?.session, session.hasStarted, !session.clock.isPaused else { return nil }
+            return session.clock.elapsed
+        }
+        ink.onStroke = { [weak self] points, color in self?.session?.logInk(points, color: color) }
+        ink.onChange = { [weak self] on in
+            self?.isDrawing = on
+            self?.session?.setDrawing(on)
+        }
     }
 
     var isBusy: Bool { phase != .idle }
@@ -180,6 +192,12 @@ final class RecordingController: ObservableObject {
         }
     }
 
+    /// Pennan på eller av (bara under inspelning).
+    func toggleDrawing() {
+        guard phase == .recording || ink.isActive else { return }
+        ink.toggle()
+    }
+
     func stop(reason: CaptureSession.StopReason = .user) async {
         guard let session, phase == .recording else { return }
         phase = .stopping
@@ -225,6 +243,7 @@ final class RecordingController: ObservableObject {
     }
 
     private func closePanels() {
+        ink.stop()
         hud?.close(); hud = nil
         cameraPanel?.close(); cameraPanel = nil
         countdownPanel?.close(); countdownPanel = nil

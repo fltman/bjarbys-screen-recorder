@@ -57,6 +57,7 @@ En JSON-rad per händelse. `t` = sekunder på tidslinjen. Koordinater i globala 
 | `cursor` | `cursor` = id i `cursors.json` |
 | `frame` | `rect` = fönstrets nya ram (bara fönsterinspelning) |
 | `element` | `rect` = ramen för gränssnittselementet under ett klick (Accessibility), `label` = roll och namn ("knapp «Exportera»") |
+| `ink` | ett streck ritat med pennan: `t` = när det började, `pts` = `[dt, x, y, …]` platt (dt i s från `t`, globala punkter), `color` = `#RRGGBB`. Var aldrig med i bilden; ritas i efterhand |
 | `pause`, `resume` | — |
 
 Okända `k` läses som `unknown`; en avbruten sista rad hoppas över.
@@ -80,6 +81,7 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 | `aspect` | `source`, `wide`, `vertical`, `square`, `classic` |
 | `framing` | `fit` (hela inspelningen med bakgrund) eller `fill` (fyller bilden, följer markören) |
 | `cursor` | `visible`, `scale`, `smoothing`, `hideWhenIdle`, `clickEffect` |
+| `showsInk`, `inkHold` | visa pennans streck, och hur länge ett färdigt streck ligger kvar (s, standard 3) innan det tonas bort på 0,4 s |
 | `shortcuts` | `visible`, `position` (`bottom`, `top`), `size` |
 | `captions` | `visible`, `size`, `highlightWord` (ordet som sägs lyser) — undertexter ur `transcript.json` |
 | `masks[]` | `start`, `end`, `keyframes[]` (`t`, `rect` normaliserat), `style` (`blur`, `pixelate`, `solid`), `kind`, `hint` (aldrig själva texten), `enabled` |

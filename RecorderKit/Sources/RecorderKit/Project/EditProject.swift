@@ -43,6 +43,10 @@ public struct EditProject: Codable, Equatable, Sendable {
     public var fadeInOut: Bool
     /// Rörelseoskärpa när kameran zoomar och panorerar (som en kamera med slutartid 1/60 s).
     public var motionBlur: Bool
+    /// Strecken som ritades på skärmen under inspelningen visas.
+    public var showsInk: Bool
+    /// Hur länge ett färdigt streck ligger kvar innan det tonar bort (s).
+    public var inkHold: Double
 
     public init() {
         schemaVersion = RecorderKit.formatVersion
@@ -69,6 +73,8 @@ public struct EditProject: Codable, Equatable, Sendable {
         transition = Transition()
         fadeInOut = false
         motionBlur = false
+        showsInk = true
+        inkHold = InkTrack.standardHold
     }
 
     /// Ett nytt projekt för en inspelning: allt med, i normal hastighet.
@@ -94,6 +100,7 @@ public struct EditProject: Codable, Equatable, Sendable {
         cursor = other.cursor; camera = other.camera; shortcuts = other.shortcuts; captions = other.captions
         showsChapterBanner = other.showsChapterBanner; transition = other.transition
         fadeInOut = other.fadeInOut; motionBlur = other.motionBlur
+        showsInk = other.showsInk; inkHold = other.inkHold
     }
 
     /// Bara utseendet, för att spara som standard.
@@ -133,6 +140,8 @@ public struct EditProject: Codable, Equatable, Sendable {
         transition = c.value(.transition, d.transition)
         fadeInOut = c.value(.fadeInOut, d.fadeInOut)
         motionBlur = c.value(.motionBlur, d.motionBlur)
+        showsInk = c.value(.showsInk, d.showsInk)
+        inkHold = c.value(.inkHold, d.inkHold)
     }
 
     // MARK: - Delar

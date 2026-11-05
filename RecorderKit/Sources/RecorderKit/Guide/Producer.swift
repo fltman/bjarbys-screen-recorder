@@ -23,6 +23,14 @@ public enum Producer {
         out.append("Chapters: " + (project.chapters.isEmpty ? "none" : project.chapters.map { "\(fmt($0.at)) \($0.title)" }.joined(separator: "; ")))
         out.append("Audio clips: " + (project.audioClips.isEmpty ? "none" : project.audioClips.map { "\($0.role.rawValue)@\(fmt($0.at)) \(fmt($0.duration)) s" }.joined(separator: "; ")))
         out.append("Captions: \(rec.transcript == nil ? "no transcript" : (project.captions.visible ? "on" : "off")). Masks: \(project.masks.count).")
+        // Pennan: det presentatören ritade på skärmen pekar ut något (ritas i efterhand, avstängbart).
+        let ink = InkTrack(events: rec.events, mapping: rec.mapping)
+        if !ink.isEmpty {
+            out.append("Pen strokes (drawn live, shown \(project.showsInk ? "on" : "off"), stay \(fmt(project.inkHold)) s): " + ink.strokes.map { st in
+                let xs = st.points.map(\.p.x), ys = st.points.map(\.p.y)
+                return "\(fmt(st.start))–\(fmt(st.end)) around (\(fmt3(Double((xs.min()! + xs.max()!) / 2))), \(fmt3(Double((ys.min()! + ys.max()!) / 2))))"
+            }.joined(separator: "; "))
+        }
 
         if let words = rec.transcript?.words, !words.isEmpty {
             out.append("\n## What is said (transcript, \(words.count) words)")

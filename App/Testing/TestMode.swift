@@ -126,6 +126,8 @@ enum TestMode {
                     print(lines.joined(separator: "\n"))
                     code = 0
                 } catch { print(error.localizedDescription); code = 1 }
+            } else if let i = args.firstIndex(of: "--prov-penna"), args.count > i + 1 {
+                code = await inkTest(out: URL(fileURLWithPath: args[i + 1]))
             } else if let i = args.firstIndex(of: "--prov-slaihop"), args.count > i + 3 {
                 // Slår ihop paketen (i den givna ordningen) till ett nytt i mappen och mäter resultatet.
                 let bundles = args[(i + 2)...].prefix { !$0.hasPrefix("--") }.map { RecordingBundle(url: URL(fileURLWithPath: $0)) }
@@ -476,6 +478,64 @@ enum TestMode {
             print("{\"fel\":\"\(error.localizedDescription)\"}")
             return 1
         }
+    }
+
+    /// Pennans fönster utan att visa det: syntetiska mushändelser (en båge och ett kort streck),
+    /// strecken som lämnas vidare, livebilden som PNG och att strecken tonas bort.
+    static func inkTest(out: URL) async -> Int32 {
+        guard let screen = NSScreen.main else { return 3 }
+        let overlay = InkOverlay()
+        overlay.hold = 0.3
+        var clock = 10.0
+        overlay.now = { clock }
+        var strokes: [([(t: Double, p: CGPoint)], String)] = []
+        overlay.onStroke = { strokes.append(($0, $1)) }
+        let window = InkWindow(screen: screen, overlay: overlay)
+        guard let view = window.contentView as? InkView else { return 1 }
+        func send(_ type: NSEvent.EventType, _ p: NSPoint) {
+            guard let e = NSEvent.mouseEvent(with: type, location: p, modifierFlags: [], timestamp: 0, windowNumber: window.windowNumber,
+                                             context: nil, eventNumber: 0, clickCount: 1, pressure: 1) else { return }
+            switch type {
+            case .leftMouseDown: view.mouseDown(with: e)
+            case .leftMouseUp: view.mouseUp(with: e)
+            default: view.mouseDragged(with: e)
+            }
+        }
+        let c = NSPoint(x: screen.frame.width * 0.4, y: screen.frame.height * 0.5)
+        send(.leftMouseDown, NSPoint(x: c.x + 120, y: c.y))
+        for i in 1...30 {
+            clock += 0.02
+            let a = Double(i) / 30 * .pi * 1.6
+            send(.leftMouseDragged, NSPoint(x: c.x + 120 * cos(a), y: c.y + 80 * sin(a)))
+        }
+        send(.leftMouseUp, NSPoint(x: c.x + 120 * cos(.pi * 1.6), y: c.y + 80 * sin(.pi * 1.6)))
+        overlay.select(colorAt: 1)
+        send(.leftMouseDown, NSPoint(x: c.x + 200, y: c.y - 150)); clock += 0.1
+        send(.leftMouseDragged, NSPoint(x: c.x + 320, y: c.y - 100)); clock += 0.1
+        send(.leftMouseUp, NSPoint(x: c.x + 330, y: c.y - 95))
+        // Livebilden: lagren ritade till en bild.
+        let w = Int(screen.frame.width), h = Int(screen.frame.height)
+        if let layer = view.layer, let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+                                                       space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) {
+            ctx.setFillColor(CGColor(gray: 0.15, alpha: 1)); ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
+            layer.render(in: ctx)
+            if let img = ctx.makeImage(), let dest = CGImageDestinationCreateWithURL(out as CFURL, "public.png" as CFString, 1, nil) {
+                CGImageDestinationAddImage(dest, img, nil); CGImageDestinationFinalize(dest)
+            }
+        }
+        let layersBefore = view.layer?.sublayers?.count ?? 0
+        try? await Task.sleep(for: .seconds(0.3 + InkTrack.fade + 0.4))
+        let layersAfter = view.layer?.sublayers?.count ?? 0
+        let mainH = NSScreen.screens.first?.frame.height ?? 0
+        let first = strokes.first?.0.first
+        print("streck: \(strokes.count), punkter: \(strokes.map { $0.0.count }), färger: \(strokes.map(\.1))")
+        print(String(format: "första punkten t=%.2f global (%.0f, %.0f), väntat (%.0f, %.0f)", first?.t ?? -1, first?.p.x ?? -1, first?.p.y ?? -1,
+                     screen.frame.minX + c.x + 120, mainH - (screen.frame.minY + c.y)))
+        print(String(format: "sista punkten t=%.2f", strokes.first?.0.last?.t ?? -1))
+        print("lager före bortgång: \(layersBefore), efter: \(layersAfter)")
+        window.close()
+        return strokes.count == 2 && layersAfter == 0 ? 0 : 1
     }
 
     static func exportTest(bundle url: URL, preset id: String, out: URL) async -> Int32 {

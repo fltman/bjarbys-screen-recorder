@@ -256,6 +256,23 @@
         }
       }
     },
+    "%lld streck, ritade under inspelningen. De zoomar med bilden och tonas bort.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld strokes, drawn during the recording. They zoom with the picture and fade away."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld streck, ritade under inspelningen. De zoomar med bilden och tonas bort."
+          }
+        }
+      }
+    },
     "%lld×%lld, %lld bilder/s": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3384,6 +3401,23 @@
         }
       }
     },
+    "Ligger kvar": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stays for"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ligger kvar"
+          }
+        }
+      }
+    },
     "Ljud": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4404,6 +4438,23 @@
         }
       }
     },
+    "Pennan": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pen"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pennan"
+          }
+        }
+      }
+    },
     "Personnummer": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4570,6 +4621,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Region"
+          }
+        }
+      }
+    },
+    "Rita på skärmen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draw on Screen"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rita på skärmen"
+          }
+        }
+      }
+    },
+    "Rita på skärmen (%@) — 1–5 byter färg, syns inte i bild förrän i redigeraren": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draw on screen (%@) — 1–5 change colour; drawn into the film in the editor, not in the recording"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rita på skärmen (%@) — 1–5 byter färg, syns inte i bild förrän i redigeraren"
           }
         }
       }
@@ -4927,6 +5012,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sluta här"
+          }
+        }
+      }
+    },
+    "Sluta rita": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop Drawing"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sluta rita"
+          }
+        }
+      }
+    },
+    "Sluta rita (Esc)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop drawing (Esc)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sluta rita (Esc)"
           }
         }
       }
@@ -6610,6 +6729,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vinkel"
+          }
+        }
+      }
+    },
+    "Visa det som ritades": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show what was drawn"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visa det som ritades"
           }
         }
       }

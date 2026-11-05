@@ -42,6 +42,8 @@ open Skarminspelare.xcodeproj
   - `--prov-appljud <mapp> [--behall]` — ljud per app med egna toner: separation och synk mot SCK
   - `--prov-tappglapp <mapp> tappar|sck|bada[+ny]` — var tonen saknas, med/utan tappar och SCK,
     `+ny` = en ny ljudprocess ansluter mitt i
+  - `--prov-penna <png>` — pennans fönster med syntetiska mushändelser (visas inte): strecken,
+    punkterna i globala koordinater, livebilden som PNG och att strecken tonas bort
   - `--prov-slaihop <mapp> <paket> <paket> …` — slår ihop tagningar till ett nytt paket och mäter
     spåren, händelserna och orden
   - `--prov-uppladdning <fil> <http://127.0.0.1:port>` — uppladdningen mot en lokal provserver

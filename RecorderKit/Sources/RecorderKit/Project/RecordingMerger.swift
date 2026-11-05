@@ -107,6 +107,10 @@ public enum RecordingMerger {
                 if let x = e.x { moved.x = x + dx }
                 if let y = e.y { moved.y = y + dy }
                 if var r = e.rect { r.x += dx; r.y += dy; moved.rect = r }
+                if var pts = e.pts {
+                    for j in stride(from: 0, to: pts.count - 2, by: 3) { pts[j + 1] += dx; pts[j + 2] += dy }
+                    moved.pts = pts
+                }
                 log.append(moved)
             }
             for entry in b.readCursors().entries where catalog.entry(entry.id) == nil {

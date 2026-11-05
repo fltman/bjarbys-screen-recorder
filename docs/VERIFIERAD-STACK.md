@@ -306,6 +306,15 @@ växer fram. ⚠️ Först förstorades den råa skärmbilden — en mask hade s
 den maskade (provat med ifylld och pixlad mask: ingen läsbar text i luppen). ⚠️ En svart ruta
 som bakgrund i `CIBlendWithMask` gav svarta hörn runt cirkeln; bakgrunden ska vara `.empty()`.
 
+## Pennan (2026-11-05)
+
+- `--prov-penna`: syntetiska `NSEvent`-musslag direkt till pennans vy (fönstret visas inte):
+  två streck med 31 och 3 punkter, färgbyte med 1–5 följer med, första punktens globala
+  koordinat (725, 491) = den väntade, och lagren är borta efter kvar-tiden + 0,4 s.
+- Renderingen (syntetiskt paket med en båge 0,5–1,3 s): halvritad vid 0,8, hel vid 2,2, skarp
+  i 2× zoom på väg bort vid 4,55 (opacitet 0,375), borta vid 5,5. Ett färdigt streck ritas en
+  gång per upplösningssteg (½×) till en IOSurface; medan det ritas görs bilden om per ruta.
+
 ## Bara ljudet (2026-11-05)
 
 - Syntetisk tagning, 3 s (mikrofon 440 Hz mono, app 880 Hz stereo): WAV 24 bit 48 kHz exakt

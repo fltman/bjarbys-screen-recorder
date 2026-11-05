@@ -20,7 +20,10 @@ is included; to have the app follow your system language instead, run
 - A 3-2-1 countdown, then a floating panel with time, level meters, pause, stop and
   discard. It warns about a silent microphone, a disk running full and tracks that stop.
 - Global shortcuts: ⌃⌥⌘R start/stop, ⌃⌥⌘P pause, ⌃⌥⌘A record an area, ⌃⌥⌘S save the
-  flashback — all changeable under Settings › Keyboard Shortcuts.
+  flashback, ⌃⌥⌘D draw — all changeable under Settings › Keyboard Shortcuts.
+- A pen: draw on the screen while you record to circle or point at something (1–5 change colour,
+  Esc stops). The strokes are saved as data, not burned in — in the film they zoom with the
+  picture, fade like they did on screen, and can be switched off.
 - The app's own windows never end up in the recording, and on request neither do desktop icons,
   notifications or desktop widgets — without touching your desktop or system settings.
 - HDR on HDR displays: 10-bit BT.2020 PQ, exported as HDR (HLG, HEVC 10-bit) or as SDR with

@@ -49,6 +49,20 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
     public var onStatus: ((Status) -> Void)?
     /// Appens egna paneler, där klick inte ska loggas (globala punkter, origo uppe till vänster).
     public func setIgnoredRegions(_ rects: [CGRect]) { input?.setIgnoredRegions(rects) }
+    /// Pennan på eller av (musens nedtryck blir då inte klick).
+    public func setDrawing(_ on: Bool) { input?.setDrawing(on) }
+
+    /// Ett streck som ritades på skärmen: punkterna med tid på tidslinjen och global punkt
+    /// (origo uppe till vänster). Loggas som en `ink`-händelse.
+    public func logInk(_ points: [(t: Double, p: CGPoint)], color: String) {
+        guard let start = points.first?.t else { return }
+        var flat: [Double] = []
+        flat.reserveCapacity(points.count * 3)
+        for q in points {
+            flat += [((q.t - start) * 1000).rounded() / 1000, (Double(q.p.x) * 10).rounded() / 10, (Double(q.p.y) * 10).rounded() / 10]
+        }
+        log.append(InputEvent(t: start, k: .ink, pts: flat, color: color))
+    }
 
     /// Första hela rutan har kommit (tidslinjen har en nollpunkt).
     public var hasStarted: Bool { clock.isStarted }
