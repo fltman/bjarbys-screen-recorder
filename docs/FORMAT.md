@@ -72,7 +72,7 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 
 | Fält | Betydelse |
 |---|---|
-| `segments[]` | delarna som är med, i ordning: `start`, `end`, `speed`, `transitionIn` (övergången in i delen; saknas = projektets) |
+| `segments[]` | delarna som är med, i ordning: `start`, `end`, `speed`, `transitionIn` (övergången in i delen; saknas = projektets), `cameraLayout` (`bubble`, `large`, `split`, `hidden`; saknas = projektets) |
 | `zooms[]` | `start`, `end`, `scale`, `centerX`/`centerY` (0–1), `followsCursor`, `isAuto` |
 | `autoZoom`, `zoomScale` | föreslå zoomar ur klicken, och hur mycket |
 | `background` | `kind` (`gradient`, `solid`, `blur`), `colorA`, `colorB`, `angle` |
@@ -88,7 +88,6 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 | `overlays[]` | bildlagret: `kind` (`title`, `callout`, `fact`, `qr`, `text`, `image`, `video` — video med `offset` i filen, `volume`, `speed` (0,25–4; `duration` är tiden i filmen), `crop` (utsnitt av videon, 0–1, origo uppe till vänster) och `softness` (mjuka kanter 0–1), helbild = `frame` [0,0,1,1]), `frame` (fri placering 0–1), `file` (bild i `media/`), `size`, `background`, `at` (källtid), `duration` (s i filmen), `title`, `lines`, `url`, `target` (0–1, markeringens mål), `corner` |
 | `chapters[]`, `showsChapterBanner` | kapitel (`at`, `title`) och om kapitelraden visas |
 | `audioClips[]` | extra ljud i `media/`: `role` (`narration`, `music`, `effect`), `at`, `file`, `text`, `duration`, `volume`, `fadeIn`, `fadeOut` |
-| `segments[]` | delarna i filmens ordning: `start`, `end` (källtid), `speed`, `transitionIn`, `cameraLayout` (`bubble`, `large`, `split`, `hidden`; saknas = projektets) |
 | `audio` | volym och tystning per spår; `appVolumes` (bundle-id → volym, standard 0,8) och `appMuted` för appar med eget spår; `duckSystem`, `duckLevel` sänker datorljudet och apparna under tal; `voiceIsolation` använder `derived/mic-isolated.caf` |
 
 ## media/ och leverans.md
