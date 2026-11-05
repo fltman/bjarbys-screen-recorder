@@ -11,6 +11,7 @@ import SwiftUI
 ///     Skarminspelare --prov-aterstall <mapp>
 ///     Skarminspelare --prov-transkribera <paket> [--modell <fil>] [--sprak sv]
 ///     Skarminspelare --prov-ljudstyrka <ljudfil>
+///     Skarminspelare --prov-vyer <mapp> <paket>   (alla fönster och paneler som bilder)
 ///     Skarminspelare --prov-flashback <del-s> <buffert-s> <kör-s> <spara-s> <mapp>
 ///     Skarminspelare --prov-rostisolering <ljudfil> <ut.caf>
 ///     Skarminspelare --prov-maskera <paket> <t1,t2,…> <mapp>   (söker känslig text, renderar)
@@ -91,6 +92,8 @@ enum TestMode {
                 } catch {
                     print(#"{"fel":"\#(error.localizedDescription)"}"#); code = 1
                 }
+            } else if let i = args.firstIndex(of: "--prov-vyer"), args.count > i + 2 {
+                code = await viewSnapshots(out: URL(fileURLWithPath: args[i + 1]), bundle: URL(fileURLWithPath: args[i + 2]))
             } else if let i = args.firstIndex(of: "--prov-ljudstyrka"), args.count > i + 1 {
                 let m = try? await Loudness.measure(AVURLAsset(url: URL(fileURLWithPath: args[i + 1])))
                 print(m.map { String(format: #"{"lufs":%.2f,"topp_dbfs":%.2f,"forstarkning_db":%.2f}"#, $0.integrated,
@@ -340,6 +343,53 @@ enum TestMode {
             return 0
         } catch {
             await recorder.stop()
+            print("{\"fel\":\"\(error.localizedDescription)\"}")
+            return 1
+        }
+    }
+
+    /// Ritar appens fönster och paneler utanför skärmen, för att granska utseendet.
+    static func viewSnapshots(out: URL, bundle: URL) async -> Int32 {
+        do {
+            try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+            func shot<V: View>(_ name: String, _ size: NSSize, _ view: V, dark: Bool = false) async throws {
+                let window = NSWindow(contentRect: NSRect(origin: CGPoint(x: -6000, y: -6000), size: size),
+                                      styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
+                window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+                // Fönstrets bakgrund bakom vyn: annars blir det genomskinliga svart i PNG:en.
+                let host = NSHostingView(rootView: view.background(Color(nsColor: .windowBackgroundColor)))
+                host.frame = NSRect(origin: .zero, size: size)
+                window.contentView = host
+                window.orderFront(nil)
+                try await Task.sleep(for: .milliseconds(700))
+                host.layoutSubtreeIfNeeded()
+                guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return }
+                host.cacheDisplay(in: host.bounds, to: rep)
+                try rep.representation(using: .png, properties: [:])?.write(to: out.appendingPathComponent(name + ".png"))
+                window.orderOut(nil)
+            }
+            let app = AppModel.shared
+            try await shot("bibliotek", NSSize(width: 980, height: 640), LibraryView().environmentObject(app))
+            try await shot("bibliotek-mork", NSSize(width: 980, height: 640), LibraryView().environmentObject(app), dark: true)
+            try await shot("behorigheter", NSSize(width: 600, height: 560), PermissionsView())
+            try await shot("hud", NSSize(width: 360, height: 140), HUDView(controller: app.recorder).padding(10), dark: true)
+            try await shot("manus", NSSize(width: 560, height: 460), ScriptEditorView(settings: app.settings))
+            try await shot("delning", NSSize(width: 520, height: 520), SharingSettingsView())
+            let model = EditorModel(recording: try LoadedRecording.load(RecordingBundle(url: bundle)))
+            for _ in 0..<40 where model.thumbnails.isEmpty || model.player.currentItem == nil {
+                try await Task.sleep(for: .milliseconds(100))
+            }
+            try await shot("redigerare", NSSize(width: 1400, height: 860), EditorView(model: model))
+            try await shot("redigerare-mork", NSSize(width: 1400, height: 860), EditorView(model: model), dark: true)
+            for tab in InspectorView.Tab.allCases {
+                UserDefaults.standard.set(tab.rawValue, forKey: "inspectorTab")
+                try await shot("inspektor-\(tab.rawValue)", NSSize(width: 310, height: 860), InspectorView(model: model))
+            }
+            UserDefaults.standard.set(InspectorView.Tab.style.rawValue, forKey: "inspectorTab")
+            try await shot("export", NSSize(width: 560, height: 560), ExportSheet(model: model))
+            print(#"{"mapp":"\#(out.path)"}"#)
+            return 0
+        } catch {
             print("{\"fel\":\"\(error.localizedDescription)\"}")
             return 1
         }

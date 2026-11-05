@@ -10,26 +10,88 @@ struct InspectorView: View {
         Binding(get: { model.project[keyPath: keyPath] }, set: { v in model.update { $0[keyPath: keyPath] = v } })
     }
 
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                if let zoom = model.selectedZoom { zoomSection(zoom) }
-                if let seg = model.selectedSegment { segmentSection(seg) }
-                backgroundSection
-                frameSection
-                autoZoomSection
-                cursorSection
-                shortcutSection
-                maskSection
-                if model.recording.hasCamera { cameraSection }
-                if model.recording.hasMicrophone || model.recording.hasSystemAudio {
-                    speechSection
-                    audioSection
-                }
+    /// Flikarna: efter vad man håller på med, så att varje flik ryms utan att rulla.
+    enum Tab: String, CaseIterable, Identifiable {
+        case style, motion, speech, privacy
+        var id: String { rawValue }
+        var icon: String {
+            switch self {
+            case .style: "paintpalette"
+            case .motion: "cursorarrow.motionlines"
+            case .speech: "waveform"
+            case .privacy: "eye.slash"
             }
-            .padding(16)
+        }
+        var title: LocalizedStringKey {
+            switch self {
+            case .style: "Stil"
+            case .motion: "Rörelse"
+            case .speech: "Tal"
+            case .privacy: "Dölj"
+            }
+        }
+    }
+
+    @AppStorage("inspectorTab") private var tab: Tab = .style
+
+    var body: some View {
+        VStack(spacing: 0) {
+            tabBar
+            Divider()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // Det markerade först, oavsett flik.
+                    if let zoom = model.selectedZoom { zoomSection(zoom); Divider() }
+                    if let seg = model.selectedSegment { segmentSection(seg); Divider() }
+                    switch tab {
+                    case .style:
+                        backgroundSection
+                        frameSection
+                        if model.recording.hasCamera { cameraSection }
+                    case .motion:
+                        autoZoomSection
+                        cursorSection
+                        shortcutSection
+                    case .speech:
+                        if model.recording.hasMicrophone || model.recording.hasSystemAudio {
+                            speechSection
+                            audioSection
+                        } else {
+                            Text("Inspelningen har inget ljud.").foregroundStyle(.secondary)
+                        }
+                    case .privacy:
+                        maskSection
+                    }
+                }
+                .padding(16)
+            }
         }
         .background(Color(nsColor: .windowBackgroundColor))
+        // Markeras något i tidslinjen visas fliken där det hör hemma.
+        .onChange(of: model.selectedMaskID) { _, id in if id != nil { tab = .privacy } }
+    }
+
+    private var tabBar: some View {
+        HStack(spacing: 4) {
+            ForEach(Tab.allCases) { t in
+                Button { tab = t } label: {
+                    VStack(spacing: 3) {
+                        Image(systemName: t.icon).font(.system(size: 15, weight: .medium))
+                        Text(t.title).font(.caption2.weight(.medium))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 7)
+                    .foregroundStyle(tab == t ? Color.accentColor : Color.secondary)
+                    .background(RoundedRectangle(cornerRadius: 7)
+                        .fill(tab == t ? Color.accentColor.opacity(0.12) : Color.clear))
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help(t.title)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
     }
 
     // MARK: - Markerat
@@ -54,9 +116,9 @@ struct InspectorView: View {
     private func segmentSection(_ seg: EditProject.ClipSegment) -> some View {
         Section2("Markerad del", systemImage: "film") {
             Picker("Hastighet", selection: Binding(get: { seg.speed }, set: { model.setSpeed($0, for: seg.id) })) {
-                ForEach([0.5, 1, 1.5, 2, 4, 8], id: \.self) { Text(String(format: "%g×", $0)).tag($0) }
+                ForEach([0.5, 1, 1.5, 2, 4, 8], id: \.self) { Text(AppLocale.format("%g×", $0)).tag($0) }
             }
-            Text("\(String(format: "%.1f", seg.duration)) s i inspelningen").font(.caption).foregroundStyle(.secondary)
+            Text("\(AppLocale.format("%.1f", seg.duration)) s i inspelningen").font(.caption).foregroundStyle(.secondary)
             Button("Ta bort delen", role: .destructive) { model.deleteSegment(seg.id) }
                 .disabled(model.project.segments.count < 2)
         }
@@ -232,7 +294,7 @@ struct InspectorView: View {
                 Text(kindName(mask.kind)).font(.callout)
                 Text(mask.hint).font(.caption.monospaced()).foregroundStyle(.secondary)
                 Spacer()
-                Text(String(format: "%.1f–%.1f s", mask.start, mask.end)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                Text(AppLocale.format("%.1f–%.1f s", mask.start, mask.end)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
             }
             .contentShape(Rectangle())
             .onTapGesture {
@@ -309,7 +371,7 @@ struct InspectorView: View {
             let dead = canFind ? model.deadTime(minimum: deadMinimum) : []
             let total = dead.map { $0.upperBound - $0.lowerBound }.reduce(0, +)
             Button(dead.isEmpty ? String(localized: "Ingen dödtid") :
-                    String(localized: "Klipp bort \(dead.count) pauser (\(String(format: "%.1f", total)) s)")) {
+                    String(localized: "Klipp bort \(dead.count) pauser (\(AppLocale.format("%.1f", total)) s)")) {
                 model.removeDeadTime(minimum: deadMinimum)
             }
             .disabled(dead.isEmpty)
@@ -432,7 +494,7 @@ private struct LabeledSlider: View {
             HStack {
                 Text(title)
                 Spacer()
-                Text(String(format: format, value * scale)).monospacedDigit().foregroundStyle(.secondary)
+                Text(AppLocale.format(format, value * scale)).monospacedDigit().foregroundStyle(.secondary)
             }
             .font(.callout)
             Slider(value: $value, in: range, onEditingChanged: onEditingChanged)

@@ -32,6 +32,8 @@ open Skarminspelare.xcodeproj
   - `--prov-rostisolering <ljudfil> <ut.caf>` — Apples röstisolering offline
   - `--prov-flashback <del-s> <buffert-s> <kör-s> <spara-s> <mapp>` — bufferten i drift, mäter skarvarna
   - `--prov-teleprompter <png>` — teleprompterrutan efter 6 s rullning, utanför skärmen
+  - `--prov-vyer <mapp> <paket>` — alla fönster och paneler (ljust och mörkt, inspektörens flikar)
+    som PNG; material och videolager ritas inte utanför skärmen
   - `--prov-uppladdning <fil> <http://127.0.0.1:port>` — uppladdningen mot en lokal provserver
     med påhittade provnycklar (aldrig riktiga)
   Startad från terminalen lånar binären terminalens skärminspelningsbehörighet.
@@ -51,6 +53,13 @@ open Skarminspelare.xcodeproj
 - `docs/FORMAT.md` — projektpaketet `.bsrec`. `docs/VERIFIERAD-STACK.md` — uppmätta fakta.
   `docs/FÄRDPLAN.md` — faserna.
 - `vault/` — Obsidian-valv för arbetsanteckningar, gitignorerat, kommer aldrig in i repot.
+
+## Utseende
+
+- Datum och decimaltal formateras med `AppLocale` (gränssnittets språk), inte `Locale.current`
+  (systemets region) — annars "Nov 4" och "2.0" mitt i svensk text.
+- Inspektören har flikar (Stil, Rörelse, Tal, Dölj) så att varje flik ryms utan att rulla;
+  det markerade (zoom, del) visas överst oavsett flik.
 
 ## Språk
 

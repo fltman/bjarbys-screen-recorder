@@ -52,7 +52,7 @@ struct EditorView: View {
                 TransportBar(model: model)
                 Divider()
                 TimelineView(model: model)
-                    .frame(height: 210)
+                    .frame(height: TimelineView.height(for: model))
             }
             Divider()
             InspectorView(model: model)
@@ -107,7 +107,10 @@ private struct TransportBar: View {
             .help("Spela/pausa (mellanslag)")
             Text("\(Self.time(model.currentTime)) / \(Self.time(model.duration))")
                 .font(.system(.callout, design: .monospaced))
+                .monospacedDigit()
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .fixedSize()
             Divider().frame(height: 18)
             Button { model.split() } label: { Label("Dela", systemImage: "scissors") }
                 .help("Dela vid spelhuvudet (⌘B)")
@@ -128,12 +131,14 @@ private struct TransportBar: View {
                 Label("Exportera …", systemImage: "square.and.arrow.up")
             }
             .buttonStyle(.borderedProminent)
+            .fixedSize()
             .help("⌘E")
         }
         .buttonStyle(.bordered)
         .controlSize(.regular)
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 
     static func time(_ s: Double) -> String {

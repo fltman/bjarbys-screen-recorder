@@ -15,18 +15,61 @@ struct TimelineView: View {
         case resizeEnd(UUID)
     }
 
-    // Filernas placering uppifrån.
+    // Filernas placering uppifrån. Undertexter och masker får egna filer när de finns.
     private let rulerH: CGFloat = 22
     private let clipY: CGFloat = 26, clipH: CGFloat = 58
-    private let zoomY: CGFloat = 90, zoomH: CGFloat = 28
-    private let waveY: CGFloat = 124, waveH: CGFloat = 32
+    private let zoomY: CGFloat = 90, zoomH: CGFloat = 26
+    private let laneH: CGFloat = 20
+    private let waveH: CGFloat = 30
     private let leading: CGFloat = 12
+    private var captionY: CGFloat? { model.plan.captions == nil ? nil : zoomY + zoomH + 6 }
+    private var maskY: CGFloat? {
+        model.project.masks.isEmpty ? nil : (captionY.map { $0 + laneH + 4 } ?? zoomY + zoomH + 6)
+    }
+    private var waveY: CGFloat { (maskY ?? captionY).map { $0 + laneH + 8 } ?? zoomY + zoomH + 8 }
+
+    /// Höjden tidslinjen behöver för filerna som finns.
+    static func height(for model: EditorModel) -> CGFloat {
+        let waves = (model.micWave.isEmpty ? 0 : 1) + (model.systemWave.isEmpty ? 0 : 1)
+        let extra = (model.plan.captions == nil ? 0 : 24) + (model.project.masks.isEmpty ? 0 : 24)
+        return 26 + 58 + 6 + 26 + 8 + CGFloat(extra) + CGFloat(max(waves, 1)) * 34 + 10 + 26
+    }
+
+    /// Ikonerna till vänster, en per fil.
+    private var laneIcons: some View {
+        ZStack(alignment: .topLeading) {
+            Color.clear
+            laneIcon("film", y: clipY + clipH / 2, help: "Klipp")
+            laneIcon("plus.magnifyingglass", y: zoomY + zoomH / 2, help: "Zoom")
+            if let y = captionY { laneIcon("captions.bubble", y: y + laneH / 2, help: "Undertexter") }
+            if let y = maskY { laneIcon("eye.slash", y: y + laneH / 2, help: "Dölj känsligt") }
+            let waves = [(model.micWave, "mic"), (model.systemWave, "speaker.wave.2")].filter { !$0.0.isEmpty }
+            ForEach(Array(waves.enumerated()), id: \.offset) { i, w in
+                laneIcon(w.1, y: waveY + CGFloat(i) * (waveH + 4) + waveH / 2,
+                         help: w.1 == "mic" ? "Mikrofon" : "Datorljud")
+            }
+        }
+        .frame(width: 30)
+        .background(Color(nsColor: .windowBackgroundColor).opacity(0.6))
+    }
+
+    private func laneIcon(_ name: String, y: CGFloat, help: LocalizedStringKey) -> some View {
+        Image(systemName: name)
+            .font(.system(size: 11, weight: .medium))
+            .foregroundStyle(.secondary)
+            .frame(width: 30, height: 18)
+            .position(x: 15, y: y)
+            .help(help)
+    }
 
     var body: some View {
         GeometryReader { geo in
             let pps = effectivePPS(width: geo.size.width)
             let contentWidth = max(geo.size.width, CGFloat(model.duration * pps) + leading * 2)
             VStack(spacing: 0) {
+                HStack(spacing: 0) {
+                laneIcons
+                Divider()
                 ScrollView(.horizontal, showsIndicators: true) {
                     Canvas { ctx, size in
                         draw(&ctx, size: size, pps: pps)
@@ -37,8 +80,8 @@ struct TimelineView: View {
                         .onChanged { handleDrag($0, pps: pps) }
                         .onEnded { _ in drag = nil })
                 }
+                }
                 HStack(spacing: 8) {
-                    Text(lanesLegend).font(.caption2).foregroundStyle(.secondary)
                     Spacer()
                     Image(systemName: "minus.magnifyingglass").foregroundStyle(.secondary)
                     Slider(value: Binding(get: { log(pps) }, set: { pixelsPerSecond = exp($0) }),
@@ -52,13 +95,6 @@ struct TimelineView: View {
             }
         }
         .background(Color(nsColor: .controlBackgroundColor))
-    }
-
-    private var lanesLegend: String {
-        var parts = [String(localized: "Klipp"), String(localized: "Zoom")]
-        if !model.micWave.isEmpty { parts.append(String(localized: "Mikrofon")) }
-        if !model.systemWave.isEmpty { parts.append(String(localized: "Datorljud")) }
-        return parts.joined(separator: " · ")
     }
 
     private func fitPPS(width: CGFloat) -> Double {
@@ -98,7 +134,7 @@ struct TimelineView: View {
                 px += thumbW
             }
             if piece.speed != 1 {
-                let label = Text(String(format: "%g×", piece.speed)).font(.caption.bold()).foregroundStyle(.white)
+                let label = Text(AppLocale.format("%g×", piece.speed)).font(.caption.bold()).foregroundStyle(.white)
                 ctx.fill(Capsule().path(in: CGRect(x: rect.minX + 6, y: rect.minY + 6, width: 34, height: 18)),
                          with: .color(.black.opacity(0.65)))
                 ctx.draw(label, at: CGPoint(x: rect.minX + 23, y: rect.minY + 15))
@@ -117,13 +153,48 @@ struct TimelineView: View {
             ctx.fill(shape, with: .color(base.opacity(selected ? 0.55 : 0.32)))
             ctx.stroke(shape, with: .color(base.opacity(selected ? 1 : 0.7)), lineWidth: selected ? 2 : 1)
             if rect.width > 44 {
-                ctx.draw(Text(String(format: "%.1f×", zoom.scale)).font(.caption.weight(.semibold)),
+                ctx.draw(Text(AppLocale.format("%.1f×", zoom.scale)).font(.caption.weight(.semibold)),
                          at: CGPoint(x: rect.midX, y: rect.midY))
             }
             if selected {
                 for hx in [rect.minX + 3, rect.maxX - 3] {
                     ctx.fill(Capsule().path(in: CGRect(x: hx - 2, y: rect.minY + 6, width: 4, height: rect.height - 12)),
                              with: .color(.white))
+                }
+            }
+        }
+
+        // Undertexter: en ruta per textrad, med början av texten.
+        if let y = captionY, let captions = model.plan.captions {
+            for cue in captions.cues {
+                let rect = CGRect(x: x(cue.start, pps), y: y, width: max(3, CGFloat((cue.end - cue.start) * pps) - 2), height: laneH)
+                let shape = RoundedRectangle(cornerRadius: 4).path(in: rect)
+                ctx.fill(shape, with: .color(.teal.opacity(0.22)))
+                ctx.stroke(shape, with: .color(.teal.opacity(0.55)), lineWidth: 0.8)
+                if rect.width > 30 {
+                    var inner = ctx
+                    inner.clip(to: shape)
+                    inner.draw(Text(cue.text.replacingOccurrences(of: "\n", with: " ")).font(.system(size: 10)),
+                               at: CGPoint(x: rect.minX + 5, y: rect.midY), anchor: .leading)
+                }
+            }
+        }
+
+        // Masker: där något döljs i den redigerade filmen.
+        if let y = maskY {
+            for mask in model.project.masks {
+                guard let r = outputRange(start: mask.start, end: mask.end) else { continue }
+                let rect = CGRect(x: x(r.lowerBound, pps), y: y, width: max(4, CGFloat((r.upperBound - r.lowerBound) * pps)), height: laneH)
+                let shape = RoundedRectangle(cornerRadius: 4).path(in: rect)
+                let selected = mask.id == model.selectedMaskID
+                let color: Color = mask.enabled ? .red : .gray
+                ctx.fill(shape, with: .color(color.opacity(selected ? 0.45 : 0.22)))
+                ctx.stroke(shape, with: .color(color.opacity(selected ? 1 : 0.55)), lineWidth: selected ? 2 : 0.8)
+                if rect.width > 40 {
+                    var inner = ctx
+                    inner.clip(to: shape)
+                    inner.draw(Text(mask.hint).font(.system(size: 10, design: .monospaced)),
+                               at: CGPoint(x: rect.minX + 5, y: rect.midY), anchor: .leading)
                 }
             }
         }
@@ -165,7 +236,7 @@ struct TimelineView: View {
             ctx.fill(Path(CGRect(x: px, y: rulerH - 7, width: 1, height: 7)), with: .color(.secondary))
             let label = s >= 60 || step >= 1
                 ? String(format: "%d:%02d", Int(s) / 60, Int(s) % 60)
-                : String(format: "%.2f", s)
+                : AppLocale.format("%.2f", s)
             ctx.draw(Text(label).font(.system(size: 9, design: .monospaced)).foregroundStyle(.secondary),
                      at: CGPoint(x: px + 3, y: 7), anchor: .leading)
             s += step
@@ -181,9 +252,13 @@ struct TimelineView: View {
 
     /// Var en zoom (i källtid) syns i den redigerade filmen, eller nil om den är bortklippt.
     private func outputRange(of zoom: EditProject.ZoomSegment) -> ClosedRange<Double>? {
+        outputRange(start: zoom.start, end: zoom.end)
+    }
+
+    private func outputRange(start: Double, end: Double) -> ClosedRange<Double>? {
         var lo: Double?, hi: Double?
         for p in model.timeMap.pieces {
-            let a = max(zoom.start, p.sourceStart), b = min(zoom.end, p.sourceEnd)
+            let a = max(start, p.sourceStart), b = min(end, p.sourceEnd)
             guard b > a else { continue }
             let oa = p.outputStart + (a - p.sourceStart) / p.speed
             let ob = p.outputStart + (b - p.sourceStart) / p.speed
@@ -213,6 +288,12 @@ struct TimelineView: View {
                     else { drag = .move(zoom.id, start: zoom.start, end: zoom.end, outStart: r.lowerBound) }
                     break
                 }
+            } else if let y = maskY, p.y >= y && p.y <= y + laneH {
+                let hit = model.project.masks.last { m in
+                    guard let r = outputRange(start: m.start, end: m.end) else { return false }
+                    return p.x >= x(r.lowerBound, pps) - 4 && p.x <= x(r.upperBound, pps) + 4
+                }
+                model.selectedMaskID = hit?.id
             } else if p.y >= clipY && p.y <= clipY + clipH {
                 model.selectedSegmentID = model.segment(atOutput: t(p.x, pps))?.id
                 model.selectedZoomID = nil

@@ -22,26 +22,37 @@ struct ExportSheet: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Exportera").font(.title2.weight(.semibold))
 
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
                 ForEach(ExportPreset.all) { p in
                     let canvas = p.canvas(aspect: model.project.aspect, source: model.recording.sourceSize)
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Image(systemName: p.id == presetID ? "largecircle.fill.circle" : "circle")
-                            .foregroundStyle(p.id == presetID ? Color.accentColor : .secondary)
+                    let selected = p.id == presetID
+                    HStack(alignment: .center, spacing: 12) {
+                        Image(systemName: Self.icon(p))
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundStyle(selected ? Color.accentColor : .secondary)
+                            .frame(width: 28)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(p.name).font(.headline)
-                            Text(p.detail).font(.callout).foregroundStyle(.secondary)
+                            Text(p.detail).font(.callout).foregroundStyle(.secondary).lineLimit(2)
                         }
-                        Spacer()
+                        Spacer(minLength: 8)
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text("\(Int(canvas.width))×\(Int(canvas.height)), \(p.fps) bilder/s")
+                            Text(verbatim: "\(Int(canvas.width))×\(Int(canvas.height))")
                             Text("≈ " + ByteCountFormatter.string(fromByteCount: p.estimatedBytes(canvas: canvas, duration: model.duration),
                                                                  countStyle: .file))
                         }
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.secondary)
                     }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 9)
+                    .background(RoundedRectangle(cornerRadius: 10)
+                        .fill(selected ? Color.accentColor.opacity(0.1) : Color.primary.opacity(0.03)))
+                    .overlay(RoundedRectangle(cornerRadius: 10)
+                        .stroke(selected ? Color.accentColor : Color.primary.opacity(0.08), lineWidth: selected ? 1.5 : 1))
                     .contentShape(Rectangle())
+                    // Dubbelklick först, annars hinner enkelklicket ta det.
+                    .onTapGesture(count: 2) { if progress == nil { presetID = p.id; chooseAndExport() } }
                     .onTapGesture { if progress == nil { presetID = p.id } }
                 }
             }
@@ -68,10 +79,15 @@ struct ExportSheet: View {
 
             HStack {
                 if progress == nil && finishedURL == nil {
-                    Button("Felrapport …") { makeBugReport() }
-                        .help("Film, steg för att återskapa, miljö och systemlogg i en mapp och en zip.")
-                    Button("Steg-för-steg-guide …") { makeGuide() }
-                        .help("En bild per klick och kortkommando, med det du sa som text. Markdown och HTML.")
+                    Menu {
+                        Button("Steg-för-steg-guide …") { makeGuide() }
+                        Button("Felrapport …") { makeBugReport() }
+                    } label: {
+                        Label("Mer", systemImage: "ellipsis.circle")
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                    .help("Steg-för-steg-guide (en bild per klick, med det du sa) eller felrapport (film, steg, miljö och systemlogg).")
                 }
                 if let finishedURL {
                     if let sharedURL {
@@ -92,6 +108,7 @@ struct ExportSheet: View {
                     if finishedURL == nil {
                         Button("Exportera …") { chooseAndExport() }
                             .keyboardShortcut(.defaultAction)
+                            .buttonStyle(.borderedProminent)
                     }
                 }
             }
@@ -118,6 +135,16 @@ struct ExportSheet: View {
                 self.error = error.localizedDescription
             }
             uploading = nil
+        }
+    }
+
+    static func icon(_ p: ExportPreset) -> String {
+        switch p.codec {
+        case .h264: "play.rectangle"
+        case .hevc: "4k.tv"
+        case .prores: "film.stack"
+        case .proresAlpha: "square.on.square.dashed"
+        case .gif: "photo.on.rectangle.angled"
         }
     }
 

@@ -35,6 +35,23 @@
         }
       }
     },
+    "%@ kl. %@": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ at %@"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kl. %@"
+          }
+        }
+      }
+    },
     "%@ s i inspelningen": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -902,6 +919,23 @@
         }
       }
     },
+    "Dölj": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dölj"
+          }
+        }
+      }
+    },
     "Dölj känsligt": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1714,6 +1748,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hörn"
+          }
+        }
+      }
+    },
+    "Idag kl. %@": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today at %@"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idag kl. %@"
+          }
+        }
+      }
+    },
+    "Igår kl. %@": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yesterday at %@"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Igår kl. %@"
           }
         }
       }
@@ -2585,6 +2653,23 @@
         }
       }
     },
+    "Mer": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mer"
+          }
+        }
+      }
+    },
     "Mikrofon": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3074,6 +3159,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rundad ruta"
+          }
+        }
+      }
+    },
+    "Rörelse": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Motion"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rörelse"
           }
         }
       }
@@ -3656,6 +3758,23 @@
         }
       }
     },
+    "Steg-för-steg-guide (en bild per klick, med det du sa) eller felrapport (film, steg, miljö och systemlogg).": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step-by-step guide (an image per click, with what you said) or bug report (video, steps, environment and system log)."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steg-för-steg-guide (en bild per klick, med det du sa) eller felrapport (film, steg, miljö och systemlogg)."
+          }
+        }
+      }
+    },
     "Steg-för-steg-guide …": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3669,6 +3788,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Steg-för-steg-guide …"
+          }
+        }
+      }
+    },
+    "Stil": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Style"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stil"
           }
         }
       }
@@ -4166,6 +4302,23 @@
         }
       }
     },
+    "Transkriberad": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcribed"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkriberad"
+          }
+        }
+      }
+    },
     "Transkriberar …": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4230,6 +4383,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Typ"
+          }
+        }
+      }
+    },
+    "Undertexter": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captions"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undertexter"
           }
         }
       }

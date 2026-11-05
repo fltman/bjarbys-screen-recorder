@@ -483,8 +483,8 @@ final class EditorModel: ObservableObject {
             }
             let (gain, limited) = Loudness.gain(for: m)
             update { $0.audio.microphoneVolume = gain; $0.audio.microphoneMuted = false }
-            let db = String(format: "%+.1f", 20 * log10(gain))
-            let measured = String(format: "%.1f", m.integrated)
+            let db = AppLocale.format("%+.1f", 20 * log10(gain))
+            let measured = AppLocale.format("%.1f", m.integrated)
             loudnessNote = limited
                 ? String(localized: "Mikrofonen låg på \(measured) LUFS. Höjd \(db) dB, mindre än målet så att topparna inte klipps.")
                 : String(localized: "Mikrofonen låg på \(measured) LUFS. Ändrad \(db) dB.")
