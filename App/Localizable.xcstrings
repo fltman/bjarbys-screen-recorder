@@ -477,6 +477,23 @@
         }
       }
     },
+    "Bufferten är tom ännu.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The buffer is still empty."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bufferten är tom ännu."
+          }
+        }
+      }
+    },
     "Börja här": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -868,6 +885,57 @@
         }
       }
     },
+    "Flashback": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flashback"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flashback"
+          }
+        }
+      }
+    },
+    "Flashback gick inte att spara: %@": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flashback could not be saved: %@"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flashback gick inte att spara: %@"
+          }
+        }
+      }
+    },
+    "Flashback stoppades: disken håller på att ta slut.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flashback stopped: the disk is running out."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flashback stoppades: disken håller på att ta slut."
+          }
+        }
+      }
+    },
     "Flytta till papperskorgen": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1034,6 +1102,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fönster"
+          }
+        }
+      }
+    },
+    "För lite ledigt diskutrymme för flashback.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too little free disk space for flashback."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "För lite ledigt diskutrymme för flashback."
           }
         }
       }
@@ -2075,6 +2160,23 @@
         }
       }
     },
+    "Med mikrofon": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With microphone"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Med mikrofon"
+          }
+        }
+      }
+    },
     "Mikrofon": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2500,6 +2602,23 @@
         }
       }
     },
+    "Senaste %lld min": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last %lld min"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senaste %lld min"
+          }
+        }
+      }
+    },
     "Senaste inspelningen": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2670,6 +2789,57 @@
         }
       }
     },
+    "Spara": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spara"
+          }
+        }
+      }
+    },
+    "Spara flashback": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save flashback"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spara flashback"
+          }
+        }
+      }
+    },
+    "Spara senaste %lld min  (⌃⌥⌘S)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save last %lld min  (⌃⌥⌘S)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spara senaste %lld min  (⌃⌥⌘S)"
+          }
+        }
+      }
+    },
     "Spara undertexter (.srt) bredvid filmen": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2683,6 +2853,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Spara undertexter (.srt) bredvid filmen"
+          }
+        }
+      }
+    },
+    "Sparar de senaste minuterna ur flashback-bufferten och öppnar dem.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saves the last minutes from the flashback buffer and opens them."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sparar de senaste minuterna ur flashback-bufferten och öppnar dem."
+          }
+        }
+      }
+    },
+    "Sparar …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving …"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sparar …"
           }
         }
       }
@@ -2734,6 +2938,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Spela in fönster …"
+          }
+        }
+      }
+    },
+    "Spela in i bakgrunden": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record in the background"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spela in i bakgrunden"
           }
         }
       }

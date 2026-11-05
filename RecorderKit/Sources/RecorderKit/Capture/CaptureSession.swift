@@ -45,6 +45,10 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
 
     /// Anropas ungefär tio gånger per sekund på huvudtråden.
     public var onStatus: ((Status) -> Void)?
+    /// Första hela rutan har kommit (tidslinjen har en nollpunkt).
+    public var hasStarted: Bool { clock.isStarted }
+    /// Nollpunkten i värdklockan (s), när den finns.
+    public var startHostTime: Double? { clock.origin?.seconds }
     /// Inspelningen behöver stoppas av ett skäl som inte är användarens (full disk, strömmen
     /// dog). Appen anropar då `stop(reason:)`.
     public var onAutoStop: ((StopReason) -> Void)?
@@ -206,6 +210,7 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         statusTimer?.invalidate()
         statusTimer = nil
         let end = clock.elapsed
+        if let origin = clock.origin { meta.startHostTime = origin.seconds }
 
         input?.stop()
         cursorSampler?.stop()

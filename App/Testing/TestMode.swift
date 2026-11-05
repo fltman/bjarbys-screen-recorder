@@ -11,6 +11,7 @@ import SwiftUI
 ///     Skarminspelare --prov-aterstall <mapp>
 ///     Skarminspelare --prov-transkribera <paket> [--modell <fil>] [--sprak sv]
 ///     Skarminspelare --prov-ljudstyrka <ljudfil>
+///     Skarminspelare --prov-flashback <del-s> <buffert-s> <kör-s> <spara-s> <mapp>
 ///     Skarminspelare --prov-rostisolering <ljudfil> <ut.caf>
 ///     Skarminspelare --prov-maskera <paket> <t1,t2,…> <mapp>   (söker känslig text, renderar)
 ///
@@ -58,6 +59,10 @@ enum TestMode {
                 } catch {
                     print(#"{"fel":"\#(error.localizedDescription)"}"#); code = 1
                 }
+            } else if let i = args.firstIndex(of: "--prov-flashback"), args.count > i + 5 {
+                code = await flashbackTest(segment: Double(args[i + 1]) ?? 4, buffer: Double(args[i + 2]) ?? 10,
+                                           run: Double(args[i + 3]) ?? 13, save: Double(args[i + 4]) ?? 10,
+                                           out: URL(fileURLWithPath: args[i + 5]))
             } else if let i = args.firstIndex(of: "--prov-ljudstyrka"), args.count > i + 1 {
                 let m = try? await Loudness.measure(AVURLAsset(url: URL(fileURLWithPath: args[i + 1])))
                 print(m.map { String(format: #"{"lufs":%.2f,"topp_dbfs":%.2f,"forstarkning_db":%.2f}"#, $0.integrated,
@@ -245,6 +250,68 @@ enum TestMode {
             print(String(data: data, encoding: .utf8) ?? "")
             return transcript.words.isEmpty ? 1 : 0
         } catch {
+            print("{\"fel\":\"\(error.localizedDescription)\"}")
+            return 1
+        }
+    }
+
+    /// Kör flashback-bufferten med korta delar, sparar och mäter det ihopsydda paketet:
+    /// längder, bildrutor och glapp i ljudet (där skarvarna sitter).
+    static func flashbackTest(segment: Double, buffer: Double, run: Double, save: Double, out: URL) async -> Int32 {
+        guard CGPreflightScreenCaptureAccess() else { print(#"{"fel":"behörighet saknas"}"#); return 2 }
+        let work = FileManager.default.temporaryDirectory.appendingPathComponent("skarminspelare-flashback-prov")
+        var options = CaptureOptions()
+        options.systemAudio = true
+        let recorder = FlashbackRecorder(bufferSeconds: buffer, segmentSeconds: segment, directory: work, options: options) {
+            let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+            guard let d = content.displays.first(where: { $0.displayID == CGMainDisplayID() }) ?? content.displays.first
+            else { throw FlashbackError.empty }
+            return CaptureTarget.display(d, in: content)
+        }
+        do {
+            try await recorder.start()
+            try await Task.sleep(for: .seconds(run))
+            let started = Date()
+            let bundle = try await recorder.save(last: save, into: out)
+            let saveTime = Date().timeIntervalSince(started)
+            let segments = recorder.segmentCount
+            await recorder.stop()
+            let meta = try bundle.readMeta()
+            var report: [String: Any] = ["paket": bundle.url.path, "langd": meta.duration, "delar_kvar": segments,
+                                         "spara_s": (saveTime * 100).rounded() / 100,
+                                         "handelser": bundle.readEvents().count,
+                                         "arbetsmapp_borta": !FileManager.default.fileExists(atPath: work.path)]
+            for track in meta.tracks {
+                let asset = AVURLAsset(url: bundle.url(for: track))
+                let duration = try await asset.load(.duration).seconds
+                guard let t = try await asset.loadTracks(withMediaType: track.kind == .screen ? .video : .audio).first,
+                      let reader = try? AVAssetReader(asset: asset) else { continue }
+                let output = AVAssetReaderTrackOutput(track: t, outputSettings: nil)
+                reader.add(output)
+                reader.startReading()
+                var times: [(Double, Double)] = []
+                while let b = output.copyNextSampleBuffer() {
+                    let pts = CMSampleBufferGetPresentationTimeStamp(b).seconds
+                    let dur = CMSampleBufferGetDuration(b).seconds
+                    times.append((pts, dur.isFinite ? dur : 0))
+                }
+                // Glapp: där nästa buffert börjar senare än föregående slutade (ljud), eller
+                // största avståndet mellan rutor (bild).
+                var gaps: [String] = []
+                for (a, b) in zip(times, times.dropFirst()) where track.kind != .screen && b.0 - (a.0 + a.1) > 0.002 {
+                    gaps.append(String(format: "%.3f+%.3f", a.0 + a.1, b.0 - (a.0 + a.1)))
+                }
+                let maxFrameGap = zip(times, times.dropFirst()).map { $1.0 - $0.0 }.max() ?? 0
+                report[track.kind.rawValue] = ["langd": (duration * 1000).rounded() / 1000, "buffertar": times.count,
+                                               "forsta": times.first?.0 ?? -1,
+                                               "glapp": track.kind == .screen ? [] : gaps,
+                                               "storsta_rutavstand": track.kind == .screen ? (maxFrameGap * 1000).rounded() / 1000 : 0]
+            }
+            let data = try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys])
+            print(String(data: data, encoding: .utf8) ?? "")
+            return 0
+        } catch {
+            await recorder.stop()
             print("{\"fel\":\"\(error.localizedDescription)\"}")
             return 1
         }

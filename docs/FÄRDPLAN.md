@@ -10,7 +10,7 @@ tagning, sedan redigerbar polish, sedan resten.
 | 2 | Polish-redigerare: fjäderzoom, syntetisk markör, bakgrund, kamerabubbla, tidslinje, export MP4/HEVC/ProRes/GIF | klar 2026-11-04 |
 | 3 | Transkript och redigering via text, utfyllnadsord/tystnad bort, undertexter, brusreducering, loudness, ducking. ⚠️ SpeechTranscriber kan inte svenska → KB-Whisper/whisper.cpp | klar 2026-11-05: transkript, text-redigering, undertexter (inbrända + .srt), dödtid, eh/öh, ducking, utjämning till −16 LUFS, brusreducering (Apples röstisolering) |
 | 4 | Maskning av känslig info: Vision-OCR, masker som följer texten, ogenomskinliga fyllningar | klar 2026-11-05 (egna masker justeras med reglage, inte genom att dra i bilden) |
-| 5 | Flashback-buffert (egen, SDK saknar SCClipBufferingOutput), App Intents, URL-schema, CLI + MCP, steg-för-steg-guide, felrapport | delvis 2026-11-05: MCP-server, URL-schema, Genvägar, steg-för-steg-guide. Kvar: flashback, felrapport |
+| 5 | Flashback-buffert (egen, SDK saknar SCClipBufferingOutput), App Intents, URL-schema, CLI + MCP, steg-för-steg-guide, felrapport | nästan klar 2026-11-05: MCP-server, URL-schema, Genvägar, steg-för-steg-guide, flashback-buffert. Kvar: felrapport |
 | 6 | HDR, 120 fps med jämn takt, ProRes 4444 med alfa, ljud per app (CATapDescription), teleprompter, stillbild/rullande skärmbild, delning till egen S3/R2 | |
 
 ## Kvar från fas 1–2 att pröva eller göra
@@ -23,6 +23,10 @@ tagning, sedan redigerbar polish, sedan resten.
 
 ## Byggt efter fas 2
 
+- Flashback (fas 5, 2026-11-05): `RecorderKit/Capture/Flashback.swift`. Sessioner à 60 s
+  som överlappar, i `~/Library/Caches/com.brattoo.skarminspelare/flashback`; "Spara senaste
+  N min" (⌃⌥⌘S, menyn, `skarminspelare://flashback-spara`, Genvägar) syr ihop dem rakt över till
+  ett vanligt paket och öppnar redigeraren. Mikrofonen bara om den väljs uttryckligen.
 - Steg-för-steg-guide (fas 5, 2026-11-05): `RecorderKit/Guide/`. Varje klick och kortkommando
   blir ett steg med en färdig bild; det som sades kring handlingen blir texten, annars en
   instruktion med elementets namn ("Klicka på knapp «Exportera»", sparas sedan nu vid klick

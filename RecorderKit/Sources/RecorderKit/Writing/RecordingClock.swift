@@ -35,6 +35,8 @@ public final class RecordingClock: @unchecked Sendable {
     }
 
     public var isStarted: Bool { state.withLock { $0.t0 != nil } }
+    /// Nollpunkten i värdklockan (första hela rutan), eller nil före start.
+    public var origin: CMTime? { state.withLock { $0.t0 } }
     public var isPaused: Bool { state.withLock { $0.pausedAt != nil } }
 
     public func pause(at time: CMTime = RecordingClock.hostNow()) {

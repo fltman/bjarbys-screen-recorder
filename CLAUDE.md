@@ -30,6 +30,7 @@ open Skarminspelare.xcodeproj
   - `--prov-maskera <paket> <t1,…> <mapp>` — söker känslig text och renderar rutor (sparar inte)
   - `--prov-ljudstyrka <ljudfil>` — LUFS enligt BS.1770 och förstärkningen till −16
   - `--prov-rostisolering <ljudfil> <ut.caf>` — Apples röstisolering offline
+  - `--prov-flashback <del-s> <buffert-s> <kör-s> <spara-s> <mapp>` — bufferten i drift, mäter skarvarna
   Startad från terminalen lånar binären terminalens skärminspelningsbehörighet.
 - `./scripts/sync-check.sh` mäter A/V-synk mot en blixt+pip-referens i QuickTime.
 - `swift scripts/make-icon.swift <png>` ritar appikonen (skalas in i `App/Assets.xcassets`).
@@ -47,6 +48,13 @@ open Skarminspelare.xcodeproj
 - `docs/FORMAT.md` — projektpaketet `.bsrec`. `docs/VERIFIERAD-STACK.md` — uppmätta fakta.
   `docs/FÄRDPLAN.md` — faserna.
 - `vault/` — Obsidian-valv för arbetsanteckningar, gitignorerat, kommer aldrig in i repot.
+
+## Språk
+
+Gränssnittet är låst till svenska: `SkarminspelareApp.lockLanguage()` sätter `AppleLanguages`
+i appens egen domän före första lokaliserade text (den här Macen har en-US först). Engelska
+finns kvar i katalogen; `defaults write com.brattoo.skarminspelare followSystemLanguage -bool true`
+låter appen följa systemspråket.
 
 ## Styrning utifrån
 

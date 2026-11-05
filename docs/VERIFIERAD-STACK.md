@@ -153,3 +153,19 @@ Provad genom MCP (`make_guide`) på brusprovet med två klick, ett elementnamn o
   engelska här. Guiden skrivs nu på transkriptets språk (annars förstaspråket).
 - Guidens bilder ärvde Reel-läge och undertext från filmen; nu görs de i inspelningens format,
   utan undertext (texten står i guiden), med zoom, markör och bakgrund kvar.
+
+## Flashback-buffert (2026-11-05)
+
+Byggd av vanliga sessioner som avlöser varandra (SDK 26.1 saknar `SCClipBufferingOutput`).
+Prov `--prov-flashback 4 10 13 10`: delar à 4 s, buffert 10 s, 13 s drift, spara 10 s,
+huvudskärmen + datorljud.
+- ⚠️ **Utan omkodning börjar bilden vid en nyckelruta**: den första sparade versionen hade
+  ingen bild de första 1,41 s (biten började mitt mellan nyckelrutor, varannan sekund).
+  Rättat: starten flyttas bakåt till närmaste nyckelruta — sparat blev 11,75 s i stället för 10.
+- Därefter: första rutan vid 0, största avstånd mellan rutor i hela biten 75 ms (två skarvar
+  ingår), ljudet utan glapp (14 buffertar, sammanhängande), sparandet tog 0,32 s (rakt över,
+  ingen omkodning). Arbetsmappen borta efter stopp; tre delar kvar i bufferten vid sparandet.
+- En ny del måste ha fått sin första ruta innan den gamla stoppas; annars blir skarven ett hål.
+  `FlashbackPlan` lämnar ett verkligt hål (misslyckad rotation) som hål i stället för att flytta tid.
+- Språklåset: `AppleLanguages = (sv)` i appens domän före första lokaliserade text ger svenskt
+  gränssnitt redan vid första starten (redigerarens ögonblicksbild), trots en-US först i systemet.

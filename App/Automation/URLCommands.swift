@@ -18,6 +18,7 @@ enum URLCommands {
         case "omrade", "area": app.recorder.recordArea()
         case "fonster", "window": app.recorder.recordWindow()
         case "bibliotek", "library": app.showLibrary()
+        case "flashback-spara", "flashback-save": app.flashback.save()
         case "oppna", "open":
             let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
             if let path = items.first(where: { $0.name == "sokvag" || $0.name == "path" })?.value {
@@ -64,6 +65,17 @@ struct PauseRecordingIntent: AppIntent {
     }
 }
 
+struct SaveFlashbackIntent: AppIntent {
+    static let title: LocalizedStringResource = "Spara flashback"
+    static let description = IntentDescription("Sparar de senaste minuterna ur flashback-bufferten och öppnar dem.")
+    static let openAppWhenRun = false
+
+    @MainActor func perform() async throws -> some IntentResult {
+        AppModel.shared.flashback.save()
+        return .result()
+    }
+}
+
 struct OpenLatestRecordingIntent: AppIntent {
     static let title: LocalizedStringResource = "Öppna senaste inspelningen"
     static let openAppWhenRun = true
@@ -81,6 +93,8 @@ struct SkarminspelareShortcuts: AppShortcutsProvider {
                     shortTitle: "Spela in", systemImageName: "record.circle")
         AppShortcut(intent: StopRecordingIntent(), phrases: ["Stoppa \(.applicationName)"],
                     shortTitle: "Stoppa", systemImageName: "stop.circle")
+        AppShortcut(intent: SaveFlashbackIntent(), phrases: ["Spara flashback i \(.applicationName)"],
+                    shortTitle: "Spara flashback", systemImageName: "clock.arrow.circlepath")
         AppShortcut(intent: OpenLatestRecordingIntent(), phrases: ["Öppna senaste inspelningen i \(.applicationName)"],
                     shortTitle: "Senaste inspelningen", systemImageName: "film")
     }

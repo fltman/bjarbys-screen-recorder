@@ -5,6 +5,23 @@ import RecorderKit
 struct SkarminspelareApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
+    init() {
+        Self.lockLanguage()
+    }
+
+    /// Gränssnittet är svenskt oavsett systemspråk — samma mekanism som språkval per program i
+    /// Systeminställningar (`AppleLanguages` i appens egen domän). Måste ske innan någon
+    /// lokaliserad text laddas. Den som vill följa systemspråket:
+    /// `defaults write com.brattoo.skarminspelare followSystemLanguage -bool true`.
+    static func lockLanguage() {
+        let d = UserDefaults.standard
+        if d.bool(forKey: "followSystemLanguage") {
+            d.removeObject(forKey: "AppleLanguages")
+        } else if (d.persistentDomain(forName: Bundle.main.bundleIdentifier ?? "")?["AppleLanguages"] as? [String])?.first != "sv" {
+            d.set(["sv"], forKey: "AppleLanguages")
+        }
+    }
+
     var body: some Scene {
         MenuBarExtra {
             MenuBarContent(app: AppModel.shared, recorder: AppModel.shared.recorder,
@@ -49,6 +66,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             hk.register(15, id: HotKeyID.toggleRecording) { app.recorder.toggleFromHotKey() } // R
             hk.register(35, id: HotKeyID.pause) { app.recorder.togglePause() }                // P
             hk.register(0, id: HotKeyID.area) { app.recorder.recordArea() }                   // A
+            hk.register(1, id: HotKeyID.flashback) { app.flashback.save() }                   // S
+            app.flashback.apply()
             Task {
                 _ = await app.library.recoverUnfinished(excluding: nil)
             }

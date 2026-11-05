@@ -17,6 +17,10 @@ final class AppSettings: ObservableObject {
     /// Modellfilen; tom = bästa som finns för språket.
     @AppStorage("whisperModel") var whisperModel: String = ""
     @AppStorage("speechLanguage") var speechLanguage: String = "sv"
+    /// Flashback: spela in i bakgrunden och spara de senaste minuterna i efterhand.
+    @AppStorage("flashbackEnabled") var flashbackEnabled: Bool = false
+    @AppStorage("flashbackMinutes") var flashbackMinutes: Int = 5
+    @AppStorage("flashbackMicrophone") var flashbackMicrophone: Bool = false
 
     /// Inställningarna för transkribering, eller nil om whisper.cpp inte går att hitta.
     var whisperSetup: WhisperSetup? {

@@ -9,8 +9,9 @@ finished video**: the screen without the cursor, the microphone, system audio an
 on separate tracks, and every mouse move and click as events. Zoom, cursor, background
 and framing are added afterwards in the editor, and they stay editable.
 
-The interface is in Swedish (*skärminspelare* means screen recorder), with an English
-translation that follows the system language.
+The interface is in Swedish (*skärminspelare* means screen recorder). An English translation
+is included; to have the app follow your system language instead, run
+`defaults write com.brattoo.skarminspelare followSystemLanguage -bool true` and restart it.
 
 ## What it does
 
@@ -20,6 +21,8 @@ translation that follows the system language.
   discard. It warns about a silent microphone, a disk running full and tracks that stop.
 - Global shortcuts: ⌃⌥⌘R start/stop, ⌃⌥⌘P pause, ⌃⌥⌘A record an area.
 - The app's own windows never end up in the recording.
+- Flashback: keep recording in the background and save the last 1–10 minutes after the fact
+  (⌃⌥⌘S), as a normal recording you can edit.
 - Crash-safe: every track is its own file, written in 2-second fragments. A recording that
   is cut off is playable up to the last fragment and is recovered at the next launch.
 
@@ -132,10 +135,9 @@ the screen recording permission of the terminal it runs from.
 
 ## Status
 
-The recording engine, the editor and export are done, and most of the speech phase of
-[`docs/FÄRDPLAN.md`](docs/FÄRDPLAN.md). Masking of sensitive text is
-done too. Next on the roadmap are a "save the last minutes" buffer, and HDR
-and 120 fps.
+The recording engine, the editor, export, speech, masking of sensitive text, the flashback
+buffer and control from agents are done (see [`docs/FÄRDPLAN.md`](docs/FÄRDPLAN.md)). Next are
+a bug-report bundle, HDR, 120 fps, ProRes with alpha and per-app audio.
 
 Built and tested on macOS 26.1 on an Apple M5 only. Not yet tried with a real camera or
 with a window that moves during recording. Transcription has been measured on synthetic

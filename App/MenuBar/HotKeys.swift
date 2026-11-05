@@ -44,4 +44,5 @@ enum HotKeyID {
     static let toggleRecording: UInt32 = 1
     static let pause: UInt32 = 2
     static let area: UInt32 = 3
+    static let flashback: UInt32 = 4
 }

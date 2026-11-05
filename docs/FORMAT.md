@@ -40,6 +40,7 @@ de att spela upp till sista fragmentet; `meta.json` har då `finished: false` ti
 | `duration` | sekunder, pauser borträknade |
 | `gaps[]` | avbrott där vakthunden startade om strömmen |
 | `keystrokesRecorded` | om kortkommandon spelades in |
+| `startHostTime` | tidslinjens nollpunkt i värdklockan (s); flashback syr ihop delar med den |
 
 ## events.jsonl
 

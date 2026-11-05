@@ -12,6 +12,7 @@ final class AppModel: ObservableObject {
     let settings = AppSettings()
     let library = LibraryModel()
     let recorder: RecordingController
+    private(set) lazy var flashback = FlashbackController(settings: settings)
 
     private var libraryWindow: NSWindow?
     private var permissionsWindow: NSWindow?

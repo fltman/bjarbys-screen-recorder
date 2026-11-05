@@ -105,6 +105,9 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
     /// Sant om tangenttryck spelades in (bara kortkommandon, aldrig vanlig text).
     public var keystrokesRecorded: Bool
     public var droppedFrames: Int
+    /// Tidslinjens nollpunkt i värdklockan (s), så att delar från olika sessioner kan läggas
+    /// i rätt förhållande till varandra (flashback-bufferten). 0 = okänd.
+    public var startHostTime: Double
 
     public init(source: Source, fps: Int, appVersion: String) {
         self.schemaVersion = RecorderKit.formatVersion
@@ -119,6 +122,7 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
         self.gaps = []
         self.keystrokesRecorded = false
         self.droppedFrames = 0
+        self.startHostTime = 0
     }
 
     public init(from decoder: Decoder) throws {
@@ -135,6 +139,7 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
         gaps = c.value(.gaps, [])
         keystrokesRecorded = c.value(.keystrokesRecorded, false)
         droppedFrames = c.value(.droppedFrames, 0)
+        startHostTime = c.value(.startHostTime, 0)
     }
 
     public func track(_ kind: TrackKind) -> Track? {
