@@ -15,6 +15,8 @@ struct ExportSheet: View {
     @State private var uploading: Double?
     @State private var fullFrameRate = true
     @State private var sharedURL: URL?
+    /// Kapitlen som YouTube-text för det som exporterades (nil utan kapitel).
+    @State private var finishedChapters: String?
     /// Bara det markerade utsnittet (I–O), när det finns ett.
     @State private var onlyMarked = true
     /// Hela ljudets ljudstyrka i filmen: 0 = som det är, annars målet i LUFS.
@@ -159,6 +161,15 @@ struct ExportSheet: View {
                     } else if SharingStore.isReady && preset.codec != .audioStems {
                         Button("Ladda upp och kopiera länk") { upload(finishedURL) }
                     }
+                    ShareLink(item: finishedURL) { Label("Dela …", systemImage: "square.and.arrow.up") }
+                        .help("AirDrop, Mail, Meddelanden … (systemets Dela-meny)")
+                    if let chapters = finishedChapters {
+                        Button("Kopiera kapitel") {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(chapters, forType: .string)
+                        }
+                        .help("Tidsstämplarna för en YouTube-beskrivning (\"0:00 Start\" …). Kapitlen ligger också i filmen.")
+                    }
                     Button("Visa i Finder") { NSWorkspace.shared.activateFileViewerSelecting([finishedURL]) }
                 }
                 Spacer()
@@ -298,6 +309,9 @@ struct ExportSheet: View {
                     let srt = range.map { captions.srt(in: $0) } ?? captions.srt
                     try? srt.write(to: url.deletingPathExtension().appendingPathExtension("srt"), atomically: true, encoding: .utf8)
                 }
+                let span = range ?? 0...model.duration
+                let chapters = model.plan.overlayTrack.youtubeChapters(in: span)
+                finishedChapters = model.project.chapters.isEmpty || chapters.isEmpty ? nil : chapters
                 finishedURL = url
                 progress = 1
             } catch Exporter.ExportError.cancelled {

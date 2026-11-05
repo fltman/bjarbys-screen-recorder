@@ -223,6 +223,24 @@ public final class Exporter: @unchecked Sendable {
             writer.add(input)
             audioIn = input
         }
+        // Kapitlen som kapitelspår (QuickTime, IINA, VLC visar dem), när projektet har kapitel.
+        // Ett textspår (tx3g) — det klassiska QuickTime-formatet, som både AVFoundation och
+        // ffmpeg-baserade spelare läser titlarna ur (ett metadataspår gav tomma titlar i ffprobe).
+        let chapters = built.plan.overlayTrack.chapterList(in: span.seconds).compactMap { c in
+            Self.chapterSample(c.title, from: c.start, to: c.end)
+        }
+        var chapterIn: AVAssetWriterInput?
+        if !chapters.isEmpty, let hint = Self.chapterFormat {
+            let input = AVAssetWriterInput(mediaType: .text, outputSettings: nil, sourceFormatHint: hint)
+            input.expectsMediaDataInRealTime = false
+            input.marksOutputTrackAsEnabled = false
+            let type = AVAssetTrack.AssociationType.chapterList.rawValue
+            if writer.canAdd(input), videoIn.canAddTrackAssociation(withTrackOf: input, type: type) {
+                writer.add(input)
+                videoIn.addTrackAssociation(withTrackOf: input, type: type)
+                chapterIn = input
+            }
+        }
         self.reader = reader
         self.writer = writer
 
@@ -242,6 +260,9 @@ public final class Exporter: @unchecked Sendable {
                 group.addTask {
                     await Self.pump(audioOut, into: audioIn, queue: "skarminspelare.export.audio", gain: gain) { _ in }
                 }
+            }
+            if let chapterIn {
+                group.addTask { await Self.pumpChapters(chapters, into: chapterIn) }
             }
         }
         if isCancelled || reader.status == .cancelled {
@@ -366,8 +387,12 @@ public final class Exporter: @unchecked Sendable {
             loudnessReport = (m.integrated, g.db, g.limitedByPeaks)
         }
         guard preset.codec == .audioStems else {
+            // M4A får kapitlen som kapitelspår (poddspelare visar dem), WAV kan inte bära dem.
+            let chapters = preset.codec == .audioAAC
+                ? built.plan.overlayTrack.chapterList(in: span.seconds).compactMap { Self.chapterSample($0.title, from: $0.start, to: $0.end) }
+                : []
             try await writeAudio(built.composition, tracks: audioTracks, mix: mix, gain: gain, span: span.time, to: url,
-                                 wav: preset.codec == .audioWAV) { t in progress(min(1, max(0, t - span.seconds.lowerBound) / max(0.001, span.time.duration.seconds))) }
+                                 wav: preset.codec == .audioWAV, chapters: chapters) { t in progress(min(1, max(0, t - span.seconds.lowerBound) / max(0.001, span.time.duration.seconds))) }
             progress(1)
             return
         }
@@ -418,7 +443,8 @@ public final class Exporter: @unchecked Sendable {
     }
 
     private func writeAudio(_ composition: AVComposition, tracks: [AVAssetTrack], mix: AVAudioMix, gain: Float, span: CMTimeRange,
-                            to url: URL, wav: Bool, progress: @escaping @Sendable (Double) -> Void) async throws {
+                            to url: URL, wav: Bool, chapters: [CMSampleBuffer] = [],
+                            progress: @escaping @Sendable (Double) -> Void) async throws {
         try? FileManager.default.removeItem(at: url)
         let reader = try AVAssetReader(asset: composition)
         reader.timeRange = span
@@ -446,12 +472,27 @@ public final class Exporter: @unchecked Sendable {
                AVEncoderBitRateKey: 256_000, AVChannelLayoutKey: layoutData])
         input.expectsMediaDataInRealTime = false
         writer.add(input)
+        var chapterIn: AVAssetWriterInput?
+        if !chapters.isEmpty, let hint = Self.chapterFormat {
+            let c = AVAssetWriterInput(mediaType: .text, outputSettings: nil, sourceFormatHint: hint)
+            c.expectsMediaDataInRealTime = false
+            c.marksOutputTrackAsEnabled = false
+            let type = AVAssetTrack.AssociationType.chapterList.rawValue
+            if writer.canAdd(c), input.canAddTrackAssociation(withTrackOf: c, type: type) {
+                writer.add(c)
+                input.addTrackAssociation(withTrackOf: c, type: type)
+                chapterIn = c
+            }
+        }
         self.reader = reader
         self.writer = writer
         guard reader.startReading() else { throw ExportError.failed(reader.error?.localizedDescription ?? "Läsningen startade inte") }
         guard writer.startWriting() else { throw ExportError.failed(writer.error?.localizedDescription ?? "Skrivningen startade inte") }
         writer.startSession(atSourceTime: span.start)
-        await Self.pump(out, into: input, queue: "skarminspelare.export.ljud", gain: gain, progress: progress)
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { await Self.pump(out, into: input, queue: "skarminspelare.export.ljud", gain: gain, progress: progress) }
+            if let chapterIn { group.addTask { await Self.pumpChapters(chapters, into: chapterIn) } }
+        }
         if isCancelled || reader.status == .cancelled {
             writer.cancelWriting()
             try? FileManager.default.removeItem(at: url)
@@ -464,6 +505,72 @@ public final class Exporter: @unchecked Sendable {
         await writer.finishWriting()
         if writer.status != .completed {
             throw ExportError.failed(writer.error?.localizedDescription ?? "Skrivningen misslyckades")
+        }
+    }
+
+    /// Formatbeskrivningen för kapitelspårets text (3GPP timed text, tx3g).
+    static let chapterFormat: CMFormatDescription? = {
+        let color: [String: Any] = [kCMTextFormatDescriptionColor_Red as String: 0, kCMTextFormatDescriptionColor_Green as String: 0,
+                                    kCMTextFormatDescriptionColor_Blue as String: 0, kCMTextFormatDescriptionColor_Alpha as String: 255]
+        let extensions: [String: Any] = [
+            kCMTextFormatDescriptionExtension_DisplayFlags as String: 0,
+            kCMTextFormatDescriptionExtension_BackgroundColor as String: color,
+            kCMTextFormatDescriptionExtension_DefaultTextBox as String: [
+                kCMTextFormatDescriptionRect_Top as String: 0, kCMTextFormatDescriptionRect_Left as String: 0,
+                kCMTextFormatDescriptionRect_Bottom as String: 0, kCMTextFormatDescriptionRect_Right as String: 0],
+            kCMTextFormatDescriptionExtension_DefaultStyle as String: [
+                kCMTextFormatDescriptionStyle_StartChar as String: 0, kCMTextFormatDescriptionStyle_EndChar as String: 0,
+                kCMTextFormatDescriptionStyle_Font as String: 1, kCMTextFormatDescriptionStyle_FontFace as String: 0,
+                kCMTextFormatDescriptionStyle_ForegroundColor as String: color.merging([kCMTextFormatDescriptionColor_Red as String: 255,
+                    kCMTextFormatDescriptionColor_Green as String: 255, kCMTextFormatDescriptionColor_Blue as String: 255]) { $1 },
+                kCMTextFormatDescriptionStyle_FontSize as String: 12],
+            kCMTextFormatDescriptionExtension_HorizontalJustification as String: 0,
+            kCMTextFormatDescriptionExtension_VerticalJustification as String: 0,
+            kCMTextFormatDescriptionExtension_FontTable as String: ["1": "Sans-Serif"],
+        ]
+        var fd: CMFormatDescription?
+        CMFormatDescriptionCreate(allocator: nil, mediaType: kCMMediaType_Text, mediaSubType: kCMTextFormatType_3GText,
+                                  extensions: extensions as CFDictionary, formatDescriptionOut: &fd)
+        return fd
+    }()
+
+    /// Ett kapitel som textprov: längden (2 byte, big-endian) och titeln i UTF-8.
+    static func chapterSample(_ title: String, from a: Double, to b: Double) -> CMSampleBuffer? {
+        guard let format = chapterFormat else { return nil }
+        let text = Array(title.utf8.prefix(0xFFFF))
+        var bytes: [UInt8] = [UInt8(text.count >> 8), UInt8(text.count & 0xFF)] + text
+        var block: CMBlockBuffer?
+        guard CMBlockBufferCreateWithMemoryBlock(allocator: nil, memoryBlock: nil, blockLength: bytes.count, blockAllocator: nil,
+                                                 customBlockSource: nil, offsetToData: 0, dataLength: bytes.count, flags: 0,
+                                                 blockBufferOut: &block) == noErr, let block,
+              CMBlockBufferReplaceDataBytes(with: &bytes, blockBuffer: block, offsetIntoDestination: 0, dataLength: bytes.count) == noErr
+        else { return nil }
+        var timing = CMSampleTimingInfo(duration: CMTime(seconds: b - a, preferredTimescale: 600),
+                                        presentationTimeStamp: CMTime(seconds: a, preferredTimescale: 600), decodeTimeStamp: .invalid)
+        var size = bytes.count
+        var sample: CMSampleBuffer?
+        CMSampleBufferCreate(allocator: nil, dataBuffer: block, dataReady: true, makeDataReadyCallback: nil, refcon: nil,
+                             formatDescription: format, sampleCount: 1, sampleTimingEntryCount: 1, sampleTimingArray: &timing,
+                             sampleSizeEntryCount: 1, sampleSizeArray: &size, sampleBufferOut: &sample)
+        return sample
+    }
+
+    private static func pumpChapters(_ samples: [CMSampleBuffer], into input: AVAssetWriterInput) async {
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            var next = 0
+            var finished = false
+            input.requestMediaDataWhenReady(on: DispatchQueue(label: "skarminspelare.export.kapitel")) {
+                guard !finished else { return }
+                while input.isReadyForMoreMediaData && next < samples.count {
+                    if !input.append(samples[next]) { next = samples.count; break }
+                    next += 1
+                }
+                if next >= samples.count {
+                    input.markAsFinished()
+                    finished = true
+                    done.resume()
+                }
+            }
         }
     }
 

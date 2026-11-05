@@ -443,6 +443,23 @@
         }
       }
     },
+    "AirDrop, Mail, Meddelanden … (systemets Dela-meny)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AirDrop, Mail, Messages… (the system Share menu)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AirDrop, Mail, Meddelanden … (systemets Dela-meny)"
+          }
+        }
+      }
+    },
     "Använd här": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1017,6 +1034,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dela vid spelhuvudet (⌘B)"
+          }
+        }
+      }
+    },
+    "Dela …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share…"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dela …"
           }
         }
       }
@@ -3278,6 +3312,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Klipp bort de markerade orden ur filmen (⌫)"
+          }
+        }
+      }
+    },
+    "Kopiera kapitel": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Chapters"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopiera kapitel"
           }
         }
       }
@@ -6253,6 +6304,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Textstorlek"
+          }
+        }
+      }
+    },
+    "Tidsstämplarna för en YouTube-beskrivning (\"0:00 Start\" …). Kapitlen ligger också i filmen.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The timestamps for a YouTube description (\"0:00 Start\" …). The chapters are also in the film."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidsstämplarna för en YouTube-beskrivning (\"0:00 Start\" …). Kapitlen ligger också i filmen."
           }
         }
       }

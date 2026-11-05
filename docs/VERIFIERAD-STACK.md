@@ -306,6 +306,15 @@ växer fram. ⚠️ Först förstorades den råa skärmbilden — en mask hade s
 den maskade (provat med ifylld och pixlad mask: ingen läsbar text i luppen). ⚠️ En svart ruta
 som bakgrund i `CIBlendWithMask` gav svarta hörn runt cirkeln; bakgrunden ska vara `.empty()`.
 
+## Kapitel i filen (2026-11-05)
+
+- Ett metadataspår (`AVTimedMetadataGroup`, `mebx`) med `chapterList`-koppling gav rätt tider men
+  **tomma titlar i ffprobe** (ffmpeg läser kapitelnamn ur textspår). Ett textspår i 3GPP-format
+  (`tx3g`, prov = längd i 2 byte big-endian + UTF-8) gav titlarna — med å ä ö — både i ffprobe
+  och i AVFoundation (`loadChapterMetadataGroups`), i MP4, MOV (ProRes) och M4A. Spåret märks
+  inte som aktivt (`disposition:default=0`), så spelarna visar det inte som undertext.
+- Utsnitt 2–5 s av kapitlen 1 / 2,5 / 4: Intro 0–0,5, Mitten 0,5–2, Slut 2–3 (i filens tid).
+
 ## Pennan (2026-11-05)
 
 - `--prov-penna`: syntetiska `NSEvent`-musslag direkt till pennans vy (fönstret visas inte):

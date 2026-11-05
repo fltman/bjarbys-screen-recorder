@@ -179,6 +179,30 @@ public struct OverlayTrack: Sendable {
         return rows.map { "\($0.0) \($0.1)" }.joined(separator: "\n")
     }
 
+    /// Kapitlen inom `range` (utdatatid) som en sammanhängande lista: kapitlet som pågår vid
+    /// utsnittets början börjar där, och "Start" läggs först om inget pågår. Till filmens
+    /// kapitelspår och YouTube-texten för ett utsnitt.
+    public func chapterList(in range: ClosedRange<Double>) -> [(start: Double, end: Double, title: String)] {
+        guard !chapters.isEmpty else { return [] }
+        var starts: [(Double, String)] = []
+        if let running = chapters.last(where: { $0.start <= range.lowerBound + 0.001 }) {
+            starts.append((range.lowerBound, running.chapter.title))
+        } else {
+            starts.append((range.lowerBound, String(localized: "Start")))
+        }
+        for c in chapters where c.start > range.lowerBound + 0.001 && c.start < range.upperBound - 0.5 {
+            starts.append((c.start, c.chapter.title))
+        }
+        return starts.enumerated().map { i, c in
+            (c.0, i + 1 < starts.count ? starts[i + 1].0 : range.upperBound, c.1)
+        }
+    }
+
+    /// YouTube-texten för ett utsnitt, med tider räknade från utsnittets början.
+    public func youtubeChapters(in range: ClosedRange<Double>) -> String {
+        chapterList(in: range).map { "\(Self.stamp($0.start - range.lowerBound)) \($0.title)" }.joined(separator: "\n")
+    }
+
     static func stamp(_ s: Double) -> String {
         let t = Int(s.rounded(.down))
         return t >= 3600 ? String(format: "%d:%02d:%02d", t / 3600, t / 60 % 60, t % 60) : String(format: "%d:%02d", t / 60, t % 60)

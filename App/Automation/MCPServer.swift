@@ -855,6 +855,11 @@ enum MCPServer {
                                 loudnessTarget: number(a["loudness"]))
         try await exporter.run(to: url) { _ in }
         var text = String(format: "Exported %@ in %.1f s: %@", preset.name, Date().timeIntervalSince(started), url.path)
+        if !project.chapters.isEmpty, !preset.isAudioOnly, preset.codec != .gif {
+            let track = OverlayTrack(overlays: [], chapters: project.chapters, timeMap: TimeMap(segments: project.segments))
+            let span = range ?? 0...TimeMap(segments: project.segments).outputDuration
+            text += "\nChapters are embedded in the file. YouTube timestamps:\n" + track.youtubeChapters(in: span)
+        }
         if preset.codec == .audioStems {
             let files = (try? FileManager.default.contentsOfDirectory(atPath: url.path))?.sorted() ?? []
             text += "\n" + files.map { "- \($0)" }.joined(separator: "\n")

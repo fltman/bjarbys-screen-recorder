@@ -132,7 +132,9 @@ lives in the keychain.
 background (to put the polished screen on top of something else in your editor) and GIF (one
 palette for the whole clip with ordered dithering, so gradients don't band). Or only the audio:
 the mix as M4A or WAV, or one WAV per source (microphone, computer audio, each app, narration,
-music) for Logic or Resolve — all as long as the film, and they add up to the mix.
+music) for Logic or Resolve — all as long as the film, and they add up to the mix. Chapters go
+into the file (MP4, MOV and M4A — QuickTime, IINA, VLC and podcast players show them), and after
+the export you can copy them as YouTube timestamps or share the file through the Share menu.
 
 ## Measured, not assumed
 

@@ -84,6 +84,10 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Kapitel i filen och Dela (2026-11-05): kapitlen skrivs som kapitelspår (tx3g-text kopplad med
+  `chap` till video- eller ljudspåret) i MP4, MOV och M4A — för ett utsnitt räknade från dess
+  början, med kapitlet som pågår där först. Efter exporten: Dela … (systemets Dela-meny) och
+  Kopiera kapitel (YouTube-tidsstämplar). MCP `export` svarar med tidsstämplarna.
 - Pennan (2026-11-05): rita på skärmen under inspelningen (⌃⌥⌘D, HUD:ens penna, menyn; 1–5
   färg, Esc slutar). Ett genomskinligt fönster per skärm tar emot musen; strecken syns direkt och
   tonas bort efter 3 s, men appen är utesluten ur inspelningen, så de sparas som `ink`-händelser
