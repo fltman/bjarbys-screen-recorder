@@ -99,6 +99,9 @@ is included; to have the app follow your system language instead, run
 **Speech** (with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), locally)
 - Transcribe the recording and edit the video by striking out words in the text. Cut words
   stay visible, struck through, and can be restored.
+- Dubbing: the AI producer voices the translated caption lines with ElevenLabs (one file per
+  line, your own key in Claude Code) and the app fits them to the original timing; the film can
+  speak the dub, and exports carry the original and the dub as language-tagged audio tracks.
 - Captions in other languages: English on your Mac with a multilingual whisper model
   (`ggml-medium.bin`), or any language via the AI producer (Claude Code over MCP). You pick which
   language is burned in; every language is written as its own `.srt`.

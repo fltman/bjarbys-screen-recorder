@@ -185,7 +185,21 @@ public enum Producer {
         for c in project.audioClips where !mediaExists(c.file) { error("Audio clip \(c.file) is missing in media/.") }
         for (a, b) in zip(narration, narration.dropFirst()) {
             guard let oa = map.output(at: a.at), let ob = map.output(at: b.at) else { continue }
-            if oa + a.duration > ob { error("Narration at \(fmt(a.at)) runs into the next one at \(fmt(b.at)).") }
+            if oa + a.outputDuration > ob { error("Narration at \(fmt(a.at)) runs into the next one at \(fmt(b.at)).") }
+        }
+        // Dubbning: raderna får inte gå i varandra (efter klipp kan de göra det — kör set_dub igen).
+        for lang in Dubbing.languages(project) {
+            let lines = project.audioClips.filter { $0.role == .dub && $0.language == lang }.sorted { $0.at < $1.at }
+            for (a, b) in zip(lines, lines.dropFirst()) {
+                guard let oa = map.output(at: a.at), let ob = map.output(at: b.at) else { continue }
+                if oa + a.outputDuration > ob + 0.05 {
+                    error("Dub (\(lang)) line at \(fmt(a.at)) runs into the next one — run set_dub again after cuts, or shorten the line.")
+                }
+            }
+            for c in lines where map.output(at: c.at) == nil { warn("Dub (\(lang)) line at \(fmt(c.at)) is in a cut part.") }
+        }
+        if !project.audio.voice.isEmpty && !Dubbing.languages(project).contains(project.audio.voice) {
+            error("The film's voice is \(project.audio.voice) but there is no dub in that language.")
         }
         let speech = Transcript(words: words).speech()
         for c in narration {

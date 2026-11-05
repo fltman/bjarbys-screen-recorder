@@ -98,8 +98,8 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 | `transition`, `fadeInOut` | standardövergång i snitten (`kind`: `none`, `dip`, `blur`, `flash`, `crossfade`; `duration`) och toning i början/slutet |
 | `overlays[]` | bildlagret: `kind` (`title`, `callout`, `fact`, `qr`, `text`, `image`, `video`, `arrow` — pil från `target.x/y` till `x+width`/`y+height` i innehållet, med `color` — video med `offset` i filen, `volume`, `speed` (0,25–4; `duration` är tiden i filmen), `crop` (utsnitt av videon, 0–1, origo uppe till vänster) och `softness` (mjuka kanter 0–1), helbild = `frame` [0,0,1,1]), `animation` (`fade`, `slide`, `pop`, `typewriter`), `frame` (fri placering 0–1), `file` (bild i `media/`), `size`, `background`, `at` (källtid), `duration` (s i filmen), `title`, `lines`, `url`, `target` (0–1, markeringens mål), `corner` |
 | `chapters[]`, `showsChapterBanner` | kapitel (`at`, `title`) och om kapitelraden visas |
-| `audioClips[]` | extra ljud i `media/`: `role` (`narration`, `music`, `effect`), `at`, `file`, `text`, `duration`, `volume`, `fadeIn`, `fadeOut` |
-| `audio` | volym och tystning per spår; `appVolumes` (bundle-id → volym, standard 0,8) och `appMuted` för appar med eget spår; `duckSystem`, `duckLevel` sänker datorljudet och apparna under tal; `voiceIsolation` använder `derived/mic-isolated.caf` |
+| `audioClips[]` | extra ljud i `media/`: `role` (`narration`, `music`, `effect`, `dub`), `at`, `file`, `text`, `duration`, `volume`, `fadeIn`, `fadeOut`; `language` (dubbningens språk) och `speed` (1 = normal; en dubbningsrad som inte ryms spelas högst 1,15× fortare, tonhöjden behålls). Dubbningens filer heter `media/dub-<språk>-<rad>.<ext>` |
+| `audio` | volym och tystning per spår; `appVolumes` (bundle-id → volym, standard 0,8) och `appMuted` för appar med eget spår; `duckSystem`, `duckLevel` sänker datorljudet och apparna under tal; `voiceIsolation` använder `derived/mic-isolated.caf`; `voice` = filmens röst (`""` = originalet, annars en dubbnings språk: mikrofonen tystas och dubbningsraderna hörs) |
 
 ## media/ och leverans.md
 

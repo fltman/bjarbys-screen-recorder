@@ -124,6 +124,8 @@ public final class Exporter: @unchecked Sendable {
     private let preset: ExportPreset
     private var reader: AVAssetReader?
     private var writer: AVAssetWriter?
+    /// Läsarna för de andra språkens ljudspår (dubbning).
+    private var extraReaders: [AVAssetReader] = []
     private var cancelled = false
     private let lock = NSLock()
 
@@ -163,6 +165,7 @@ public final class Exporter: @unchecked Sendable {
     public func cancel() {
         lock.withLock { cancelled = true }
         reader?.cancelReading()
+        lock.withLock { extraReaders }.forEach { $0.cancelReading() }
         writer?.cancelWriting()
         lock.withLock { process }?.terminate()
     }
@@ -273,6 +276,39 @@ public final class Exporter: @unchecked Sendable {
             writer.add(input)
             audioIn = input
         }
+        // Dubbning: originalet och varje dubbning som var sitt ljudspår, med språkkod, i samma
+        // grupp — spelaren väljer (QuickTime: Visa › Språk). Huvudspåret är filmens röst.
+        var alternates: [(reader: AVAssetReader, output: AVAssetReaderAudioMixOutput, input: AVAssetWriterInput, gain: Float)] = []
+        if let audioIn, let audioOut, !Dubbing.languages(project).isEmpty {
+            let original = recording.transcript?.language.isEmpty == false ? recording.transcript!.language : "sv"
+            let main = Dubbing.languages(project).contains(project.audio.voice) ? project.audio.voice : ""
+            Self.tag(audioIn, language: main.isEmpty ? original : main)
+            for voice in ([""] + Dubbing.languages(project)) where voice != main {
+                let r = try AVAssetReader(asset: built.composition)
+                r.timeRange = span.time
+                let altMix = CompositionBuilder.audioMix(for: built.composition, plan: built.plan, appIDs: recording.apps.map(\.id),
+                                                         edges: range == nil ? nil : span.seconds, voice: voice)
+                let out = AVAssetReaderAudioMixOutput(audioTracks: audioTracks, audioSettings: audioOut.audioSettings)
+                out.audioMix = altMix
+                out.audioTimePitchAlgorithm = .spectral
+                r.add(out)
+                var g: Float = 1
+                if let target = loudnessTarget, let m = try await Loudness.measureMix(built.composition, audioMix: altMix, range: span.time) {
+                    g = Float(pow(10, Loudness.mixGain(for: m, target: target).db / 20))
+                }
+                let input = AVAssetWriterInput(mediaType: .audio, outputSettings: audioIn.outputSettings)
+                input.expectsMediaDataInRealTime = false
+                input.marksOutputTrackAsEnabled = false
+                Self.tag(input, language: voice.isEmpty ? original : voice)
+                guard writer.canAdd(input) else { continue }
+                writer.add(input)
+                alternates.append((r, out, input, g))
+            }
+            if !alternates.isEmpty {
+                let group = AVAssetWriterInputGroup(inputs: [audioIn] + alternates.map(\.input), defaultInput: audioIn)
+                if writer.canAdd(group) { writer.add(group) }
+            }
+        }
         // Kapitlen som kapitelspår (QuickTime, IINA, VLC visar dem), när projektet har kapitel.
         // Ett textspår (tx3g) — det klassiska QuickTime-formatet, som både AVFoundation och
         // ffmpeg-baserade spelare läser titlarna ur (ett metadataspår gav tomma titlar i ffprobe).
@@ -294,7 +330,12 @@ public final class Exporter: @unchecked Sendable {
         self.reader = reader
         self.writer = writer
 
+        lock.withLock { extraReaders = alternates.map(\.reader) }
+        defer { lock.withLock { extraReaders = [] } }
         guard reader.startReading() else { throw ExportError.failed(reader.error?.localizedDescription ?? "Läsningen startade inte") }
+        for a in alternates where !a.reader.startReading() {
+            throw ExportError.failed(a.reader.error?.localizedDescription ?? "Läsningen startade inte")
+        }
         guard writer.startWriting() else { throw ExportError.failed(writer.error?.localizedDescription ?? "Skrivningen startade inte") }
         writer.startSession(atSourceTime: span.time.start)
 
@@ -314,6 +355,15 @@ public final class Exporter: @unchecked Sendable {
             if let chapterIn {
                 group.addTask { await Self.pumpChapters(chapters, into: chapterIn) }
             }
+            for (n, a) in alternates.enumerated() {
+                group.addTask {
+                    await Self.pump(a.output, into: a.input, queue: "skarminspelare.export.audio\(n + 2)", gain: a.gain) { _ in }
+                }
+            }
+        }
+        if alternates.contains(where: { $0.reader.status == .failed }) {
+            writer.cancelWriting()
+            throw ExportError.failed(alternates.first { $0.reader.status == .failed }?.reader.error?.localizedDescription ?? "Läsningen misslyckades")
         }
         if isCancelled || reader.status == .cancelled {
             writer.cancelWriting()
@@ -649,6 +699,10 @@ public final class Exporter: @unchecked Sendable {
                 let role = i < clips.count ? clips[i].role : .effect
                 switch role {
                 case .narration: add("narration", String(localized: "Berättarröst"), t)
+                case .dub:
+                    let lang = clips[i].language
+                    let name = Locale(identifier: Locale.preferredLanguages.first ?? "sv").localizedString(forLanguageCode: lang) ?? lang
+                    add("dub-\(lang)", String(localized: "Dubbning (\(name))"), t)
                 case .music: add("music", String(localized: "Musik"), t)
                 default: add("effect", String(localized: "Ljudeffekter"), t)
                 }
@@ -796,6 +850,15 @@ public final class Exporter: @unchecked Sendable {
     }
 
     /// Utsnittet inom filmen (eller hela filmen), som tidsintervall och sekunder.
+    /// Språkkoden på ett ljudspår: ISO 639-2 (`swe`, `eng`) och BCP 47 (`sv`, `en`).
+    static func tag(_ input: AVAssetWriterInput, language: String) {
+        guard !language.isEmpty, language != "auto" else { return }
+        input.extendedLanguageTag = language
+        if let alpha3 = Locale.Language(identifier: language).languageCode?.identifier(.alpha3) {
+            input.languageCode = alpha3
+        }
+    }
+
     private func clampedRange(_ built: CompositionBuilder.Result) -> (time: CMTimeRange, seconds: ClosedRange<Double>) {
         let d = built.duration.seconds
         let a = min(max(0, range?.lowerBound ?? 0), d), b = min(max(a, range?.upperBound ?? d), d)

@@ -507,6 +507,16 @@ struct InspectorView: View {
                 if let e = model.translationError {
                     Text(e).font(.caption).foregroundStyle(.red)
                 }
+                let dubs = Dubbing.languages(model.project)
+                if !dubs.isEmpty {
+                    Picker("Röst", selection: binding(\.audio.voice)) {
+                        Text("Originalet").tag("")
+                        ForEach(dubs, id: \.self) { lang in
+                            Text("\(AppLocale.locale.localizedString(forLanguageCode: lang)?.capitalized ?? lang) (dubbad)").tag(lang)
+                        }
+                    }
+                    .help("Dubbad: mikrofonen tystas och den inlästa rösten hörs. Exporten får båda som ljudspår med språkkod.")
+                }
                 if languages.isEmpty && model.translating == nil {
                     Text(model.localTranslationModel != nil
                          ? "Andra språk än engelska: be producenten i Claude Code att översätta undertexterna."

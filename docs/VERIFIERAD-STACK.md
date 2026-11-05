@@ -552,3 +552,18 @@ Inbyggd XDR-skärm (`maximumPotentialExtendedDynamicRangeColorComponentValue` 16
 - Exportfart, syntetiskt paket i full storlek (3024×1964, 60 bilder/s, 6 s, stillastående
   innehåll): "MP4 4K HDR" (3326×2160, HLG) 2,0× realtid; "MP4 1080p" från HDR, med den linjära
   mellanbilden, 4,8× realtid.
+
+## Dubbning (2026-11-05)
+
+- Påhittat paket: svensk talsyntes (Alva, 22,6 s) → KB-Whisper → ggml-medium `-tr` → 5 engelska
+  rader (249 tecken) → inlästa med ElevenLabs eleven_v4, Anders klonade röst, en fil per rad
+  (280 tecken med AI-upplysningen först; 4,24 / 3,92 / 3,52 / 2,48 / 3,68 s).
+- Placeringen: rad 1 (med upplysningen) fick börja 0,8 s före originalet, i tystnaden, och gå
+  1,15× — ändå 1,03 s för lång, så rad 2 kom 1,73 s sent; pausen på 2,5 s tog igen det (rad 3–5
+  på 0,00 / 0,00 / 0,11 s). AVFoundation mäter mp3-filerna något längre än ffprobe (4,29 mot 4,24 s).
+- MP4: två AAC-spår, `eng` (standard) och `swe` (`disposition:default=0`). RMS: där bara Alva talar
+  (19,75–21,0 s) eng −inf, swe −19,9 dBFS; där bara dubbningen hörs (0,3–0,7 s) eng −15,2, swe −70,0.
+- MKV skrev först båda ljudspåren som engelska och standard (Matroska utan `Language` = `eng`,
+  utan `FlagDefault` = 1); nu `Language`/`LanguageBCP47` och `FlagDefault` ur MP4-spåren: eng
+  standard, swe inte; ffmpeg avkodar hela filen utan fel.
+

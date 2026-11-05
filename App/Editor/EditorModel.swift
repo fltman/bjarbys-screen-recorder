@@ -169,7 +169,7 @@ final class EditorModel: ObservableObject {
     private func projectChanged() {
         rebuildTask?.cancel()
         let full = project.segments != builtSegments || project.audio.voiceIsolation != builtIsolation
-            || project.audioClips.map { "\($0.id)\($0.at)\($0.file)" } != builtClips
+            || project.audioClips.map { "\($0.id)\($0.at)\($0.file)\($0.speed)" } != builtClips
             || videoSignature != builtVideos
             || (project.transition.kind == .crossfade) != builtStandardCrossfade
             || (project.transition.kind == .crossfade && project.transition.duration != builtStandardDuration)
@@ -208,7 +208,7 @@ final class EditorModel: ObservableObject {
                 built = result
                 builtSegments = project.segments
                 builtIsolation = project.audio.voiceIsolation
-                builtClips = project.audioClips.map { "\($0.id)\($0.at)\($0.file)" }
+                builtClips = project.audioClips.map { "\($0.id)\($0.at)\($0.file)\($0.speed)" }
                 builtVideos = videoSignature
                 builtStandardCrossfade = project.transition.kind == .crossfade
                 builtStandardDuration = project.transition.duration

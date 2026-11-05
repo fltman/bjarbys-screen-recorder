@@ -34,8 +34,14 @@ public enum Matroska {
         for track in try await asset.loadTracks(withMediaType: .video) + asset.loadTracks(withMediaType: .audio) {
             guard let format = try await track.load(.formatDescriptions).first else { continue }
             let isVideo = track.mediaType == .video
+            // Språk och standardspår: ett MKV-spår utan språk räknas som engelska, och utan
+            // standardflagga är alla spår standard (två ljudspår vid dubbning).
+            let language = try await track.load(.languageCode)
+            let tag = try await track.load(.extendedLanguageTag)
+            let enabled = try await track.load(.isEnabled)
             entries.append(try trackEntry(number: number, format: format, video: isVideo,
-                                          frameRate: isVideo ? Double(try await track.load(.nominalFrameRate)) : 0))
+                                          frameRate: isVideo ? Double(try await track.load(.nominalFrameRate)) : 0,
+                                          language: language, languageTag: tag, isDefault: enabled))
             let out = AVAssetReaderTrackOutput(track: track, outputSettings: nil)
             out.alwaysCopiesSampleData = false
             reader.add(out)
@@ -144,9 +150,12 @@ public enum Matroska {
 
     // MARK: - Spår
 
-    static func trackEntry(number: UInt64, format: CMFormatDescription, video: Bool, frameRate: Double) throws -> Data {
+    static func trackEntry(number: UInt64, format: CMFormatDescription, video: Bool, frameRate: Double,
+                           language: String? = nil, languageTag: String? = nil, isDefault: Bool = true) throws -> Data {
         let sub = CMFormatDescriptionGetMediaSubType(format)
-        var parts: [Data] = [uint(0xD7, number), uint(0x73C5, number), uint(0x9C, 0)]
+        var parts: [Data] = [uint(0xD7, number), uint(0x73C5, number), uint(0x9C, 0), uint(0x88, isDefault ? 1 : 0),
+                             string(0x22B59C, language.flatMap { $0.count == 3 ? $0 : nil } ?? "und")]
+        if let languageTag, !languageTag.isEmpty { parts.append(string(0x22B59D, languageTag)) }
         if video {
             let codec: String, atom: String
             switch sub {

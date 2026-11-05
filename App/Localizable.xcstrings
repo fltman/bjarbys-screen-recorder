@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "sv",
   "strings": {
+    "%@ (dubbad)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (dubbed)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (dubbad)"
+          }
+        }
+      }
+    },
     "%@ / %@": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1646,6 +1663,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dropbox"
+          }
+        }
+      }
+    },
+    "Dubbad: mikrofonen tystas och den inlästa rösten hörs. Exporten får båda som ljudspår med språkkod.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dubbed: the microphone is muted and the voiced lines are heard. Exports carry both as language-tagged audio tracks."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dubbad: mikrofonen tystas och den inlästa rösten hörs. Exporten får båda som ljudspår med språkkod."
           }
         }
       }
@@ -6185,6 +6219,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rörelseoskärpa"
+          }
+        }
+      }
+    },
+    "Röst": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Röst"
           }
         }
       }

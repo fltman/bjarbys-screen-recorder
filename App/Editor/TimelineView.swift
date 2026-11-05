@@ -334,10 +334,10 @@ struct TimelineView: View {
         if let y = audioY {
             for c in model.project.audioClips {
                 guard let start = model.editTimeMap.output(at: c.at) else { continue }
-                let end = min(model.duration, start + c.duration)
+                let end = min(model.duration, start + c.outputDuration)
                 let rect = CGRect(x: x(start, pps), y: y, width: max(4, CGFloat((end - start) * pps)), height: laneH)
                 let shape = RoundedRectangle(cornerRadius: 4).path(in: rect)
-                let color: Color = c.role == .music ? .pink : (c.role == .narration ? .orange : .yellow)
+                let color: Color = c.role == .music ? .pink : (c.role == .narration ? .orange : (c.role == .dub ? .teal : .yellow))
                 ctx.fill(shape, with: .color(color.opacity(0.22)))
                 ctx.stroke(shape, with: .color(color.opacity(0.6)), lineWidth: 0.8)
                 if rect.width > 34 {

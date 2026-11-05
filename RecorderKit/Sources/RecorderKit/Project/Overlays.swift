@@ -226,9 +226,16 @@ public struct OverlayTrack: Sendable {
 /// `media/` (gjord utanför appen — berättarröst via elevenlabs-dialogue i Claude Code).
 /// Berättarrösten sänker datorljud, mikrofon och musik under sig; musiken sänks under tal.
 public struct AudioClip: Codable, Equatable, Hashable, Sendable, Identifiable {
-    public enum Role: String, Codable, Sendable, CaseIterable { case narration, music, effect }
+    /// `dub` = en rad i en dubbning: talet på ett annat språk (`language`), som ersätter
+    /// mikrofonen när filmen har den rösten (`AudioMix.voice`).
+    public enum Role: String, Codable, Sendable, CaseIterable { case narration, music, effect, dub }
     public var id: UUID
     public var role: Role
+    /// Dubbningens språk (bara `dub`).
+    public var language: String
+    /// Uppspelningshastighet (1 = normal; en dubbningsrad som inte ryms spelas något fortare,
+    /// med bibehållen tonhöjd).
+    public var speed: Double
     /// Källtid där klippet börjar (det spelas i normal hastighet därifrån).
     public var at: Double
     /// Filnamnet i `media/`.
@@ -242,16 +249,21 @@ public struct AudioClip: Codable, Equatable, Hashable, Sendable, Identifiable {
     public var fadeOut: Double
 
     public init(id: UUID = UUID(), role: Role, at: Double, file: String, text: String = "", duration: Double,
-                volume: Double = 1, fadeIn: Double = 0, fadeOut: Double = 0) {
+                volume: Double = 1, fadeIn: Double = 0, fadeOut: Double = 0, language: String = "", speed: Double = 1) {
         self.id = id; self.role = role; self.at = at; self.file = file; self.text = text
         self.duration = duration; self.volume = volume; self.fadeIn = fadeIn; self.fadeOut = fadeOut
+        self.language = language; self.speed = speed
     }
+
+    /// Hur länge klippet låter i filmen (längden genom hastigheten).
+    public var outputDuration: Double { duration / max(speed, 0.01) }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = c.value(.id, UUID()); role = c.value(.role, .narration); at = c.value(.at, 0)
         file = c.value(.file, ""); text = c.value(.text, ""); duration = c.value(.duration, 0)
         volume = c.value(.volume, 1); fadeIn = c.value(.fadeIn, 0); fadeOut = c.value(.fadeOut, 0)
+        language = c.value(.language, ""); speed = c.value(.speed, 1)
     }
 }
 

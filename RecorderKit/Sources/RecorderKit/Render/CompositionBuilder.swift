@@ -166,7 +166,8 @@ public enum CompositionBuilder {
             }
         }
 
-        // Extra ljud (berättarröst, musik, effekter) på sina utdatatider, i normal hastighet.
+        // Extra ljud (berättarröst, musik, effekter, dubbning) på sina utdatatider, i sin hastighet
+        // (dubbningsrader som inte ryms spelas något fortare; tonhöjden behålls av mixen).
         for (i, clip) in plan.project.audioClips.enumerated() {
             guard let at = plan.timeMap.output(at: clip.at), at < cursor.seconds else { continue }
             let asset = AVURLAsset(url: rec.bundle.mediaDir.appendingPathComponent(clip.file))
@@ -175,9 +176,14 @@ public enum CompositionBuilder {
                   let track = composition.addMutableTrack(withMediaType: .audio,
                                                           preferredTrackID: audioClipTrackBase + CMPersistentTrackID(i)) else { continue }
             let start = CMTime(seconds: at, preferredTimescale: timescale)
-            let room = cursor - start
+            let speed = max(clip.speed, 0.01)
+            let room = CMTime(seconds: (cursor - start).seconds * speed, preferredTimescale: timescale)
             let length = CMTimeMinimum(range.duration, room)
             try? track.insertTimeRange(CMTimeRange(start: range.start, duration: length), of: source, at: start)
+            if abs(speed - 1) > 0.001 {
+                track.scaleTimeRange(CMTimeRange(start: start, duration: length),
+                                     toDuration: CMTime(seconds: length.seconds / speed, preferredTimescale: timescale))
+            }
         }
 
         // Klickljud: samma korta klick vid varje musklick som finns kvar i filmen, på ett eget spår.
@@ -358,14 +364,19 @@ public enum CompositionBuilder {
     /// Ljudmixen: volym och tystning per spår, datorljudet under tal (om valt), mikrofon och
     /// datorljud under berättarröst, musik under tal och berättarröst, och klippens toningar.
     /// `edges`: ett utsnitt som exporteras för sig; ljudet tonas in och ut på 20 ms i dess kanter.
+    /// `voice`: rösten ("" = originalet, annars en dubbnings språk); nil = projektets val.
     public static func audioMix(for composition: AVComposition, plan: RenderPlan, appIDs: [String] = [],
-                                edges: ClosedRange<Double>? = nil) -> AVMutableAudioMix {
+                                edges: ClosedRange<Double>? = nil, voice: String? = nil) -> AVMutableAudioMix {
         let mix = plan.project.audio
         let map = plan.timeMap
         // Berättarrösten i utdatatid.
         let narration: [ClosedRange<Double>] = plan.project.audioClips.filter { $0.role == .narration }.compactMap { c in
-            map.output(at: c.at).map { $0...($0 + c.duration) }
+            map.output(at: c.at).map { $0...($0 + c.outputDuration) }
         }
+        // Dubbad: mikrofonen tystas och dubbningsraderna är talet (datorljud och musik sänks under dem).
+        let voice = voice ?? mix.voice
+        let dubbed = !voice.isEmpty && Dubbing.languages(plan.project).contains(voice)
+        let speech = dubbed ? Dubbing.ranges(plan.project, language: voice, timeMap: map) : plan.speech
         var params: [AVMutableAudioMixInputParameters] = []
         func time(_ s: Double) -> CMTime { CMTime(seconds: max(0, s), preferredTimescale: 600) }
         let edgePart = edges.map { r in
@@ -389,9 +400,9 @@ public enum CompositionBuilder {
             switch track.trackID {
             case microphoneTrackID, systemTrackID, alternateMicTrackID, alternateSystemTrackID:
                 let isMic = track.trackID == microphoneTrackID || track.trackID == alternateMicTrackID
-                let volume = isMic ? (mix.microphoneMuted ? 0 : mix.microphoneVolume) : (mix.systemMuted ? 0 : mix.systemVolume)
+                let volume = isMic ? (mix.microphoneMuted || dubbed ? 0 : mix.microphoneVolume) : (mix.systemMuted ? 0 : mix.systemVolume)
                 var under = narration
-                if !isMic && mix.duckSystem { under += plan.speech }
+                if !isMic && mix.duckSystem { under += speech }
                 var parts = [GainEnvelope.duck(under: under, factor: mix.duckLevel)]
                 let isAlternate = track.trackID == alternateMicTrackID || track.trackID == alternateSystemTrackID
                 parts.append(isAlternate ? GainEnvelope.alternate(plan.cutPlan.cuts) : cutPart)
@@ -405,7 +416,7 @@ public enum CompositionBuilder {
                 let id = appIDs.indices.contains(index) ? appIDs[index] : ""
                 let volume = mix.isAppMuted(id) ? 0 : mix.appVolume(id)
                 var under = narration
-                if mix.duckSystem { under += plan.speech }
+                if mix.duckSystem { under += speech }
                 apply(p, GainEnvelope(base: volume, parts: [GainEnvelope.duck(under: under, factor: mix.duckLevel),
                                                             isAlternate ? GainEnvelope.alternate(plan.cutPlan.cuts) : cutPart]))
             case videoAudioTrackBase...:
@@ -417,13 +428,15 @@ public enum CompositionBuilder {
                 guard plan.project.audioClips.indices.contains(index),
                       let at = map.output(at: plan.project.audioClips[index].at) else { apply(p, GainEnvelope(base: 0)); break }
                 let clip = plan.project.audioClips[index]
-                let end = at + clip.duration
+                let end = at + clip.outputDuration
                 var parts: [GainEnvelope.Part] = []
                 if clip.fadeIn > 0.01 { parts.append(.init([(at, 0), (at + clip.fadeIn, 1)])) }
                 if clip.fadeOut > 0.01 { parts.append(.init([(end - clip.fadeOut, 1), (end, 0)])) }
                 // Musiken sänks under tal och berättarröst.
-                if clip.role == .music { parts.append(GainEnvelope.duck(under: plan.speech + narration, factor: 0.3)) }
-                apply(p, GainEnvelope(base: clip.volume, parts: parts))
+                if clip.role == .music { parts.append(GainEnvelope.duck(under: speech + narration, factor: 0.3)) }
+                // En dubbning hörs bara när filmen har den rösten.
+                let silent = clip.role == .dub && !(dubbed && clip.language == voice)
+                apply(p, GainEnvelope(base: silent ? 0 : clip.volume, parts: parts))
             }
             params.append(p)
         }

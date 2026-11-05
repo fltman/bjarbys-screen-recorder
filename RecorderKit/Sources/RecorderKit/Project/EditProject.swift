@@ -580,6 +580,9 @@ public struct EditProject: Codable, Equatable, Sendable {
         public var appVolumes: [String: Double]
         /// Tystade appar (bundle-id).
         public var appMuted: [String]
+        /// Rösten i filmen: "" = originalet, annars en dubbnings språk (mikrofonen tystas då
+        /// och dubbningsraderna hörs i stället).
+        public var voice: String
         public static let appDefault = 0.8
 
         public func appVolume(_ id: String) -> Double { appVolumes[id] ?? Self.appDefault }
@@ -594,6 +597,7 @@ public struct EditProject: Codable, Equatable, Sendable {
             self.voiceIsolation = voiceIsolation
             self.appVolumes = [:]
             self.appMuted = []
+            self.voice = ""
         }
 
         public init(from decoder: Decoder) throws {
@@ -608,6 +612,7 @@ public struct EditProject: Codable, Equatable, Sendable {
             voiceIsolation = c.value(.voiceIsolation, d.voiceIsolation)
             appVolumes = c.value(.appVolumes, d.appVolumes)
             appMuted = c.value(.appMuted, d.appMuted)
+            voice = c.value(.voice, d.voice)
         }
     }
 }

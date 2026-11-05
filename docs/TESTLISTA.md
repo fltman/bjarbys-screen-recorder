@@ -57,6 +57,12 @@ Bygg först: `./scripts/build.sh`, öppna `dist/Bjarbys skärminspelare.app`.
   Exportera: ett `.srt` per språk. Prova också producenten («översätt undertexterna till tyska»).
   ⚠️ Bara provat med talsyntes (Alva), inte med en riktig röst med brus och tvekljud.
 
+- [ ] **Dubbning** — be producenten «dubba filmen till engelska med min röst» (efter
+  översättningen). Den ska fråga om röst och visa antalet tecken innan den läser in. Tal › Röst ›
+  Engelska (dubbad): din svenska röst ska vara borta och den engelska höras på rätt ställen.
+  Exportera MP4 och byt ljudspår i QuickTime (Visa › Språk) eller IINA/VLC. ⚠️ Bara provat med
+  talsyntes som original; lyssna särskilt på rader som spelats fortare (1,15×).
+
 ## Biblioteket
 
 - [ ] **Byt namn** — högerklicka › Byt namn …; tomt namn ger datumet tillbaka.

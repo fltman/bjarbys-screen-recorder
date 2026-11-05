@@ -53,6 +53,9 @@ enum TestMode {
                 code = await translateTest(bundle: URL(fileURLWithPath: args[i + 1]),
                                            model: value(after: "--modell", in: args),
                                            language: value(after: "--sprak", in: args) ?? "sv")
+            } else if let i = args.firstIndex(of: "--prov-dubba"), args.count > i + 3 {
+                code = await dubTest(bundle: URL(fileURLWithPath: args[i + 1]), language: args[i + 2],
+                                     files: args[i + 3].split(separator: ",", omittingEmptySubsequences: false).map(String.init))
             } else if let i = args.firstIndex(of: "--prov-maskera"), args.count > i + 3 {
                 code = await renderTest(bundle: URL(fileURLWithPath: args[i + 1]),
                                         times: args[i + 2].split(separator: ",").compactMap { Double($0) },
@@ -435,6 +438,33 @@ enum TestMode {
             let data = try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys])
             print(String(data: data, encoding: .utf8) ?? "")
             return transcript.words.isEmpty ? 1 : 0
+        } catch {
+            print("{\"fel\":\"\(error.localizedDescription)\"}")
+            return 1
+        }
+    }
+
+    /// `--prov-dubba <paket> <språk> <fil1,fil2,…>`: lägger in en dubbning (en fil per rad i
+    /// `captions-<språk>.json`, tom = hoppa över), sparar projektet med den rösten och skriver var
+    /// raderna hamnade. Exportera sedan med `--prov-exportera` och mät spåren.
+    static func dubTest(bundle url: URL, language: String, files: [String]) async -> Int32 {
+        do {
+            let bundle = RecordingBundle(url: url)
+            let rec = try LoadedRecording.load(bundle)
+            var project = bundle.loadProject(duration: rec.meta.duration)
+            let lines = try await Dubbing.apply(to: bundle, project: &project, duration: rec.meta.duration,
+                                                language: language, files: files, texts: [], show: true)
+            try bundle.saveProject(project)
+            let report: [String: Any] = [
+                "rader": lines.map { l in
+                    String(format: "%.2f–%.2f (original %.2f) fart %.3f sen %.2f för lång %.2f  ", l.placement.at, l.placement.end,
+                           l.cue.start, l.placement.speed, l.placement.lag, l.placement.overrun) + l.text
+                },
+                "kontroll": Producer.preflight(project: project, words: rec.transcript?.words ?? [], duration: rec.meta.duration).map { "\($0.severity.rawValue) \($0.message)" },
+            ]
+            let data = try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys])
+            print(String(data: data, encoding: .utf8) ?? "")
+            return 0
         } catch {
             print("{\"fel\":\"\(error.localizedDescription)\"}")
             return 1

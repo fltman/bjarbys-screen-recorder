@@ -157,6 +157,16 @@ enum MCPServer {
              "inputSchema": schema(["recording": recordingArg, "show": ["type": "boolean"],
                                     "model": ["type": "string", "description": "Model file in whisper.cpp/models (default: the best multilingual one)."]],
                                    required: ["recording"])],
+            ["name": "get_dub_script",
+             "description": "The lines to voice for a DUB (the speech replaced by another language): the captions in `language` (translate first: translate_captions_locally or set_caption_translation), each with its start, the room until the next line, and a rough character budget. Voice ONE audio file per line with the elevenlabs-dialogue skill (model eleven_v4, --language <language>) — it costs money: confirm voice and language with the user and tell them the character count first. With a cloned voice, the first line must say it is an AI version of that person's voice. Then set_dub.",
+             "inputSchema": schema(["recording": recordingArg, "language": ["type": "string"]], required: ["recording", "language"])],
+            ["name": "set_dub",
+             "description": "Place a dub: one audio file per line from get_dub_script, same order and count (\"\" = skip a line). Lines start with the original line, may run 0.6 s into the next, then play up to 1.15× faster (pitch kept); what still does not fit is reported — shorten that text and voice it again. show = the film gets this voice (the microphone is muted, the dub lines speak). Exports carry the original and each dub as separate, language-tagged audio tracks.",
+             "inputSchema": schema(["recording": recordingArg, "language": ["type": "string"],
+                                    "files": ["type": "array", "items": ["type": "string"]],
+                                    "texts": ["type": "array", "items": ["type": "string"], "description": "What each file says, if it differs from the caption line."],
+                                    "show": ["type": "boolean"]],
+                                   required: ["recording", "language", "files"])],
             ["name": "list_plugins", "description": "Plugins installed in ~/Library/Application Support/Bjarbys skärminspelare/Plugins: name, whether the user has enabled them, hooks and actions.",
              "inputSchema": schema([:])],
             ["name": "run_plugin_action",
@@ -417,6 +427,8 @@ enum MCPServer {
             return describe(merged, meta: try merged.readMeta())
         case "transcribe": return try await transcribe(a)
         case "translate_captions_locally": return try await translateLocally(a)
+        case "get_dub_script": return try dubScript(a)
+        case "set_dub": return try await setDub(a)
         case "edit_recording": return try await edit(a)
         case "render_frames": return try await renderFrames(a)
         case "export": return try await export(a)
@@ -552,6 +564,54 @@ enum MCPServer {
     }
 
     // MARK: - Tal
+
+    private static func dubScript(_ a: [String: Any]) throws -> String {
+        let rec = try resolve(a)
+        let language = (a["language"] as? String ?? "").lowercased()
+        guard let t = rec.bundle.readTranslation(language), !t.cues.isEmpty else {
+            throw ToolError("No captions in \(language) yet — translate first (translate_captions_locally for English, or get_caption_cues + set_caption_translation).")
+        }
+        let map = TimeMap(segments: rec.bundle.loadProject(duration: rec.meta.duration).segments)
+        let starts = t.cues.map { map.output(at: $0.start) }
+        var lines: [String] = []
+        var characters = 0
+        for (i, c) in t.cues.enumerated() {
+            guard let s = starts[i] else { lines.append("\(i)\t(cut away — pass \"\")\t\(c.text)"); continue }
+            let next = starts[(i + 1)...].compactMap { $0 }.first ?? map.outputDuration
+            let room = next - s + (i + 1 < t.cues.count ? Dubbing.maxLag : 0)
+            // Engelska i lugnt tal: ungefär 14 tecken per sekund.
+            lines.append("\(i)\t\(Producer.fmt(c.start))\troom \(Producer.fmt(room)) s ≈ \(Int(room * 14)) chars\t\(c.text)")
+            characters += c.text.count
+        }
+        return "\(t.cues.count) lines in \(language), \(characters) characters (SOURCE seconds; room = until the next line + 0.6 s). One audio file per line, same order, then set_dub:\n"
+            + lines.joined(separator: "\n")
+    }
+
+    private static func setDub(_ a: [String: Any]) async throws -> String {
+        let rec = try resolve(a)
+        let language = (a["language"] as? String ?? "").lowercased()
+        guard language.count >= 2, language.count <= 8, language.allSatisfy({ $0.isLetter || $0 == "-" }) else {
+            throw ToolError("Give language as a code, e.g. en.")
+        }
+        let files = a["files"] as? [String] ?? []
+        for f in files where !f.isEmpty && !FileManager.default.fileExists(atPath: NSString(string: f).expandingTildeInPath) {
+            throw ToolError("No file at \(f).")
+        }
+        var p = rec.bundle.loadProject(duration: rec.meta.duration)
+        let show = a["show"] as? Bool ?? true
+        let lines = try await Dubbing.apply(to: rec.bundle, project: &p, duration: rec.meta.duration, language: language,
+                                            files: files, texts: a["texts"] as? [String] ?? [], show: show)
+        try rec.bundle.saveProject(p)
+        var report = lines.enumerated().map { i, l in
+            var line = "\(Producer.fmt(l.placement.at)) s (output)\t\(Producer.fmt(l.duration)) s"
+            if l.placement.lag > 0.05 { line += ", \(Producer.fmt(l.placement.lag)) s late" }
+            if l.placement.speed > 1.001 { line += String(format: ", %.2f× speed", l.placement.speed) }
+            if l.placement.overrun > 0.05 { line += " — ⚠️ \(Producer.fmt(l.placement.overrun)) s TOO LONG: shorten and voice again" }
+            return "\(i)\t" + line + "\t\(l.text)"
+        }
+        report.insert("Placed \(lines.count) \(language) lines\(show ? "; the film now speaks \(language) (microphone muted)" : ""). Listen before delivery — render_frames shows no sound.", at: 0)
+        return report.joined(separator: "\n")
+    }
 
     private static func translateLocally(_ a: [String: Any]) async throws -> String {
         let rec = try resolve(a)
@@ -931,6 +991,7 @@ enum MCPServer {
         let rec = try resolve(a)
         guard let path = a["file"] as? String, let role = AudioClip.Role(rawValue: a["role"] as? String ?? ""),
               let at = number(a["at"]) else { throw ToolError("file, role (narration|music|effect) and at are required.") }
+        guard role != .dub else { throw ToolError("Use get_dub_script + set_dub for a dub.") }
         let source = URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
         guard FileManager.default.fileExists(atPath: source.path) else { throw ToolError("No file at \(source.path).") }
         guard let track = try? await AVURLAsset(url: source).loadTracks(withMediaType: .audio).first,
@@ -975,6 +1036,9 @@ enum MCPServer {
            pengar. Använd elevenlabs-dialogue-skillen (Text to Dialogue, aldrig rå TTS), en fil per
            steg, sedan `add_audio` role narration med texten. Låt varje rad andas (~1 s paus).
            Klonad röst: säg i första repliken att det är en AI med den personens röst.
+           Dubbning (talet på ett annat språk) bara om människan ber om det: översätt undertexterna,
+           `get_dub_script`, en fil per rad med samma skill, `set_dub`; korta och läs in igen de
+           rader som rapporteras för långa. Samma regler: fråga om röst och språk, säg antalet tecken.
         8. `preflight`: åtgärda alla fel; varningar ska du kunna motivera.
         9. DET SOM SÄGS SKA SYNAS: kör `render_frames` vid varje overlay, kapitel och varje
            berättarrad, och LÄS bilderna. Stämmer inte bilden med texten — ändra besluten (tid,

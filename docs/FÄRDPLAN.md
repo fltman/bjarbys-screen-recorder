@@ -90,6 +90,13 @@ tagning, sedan redigerbar polish, sedan resten.
   `get_caption_cues` → `set_caption_translation` (antalet rader kontrolleras). Uppmätt: Apples
   översättning på datorn har ingen svenska (`unsupported`), och varken KB-Whisper medium eller
   large-v3-turbo översätter med `-tr` (båda skrev svenska).
+- Dubbning (2026-11-05): undertextraderna på ett annat språk inlästa med elevenlabs-dialogue i
+  Claude Code (en fil per rad; appen har inga nycklar) och lagda som ljudklipp `dub` på radernas
+  tider (`Speech/Dubbing.swift`, MCP `get_dub_script` → `set_dub`). En rad börjar med
+  originalraden, får gå 0,6 s in i nästa, börja 0,8 s tidigare i tystnaden före, och spelas
+  högst 1,15× fortare; resten rapporteras. Tal › Röst: Originalet / Engelska (dubbad) —
+  dubbad tystar mikrofonen. MP4/MOV/MKV får originalet och varje dubbning som egna ljudspår med
+  språkkod (huvudspåret = filmens röst).
 - Översättning på datorn (2026-11-05): med en flerspråkig whisper-modell (`ggml-medium.bin`,
   nedladdad) översätter Tal › Översätt till engelska talet direkt (`Transcriber.translate`,
   `-tr`), MCP `translate_captions_locally`. Bara till engelska; andra språk via producenten.

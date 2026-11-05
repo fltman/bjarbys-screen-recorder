@@ -292,7 +292,7 @@ struct LayersInspector: View {
             ForEach(model.project.audioClips) { c in
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
-                        Image(systemName: c.role == .music ? "music.note" : (c.role == .narration ? "person.wave.2" : "speaker.wave.1"))
+                        Image(systemName: c.role == .music ? "music.note" : (c.role == .narration ? "person.wave.2" : (c.role == .dub ? "character.bubble" : "speaker.wave.1")))
                             .frame(width: 18).foregroundStyle(Color.accentColor)
                         Text(c.text.isEmpty ? c.file : c.text).lineLimit(1).font(.callout)
                         Spacer()
