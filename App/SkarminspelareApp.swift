@@ -41,6 +41,7 @@ struct SkarminspelareApp: App {
 
 private struct MenuBarLabel: View {
     @ObservedObject var recorder: RecordingController
+    @ObservedObject private var flashback = AppModel.shared.flashback
 
     var body: some View {
         switch recorder.phase {
@@ -49,7 +50,8 @@ private struct MenuBarLabel: View {
         case .countdown, .choosing, .stopping:
             Image(systemName: "circle.dotted")
         case .idle:
-            Image(systemName: "record.circle")
+            // Flashback spelar in i bakgrunden: syns i ikonen, så att det aldrig sker i smyg.
+            Image(systemName: flashback.isRunning ? "clock.arrow.circlepath" : "record.circle")
         }
     }
 }

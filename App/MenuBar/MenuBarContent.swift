@@ -15,13 +15,16 @@ struct MenuBarContent: View {
             Button(recorder.status.isPaused ? "Fortsätt" : "Pausa") { recorder.togglePause() }
             Divider()
         } else {
+            // Kortkommandona visas i menyn (de globala gäller också när menyn är stängd).
             Button("Spela in skärmen") { recorder.recordDisplayUnderMouse() }
+                .keyboardShortcut("r", modifiers: [.control, .option, .command])
                 .disabled(recorder.isBusy)
             Button("Spela in fönster …") { recorder.recordWindow() }
                 .disabled(recorder.isBusy)
             Button("Spela in program …") { recorder.recordApplication() }
                 .disabled(recorder.isBusy)
             Button("Spela in område …") { recorder.recordArea() }
+                .keyboardShortcut("a", modifiers: [.control, .option, .command])
                 .disabled(recorder.isBusy)
             Divider()
             Picker("Mikrofon", selection: $settings.micID) {
@@ -34,19 +37,23 @@ struct MenuBarContent: View {
                 ForEach(settings.cameras) { Text($0.name).tag($0.id) }
             }
             Toggle("Datorljud", isOn: $settings.systemAudio)
-            Toggle("Spela in kortkommandon", isOn: $settings.keystrokes)
-            Toggle("Nedräkning", isOn: $settings.countdown)
-            Toggle("Teleprompter", isOn: $settings.teleprompterEnabled)
-            Button("Manus …") { app.showScriptEditor() }
-            Picker("Bildfrekvens", selection: $settings.fps) {
-                Text("30 bilder/s").tag(30)
-                Text("60 bilder/s").tag(60)
-                // Bara om någon skärm visar 120 Hz (ProMotion): annars finns inga fler rutor att få.
-                if NSScreen.screens.contains(where: { $0.maximumFramesPerSecond >= 120 }) {
-                    Text("120 bilder/s").tag(120)
+            Divider()
+            Menu("Inspelning") {
+                Toggle("Spela in kortkommandon", isOn: $settings.keystrokes)
+                Toggle("Nedräkning", isOn: $settings.countdown)
+                Picker("Bildfrekvens", selection: $settings.fps) {
+                    Text("30 bilder/s").tag(30)
+                    Text("60 bilder/s").tag(60)
+                    // Bara om någon skärm visar 120 Hz (ProMotion): annars finns inga fler rutor att få.
+                    if NSScreen.screens.contains(where: { $0.maximumFramesPerSecond >= 120 }) {
+                        Text("120 bilder/s").tag(120)
+                    }
                 }
             }
-            Divider()
+            Menu("Teleprompter") {
+                Toggle("Visa manuset under inspelningen", isOn: $settings.teleprompterEnabled)
+                Button("Manus …") { app.showScriptEditor() }
+            }
         }
         flashbackMenu
         Menu("Skärmdump") {
@@ -64,8 +71,10 @@ struct MenuBarContent: View {
         }
         Divider()
         Button("Bibliotek …") { app.showLibrary() }
-        Button("Delning …") { app.showSharingSettings() }
-        Button("Behörigheter …") { app.showPermissions() }
+        Menu("Inställningar") {
+            Button("Delning …") { app.showSharingSettings() }
+            Button("Behörigheter …") { app.showPermissions() }
+        }
         Divider()
         Button("Avsluta Bjarbys skärminspelare") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q")

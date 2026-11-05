@@ -160,15 +160,29 @@ private final class CountdownModel: ObservableObject {
 
 private struct CountdownView: View {
     @ObservedObject var model: CountdownModel
+    @State private var drain: CGFloat = 1
 
     var body: some View {
-        Text("\(model.number)")
-            .font(.system(size: 110, weight: .bold, design: .rounded))
-            .foregroundStyle(.white)
-            .frame(width: 200, height: 200)
-            .background(Circle().fill(.black.opacity(0.6)))
-            .contentTransition(.numericText(countsDown: true))
-            .animation(.snappy, value: model.number)
+        ZStack {
+            Circle().fill(.black.opacity(0.62))
+            Circle().stroke(.white.opacity(0.14), lineWidth: 6).padding(10)
+            // Ringen töms under varje sekund.
+            Circle()
+                .trim(from: 0, to: drain)
+                .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .padding(10)
+            Text("\(model.number)")
+                .font(.system(size: 104, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .contentTransition(.numericText(countsDown: true))
+                .animation(.snappy, value: model.number)
+        }
+        .frame(width: 200, height: 200)
+        .onChange(of: model.number, initial: true) { _, _ in
+            drain = 1
+            withAnimation(.linear(duration: 0.95)) { drain = 0 }
+        }
     }
 }
 

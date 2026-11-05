@@ -2007,6 +2007,23 @@
         }
       }
     },
+    "Inspelning": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recording"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspelning"
+          }
+        }
+      }
+    },
     "Inspelningen avbröts": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2156,6 +2173,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Inspelningens"
+          }
+        }
+      }
+    },
+    "Inställningar": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inställningar"
           }
         }
       }
