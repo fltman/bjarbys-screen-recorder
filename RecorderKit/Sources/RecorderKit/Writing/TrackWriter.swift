@@ -40,6 +40,9 @@ public final class TrackWriter: @unchecked Sendable {
         writer.shouldOptimizeForNetworkUse = false
     }
 
+    /// Skrivaren tar emot mer just nu (för provlägen som skriver snabbare än realtid).
+    public var isReady: Bool { lock.withLock { input?.isReadyForMoreMediaData ?? true } }
+
     public var hasFailed: Bool {
         lock.withLock { failure != nil || writer.status == .failed }
     }

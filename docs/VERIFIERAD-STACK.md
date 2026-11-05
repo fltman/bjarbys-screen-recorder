@@ -327,3 +327,6 @@ Inbyggd XDR-skärm (`maximumPotentialExtendedDynamicRangeColorComponentValue` 16
 - **Live** (`--prov-hdr`, eget fönster med 1,0 och 4,0 linjärt via `preferredDynamicRange = .high`):
   inspelningen 100 respektive 398 nits — 4× även när skärmens huvudrum just då var 2,3 (canonical
   följer innehållet, inte skärmens ljusstyrka).
+- Exportfart, syntetiskt paket i full storlek (3024×1964, 60 bilder/s, 6 s, stillastående
+  innehåll): "MP4 4K HDR" (3326×2160, HLG) 2,0× realtid; "MP4 1080p" från HDR, med den linjära
+  mellanbilden, 4,8× realtid.

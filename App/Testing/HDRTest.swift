@@ -78,14 +78,17 @@ enum HDRTest {
         for (id, format) in [("mp4-4k-hdr", kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange), ("mp4-1080", kCVPixelFormatType_32BGRA)] {
             guard let preset = ExportPreset.all.first(where: { $0.id == id }) else { continue }
             let url = out.appendingPathComponent("hdr-prov-\(id).mp4")
+            let started = Date()
             try await Exporter(recording: rec, project: project, preset: preset).run(to: url) { _ in }
+            let seconds = Date().timeIntervalSince(started)
             defer { try? FileManager.default.removeItem(at: url) }
             guard let px = try await readFrame(url, at: 1.0, format: format) else { continue }
             let canvas = CGSize(width: CVPixelBufferGetWidth(px), height: CVPixelBufferGetHeight(px))
             func mapped(_ p: CGPoint) -> CGPoint {
                 CGPoint(x: p.x * canvas.width / source.width, y: p.y * canvas.height / source.height)
             }
-            var r: [String: Any] = ["fargegenskaper": attachments(px)]
+            var r: [String: Any] = ["fargegenskaper": attachments(px),
+                                    "ganger_realtid": (rec.meta.duration / seconds * 10).rounded() / 10]
             for (name, p) in points {
                 if format == kCVPixelFormatType_32BGRA { r["rgb_\(name)"] = bgra(px, at: mapped(p)) }
                 else { r["hlg_\(name)"] = signal(luma10(px, at: mapped(p))) }
@@ -97,26 +100,28 @@ enum HDRTest {
     /// `--prov-hdr-syntetisk <mapp>`: samma mätning utan skärm, på ett påhittat HDR-paket — en
     /// HEVC Main10-fil i BT.2020 PQ med tre band: 20 nits (grått), 100 nits (SDR-vitt som
     /// ScreenCaptureKit lägger det) och 400 nits (4 × SDR-vitt).
-    static func synthetic(out: URL) async -> Int32 {
+    static func synthetic(out: URL, width: Int = 960, height: Int = 540, fps: Int = 30, seconds: Int = 2) async -> Int32 {
         var report: [String: Any] = [:]
         do {
             try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
             let bundle = try RecordingBundle.create(in: out)
             defer { try? FileManager.default.removeItem(at: bundle.url) }
-            let (w, h) = (960, 540)
-            let writer = try TrackWriter(kind: .screen, url: bundle.trackURL(.screen), settings: .screen(width: w, height: h, fps: 30, hdr: true))
+            let (w, h) = (width, height)
+            let writer = try TrackWriter(kind: .screen, url: bundle.trackURL(.screen), settings: .screen(width: w, height: h, fps: fps, hdr: true))
             let bands = [20.0, 100, 400]
-            for i in 0..<60 {
-                guard let px = pqFrame(width: w, height: h, nits: bands),
-                      let sb = sampleBuffer(px, at: CMTime(value: CMTimeValue(i), timescale: 30)) else { throw err("ruta") }
-                writer.append(sb, at: CMTime(value: CMTimeValue(i), timescale: 30))
+            guard let px = pqFrame(width: w, height: h, nits: bands) else { throw err("ruta") }
+            for i in 0..<(fps * seconds) {
+                let t = CMTime(value: CMTimeValue(i), timescale: CMTimeScale(fps))
+                guard let sb = sampleBuffer(px, at: t, fps: fps) else { throw err("ruta") }
+                while !writer.isReady { try await Task.sleep(for: .milliseconds(2)) }
+                writer.append(sb, at: t)
             }
             _ = await writer.finish()
             var meta = RecordingMeta(source: .init(kind: .display, title: "syntetisk", displayID: 0, windowID: nil,
                                                    contentRect: Rect(x: 0, y: 0, width: 480, height: 270), pixelScale: 2,
                                                    pixelWidth: w, pixelHeight: h), fps: 30, appVersion: "prov")
             meta.tracks = [.init(kind: .screen, file: RecordingBundle.fileName(for: .screen))]
-            meta.duration = 2; meta.finished = true; meta.hdr = true
+            meta.duration = Double(seconds); meta.finished = true; meta.hdr = true; meta.fps = fps
             try bundle.writeMeta(meta)
             let points = [("gra", CGPoint(x: w / 6, y: h / 2)), ("vit", CGPoint(x: w / 2, y: h / 2)), ("hdr", CGPoint(x: w * 5 / 6, y: h / 2))]
             if let px = try await readFrame(bundle.trackURL(.screen), at: 1.0, format: kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange) {
@@ -177,11 +182,11 @@ enum HDRTest {
         return pb
     }
 
-    private static func sampleBuffer(_ px: CVPixelBuffer, at t: CMTime) -> CMSampleBuffer? {
+    private static func sampleBuffer(_ px: CVPixelBuffer, at t: CMTime, fps: Int = 30) -> CMSampleBuffer? {
         var format: CMVideoFormatDescription?
         CMVideoFormatDescriptionCreateForImageBuffer(allocator: nil, imageBuffer: px, formatDescriptionOut: &format)
         guard let format else { return nil }
-        var timing = CMSampleTimingInfo(duration: CMTime(value: 1, timescale: 30), presentationTimeStamp: t, decodeTimeStamp: .invalid)
+        var timing = CMSampleTimingInfo(duration: CMTime(value: 1, timescale: CMTimeScale(fps)), presentationTimeStamp: t, decodeTimeStamp: .invalid)
         var sb: CMSampleBuffer?
         CMSampleBufferCreateReadyWithImageBuffer(allocator: nil, imageBuffer: px, formatDescription: format,
                                                  sampleTiming: &timing, sampleBufferOut: &sb)

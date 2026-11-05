@@ -102,7 +102,11 @@ enum TestMode {
                                      20 * log10($0.peak), 20 * log10(Loudness.gain(for: $0).gain)) } ?? #"{"fel":"tyst eller oläsbar"}"#)
                 code = m == nil ? 1 : 0
             } else if let i = args.firstIndex(of: "--prov-hdr-syntetisk"), args.count > i + 1 {
-                code = await HDRTest.synthetic(out: URL(fileURLWithPath: args[i + 1]))
+                // Valfritt: bredd höjd bilder/s sekunder (för att mäta exportfarten i full storlek).
+                let n = args.dropFirst(i + 2).prefix(4).compactMap { Int($0) }
+                code = n.count == 4
+                    ? await HDRTest.synthetic(out: URL(fileURLWithPath: args[i + 1]), width: n[0], height: n[1], fps: n[2], seconds: n[3])
+                    : await HDRTest.synthetic(out: URL(fileURLWithPath: args[i + 1]))
             } else if let i = args.firstIndex(of: "--prov-hdr"), args.count > i + 1 {
                 code = await HDRTest.run(out: URL(fileURLWithPath: args[i + 1]))
             } else if let i = args.firstIndex(of: "--prov-tappglapp"), args.count > i + 2 {
