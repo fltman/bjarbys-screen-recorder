@@ -46,6 +46,25 @@ final class AppModel: ObservableObject {
         libraryWindow?.makeKeyAndOrderFront(nil)
     }
 
+    private var scriptWindow: NSWindow?
+
+    func showScriptEditor() {
+        if scriptWindow == nil {
+            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 460),
+                             styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
+            w.title = String(localized: "Manus")
+            w.isReleasedWhenClosed = false
+            let host = NSHostingController(rootView: ScriptEditorView(settings: settings))
+            host.sizingOptions = [.minSize]
+            w.contentViewController = host
+            w.setContentSize(NSSize(width: 560, height: 460))
+            w.center()
+            scriptWindow = w
+        }
+        NSApp.activate()
+        scriptWindow?.makeKeyAndOrderFront(nil)
+    }
+
     func showPermissions() {
         if permissionsWindow == nil {
             let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 600, height: 560),

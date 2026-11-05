@@ -31,6 +31,7 @@ open Skarminspelare.xcodeproj
   - `--prov-ljudstyrka <ljudfil>` — LUFS enligt BS.1770 och förstärkningen till −16
   - `--prov-rostisolering <ljudfil> <ut.caf>` — Apples röstisolering offline
   - `--prov-flashback <del-s> <buffert-s> <kör-s> <spara-s> <mapp>` — bufferten i drift, mäter skarvarna
+  - `--prov-teleprompter <png>` — teleprompterrutan efter 6 s rullning, utanför skärmen
   Startad från terminalen lånar binären terminalens skärminspelningsbehörighet.
 - `./scripts/sync-check.sh` mäter A/V-synk mot en blixt+pip-referens i QuickTime.
 - `swift scripts/make-icon.swift <png>` ritar appikonen (skalas in i `App/Assets.xcassets`).

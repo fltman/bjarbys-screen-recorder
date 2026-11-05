@@ -21,6 +21,8 @@ is included; to have the app follow your system language instead, run
   discard. It warns about a silent microphone, a disk running full and tracks that stop.
 - Global shortcuts: ⌃⌥⌘R start/stop, ⌃⌥⌘P pause, ⌃⌥⌘A record an area.
 - The app's own windows never end up in the recording.
+- A teleprompter: your script scrolls at reading speed in a box near the camera, visible only
+  to you.
 - Flashback: keep recording in the background and save the last 1–10 minutes after the fact
   (⌃⌥⌘S), as a normal recording you can edit.
 - Crash-safe: every track is its own file, written in 2-second fragments. A recording that

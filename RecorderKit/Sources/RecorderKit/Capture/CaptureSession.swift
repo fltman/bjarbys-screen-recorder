@@ -45,6 +45,9 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
 
     /// Anropas ungefär tio gånger per sekund på huvudtråden.
     public var onStatus: ((Status) -> Void)?
+    /// Appens egna paneler, där klick inte ska loggas (globala punkter, origo uppe till vänster).
+    public func setIgnoredRegions(_ rects: [CGRect]) { input?.setIgnoredRegions(rects) }
+
     /// Första hela rutan har kommit (tidslinjen har en nollpunkt).
     public var hasStarted: Bool { clock.isStarted }
     /// Nollpunkten i värdklockan (s), när den finns.

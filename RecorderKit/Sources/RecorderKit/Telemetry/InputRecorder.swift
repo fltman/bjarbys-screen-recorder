@@ -1,3 +1,4 @@
+import os
 import Foundation
 import AppKit
 import CoreGraphics
@@ -16,6 +17,11 @@ public final class InputRecorder: @unchecked Sendable {
     private let wantsKeystrokes: Bool
     /// Anropas vid varje musnedtryck med global punkt och tidslinjetid (för elementramen).
     public var onMouseDown: ((CGPoint, Double) -> Void)?
+    /// Ytor (globala punkter, origo uppe till vänster) där klick och scroll inte loggas: appens
+    /// egna paneler (HUD, teleprompter). De syns inte i filmen, så klick där får inte bli zoomar.
+    private let ignored = OSAllocatedUnfairLock(initialState: [CGRect]())
+    public func setIgnoredRegions(_ rects: [CGRect]) { ignored.withLock { $0 = rects } }
+    private func isIgnored(_ p: CGPoint) -> Bool { ignored.withLock { $0.contains { $0.contains(p) } } }
 
     private var tap: CFMachPort?
     private var thread: Thread?
@@ -127,19 +133,21 @@ public final class InputRecorder: @unchecked Sendable {
             lastMove = t
             log.append(InputEvent(t: t, k: .move, x: p.x, y: p.y))
         case .leftMouseDragged, .rightMouseDragged, .otherMouseDragged:
-            guard t - lastMove >= 1.0 / 240 else { return }
+            guard t - lastMove >= 1.0 / 240, !isIgnored(p) else { return }
             lastMove = t
             log.append(InputEvent(t: t, k: .drag, x: p.x, y: p.y, b: Self.button(type)))
         case .leftMouseDown, .rightMouseDown, .otherMouseDown:
+            guard !isIgnored(p) else { return }
             let clicks = Int(event.getIntegerValueField(.mouseEventClickState))
             log.append(InputEvent(t: t, k: .down, x: p.x, y: p.y, b: Self.button(type), n: clicks))
             onMouseDown?(p, t)
         case .leftMouseUp, .rightMouseUp, .otherMouseUp:
+            guard !isIgnored(p) else { return }
             log.append(InputEvent(t: t, k: .up, x: p.x, y: p.y, b: Self.button(type)))
         case .scrollWheel:
             let dy = Double(event.getIntegerValueField(.scrollWheelEventPointDeltaAxis1))
             let dx = Double(event.getIntegerValueField(.scrollWheelEventPointDeltaAxis2))
-            guard dx != 0 || dy != 0 else { return }
+            guard dx != 0 || dy != 0, !isIgnored(p) else { return }
             log.append(InputEvent(t: t, k: .scroll, x: p.x, y: p.y, dx: dx, dy: dy))
         case .keyDown:
             guard let label = Self.shortcutLabel(event) else { return }

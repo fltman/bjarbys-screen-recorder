@@ -120,6 +120,57 @@
         }
       }
     },
+    "%lld ord, ungefär %@. Rutan syns bara för dig: appens egna fönster kommer aldrig med i inspelningen.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld words, about %@. Only you see the box: the app’s own windows never end up in the recording."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ord, ungefär %@. Rutan syns bara för dig: appens egna fönster kommer aldrig med i inspelningen."
+          }
+        }
+      }
+    },
+    "%lld ord/min": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld words/min"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ord/min"
+          }
+        }
+      }
+    },
+    "%lld pt": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld pt"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld pt"
+          }
+        }
+      }
+    },
     "%lld rutor tappade": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2075,6 +2126,40 @@
         }
       }
     },
+    "Manus": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Script"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manus"
+          }
+        }
+      }
+    },
+    "Manus …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Script …"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manus …"
+          }
+        }
+      }
+    },
     "Mappen med build/bin/whisper-cli och models/": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2649,6 +2734,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sidled"
+          }
+        }
+      }
+    },
+    "Skriv eller klistra in det du ska säga.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write or paste what you are going to say."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skriv eller klistra in det du ska säga."
           }
         }
       }
@@ -3452,6 +3554,23 @@
         }
       }
     },
+    "Teleprompter": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teleprompter"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teleprompter"
+          }
+        }
+      }
+    },
     "Text": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3856,6 +3975,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Visa kortkommandon i videon. Bara tangenter med ⌘ ⌃ ⌥ sparas, aldrig text."
+          }
+        }
+      }
+    },
+    "Visa manuset under inspelningen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show the script while recording"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visa manuset under inspelningen"
           }
         }
       }

@@ -63,6 +63,24 @@ enum TestMode {
                 code = await flashbackTest(segment: Double(args[i + 1]) ?? 4, buffer: Double(args[i + 2]) ?? 10,
                                            run: Double(args[i + 3]) ?? 13, save: Double(args[i + 4]) ?? 10,
                                            out: URL(fileURLWithPath: args[i + 5]))
+            } else if let i = args.firstIndex(of: "--prov-teleprompter"), args.count > i + 1 {
+                // Rutan efter 6 s rullning (2 s inledning + 4 s), utanför skärmen.
+                let model = TeleprompterModel(text: """
+                    Hej och välkommen! I den här korta genomgången visar jag hur du exporterar en film \
+                    från redigeraren. Först öppnar vi inspelningen i biblioteket. Sedan väljer vi format \
+                    och bakgrund, och till sist trycker vi på Exportera längst upp till höger. Klart!
+                    """, wpm: 150, fontSize: 26)
+                model.start()
+                try? await Task.sleep(for: .seconds(6))
+                let view = NSHostingView(rootView: TeleprompterView(model: model))
+                view.frame = NSRect(x: 0, y: 0, width: 760, height: 210)
+                view.layoutSubtreeIfNeeded()
+                if let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
+                    view.cacheDisplay(in: view.bounds, to: rep)
+                    try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: args[i + 1]))
+                }
+                print(#"{"fil":"\#(args[i + 1])"}"#)
+                code = 0
             } else if let i = args.firstIndex(of: "--prov-ljudstyrka"), args.count > i + 1 {
                 let m = try? await Loudness.measure(AVURLAsset(url: URL(fileURLWithPath: args[i + 1])))
                 print(m.map { String(format: #"{"lufs":%.2f,"topp_dbfs":%.2f,"forstarkning_db":%.2f}"#, $0.integrated,

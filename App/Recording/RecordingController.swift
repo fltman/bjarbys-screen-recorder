@@ -31,6 +31,7 @@ final class RecordingController: ObservableObject {
     private var hud: HUDPanel?
     private var countdownPanel: CountdownPanel?
     private var cameraPanel: CameraPreviewPanel?
+    private var teleprompter: TeleprompterPanel?
     private var areaSelector: AreaSelector?
 
     init(settings: AppSettings, library: LibraryModel) {
@@ -136,7 +137,10 @@ final class RecordingController: ObservableObject {
         do {
             let session = try CaptureSession(target: target, options: settings.captureOptions,
                                              directory: library.directory)
-            session.onStatus = { [weak self] s in self?.status = s }
+            session.onStatus = { [weak self] s in
+                self?.status = s
+                self?.updateIgnoredRegions()
+            }
             session.onAutoStop = { [weak self] reason in
                 Task { await self?.stop(reason: reason) }
             }
@@ -144,6 +148,7 @@ final class RecordingController: ObservableObject {
             try await session.start()
             phase = .recording
             showHUD(on: target.displayID)
+            showTeleprompter(on: target.displayID)
             if let camera = session.camera {
                 let panel = CameraPreviewPanel(session: camera.session, on: target.displayID)
                 panel.orderFrontRegardless()
@@ -166,7 +171,13 @@ final class RecordingController: ObservableObject {
 
     func togglePause() {
         guard let session, phase == .recording else { return }
-        if session.clock.isPaused { session.resume() } else { session.pause() }
+        if session.clock.isPaused {
+            session.resume()
+            teleprompter?.model.start()
+        } else {
+            session.pause()
+            teleprompter?.model.pause()
+        }
     }
 
     func stop(reason: CaptureSession.StopReason = .user) async {
@@ -217,6 +228,23 @@ final class RecordingController: ObservableObject {
         hud?.close(); hud = nil
         cameraPanel?.close(); cameraPanel = nil
         countdownPanel?.close(); countdownPanel = nil
+        teleprompter?.close(); teleprompter = nil
+    }
+
+    private func showTeleprompter(on displayID: CGDirectDisplayID) {
+        let text = settings.teleprompterText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard settings.teleprompterEnabled, !text.isEmpty else { return }
+        let model = TeleprompterModel(text: text, wpm: settings.teleprompterWPM, fontSize: settings.teleprompterFontSize)
+        let panel = TeleprompterPanel(model: model, on: displayID)
+        panel.orderFrontRegardless()
+        teleprompter = panel
+        model.start()
+    }
+
+    /// Appens paneler syns inte i filmen; klick på dem ska inte heller bli händelser.
+    private func updateIgnoredRegions() {
+        let frames = [hud?.frame, teleprompter?.frame, cameraPanel?.frame].compactMap { $0 }
+        session?.setIgnoredRegions(frames.map(AreaSelector.cgRect(fromCocoa:)))
     }
 
     private func ensurePermission() -> Bool {

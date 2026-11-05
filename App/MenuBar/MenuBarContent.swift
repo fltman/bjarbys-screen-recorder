@@ -36,6 +36,8 @@ struct MenuBarContent: View {
             Toggle("Datorljud", isOn: $settings.systemAudio)
             Toggle("Spela in kortkommandon", isOn: $settings.keystrokes)
             Toggle("Nedräkning", isOn: $settings.countdown)
+            Toggle("Teleprompter", isOn: $settings.teleprompterEnabled)
+            Button("Manus …") { app.showScriptEditor() }
             Picker("Bildfrekvens", selection: $settings.fps) {
                 Text("30 bilder/s").tag(30)
                 Text("60 bilder/s").tag(60)

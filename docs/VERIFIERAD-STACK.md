@@ -169,3 +169,11 @@ huvudskärmen + datorljud.
   `FlashbackPlan` lämnar ett verkligt hål (misslyckad rotation) som hål i stället för att flytta tid.
 - Språklåset: `AppleLanguages = (sv)` i appens domän före första lokaliserade text ger svenskt
   gränssnitt redan vid första starten (redigerarens ögonblicksbild), trots en-US först i systemet.
+
+## Teleprompter (2026-11-05)
+
+- SwiftUI kapar en `Text` med "…" till förälderns höjd; för en rullande text krävs
+  `.fixedSize(horizontal: false, vertical: true)` (syntes i första ögonblicksbilden).
+- Appen har en egen `TimelineView` (tidslinjen) som skuggar SwiftUI:s — skriv `SwiftUI.TimelineView`.
+- Ögonblicksbild efter 4 s rullning i 150 ord/min: ~10 ord lästa, raden med dem precis ovanför
+  läslinjen; nederkanten tonar ut.

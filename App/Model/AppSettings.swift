@@ -21,6 +21,11 @@ final class AppSettings: ObservableObject {
     @AppStorage("flashbackEnabled") var flashbackEnabled: Bool = false
     @AppStorage("flashbackMinutes") var flashbackMinutes: Int = 5
     @AppStorage("flashbackMicrophone") var flashbackMicrophone: Bool = false
+    /// Teleprompter: manuset rullar i en ruta vid kameran under inspelningen.
+    @AppStorage("teleprompterEnabled") var teleprompterEnabled: Bool = false
+    @AppStorage("teleprompterText") var teleprompterText: String = ""
+    @AppStorage("teleprompterWPM") var teleprompterWPM: Double = 130
+    @AppStorage("teleprompterFontSize") var teleprompterFontSize: Double = 26
 
     /// Inställningarna för transkribering, eller nil om whisper.cpp inte går att hitta.
     var whisperSetup: WhisperSetup? {
