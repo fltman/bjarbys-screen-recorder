@@ -118,3 +118,15 @@ som scrollar 300 px under 3–4 s, och en rad vanlig text (ffmpeg `drawtext`, Ar
   och kan då synas i kanten under en kort stund. Därför: kontrollera filmen innan den delas.
 - En nyckel lästes olika i olika rutor (med och utan prefix) och blev två masker som tillsammans
   täckte hela tiden — rätt resultat, men listan kan visa samma sak två gånger.
+
+## Brusreducering (2026-11-05)
+
+`AUSoundIsolation` (Apples röstisolering, `HighQualityVoice` från macOS 15) körd offline med
+`AVAudioEngine` i manuellt renderingsläge. Prov: syntetiskt tal + rosa brus (amplitud 0,05),
+mikrofonen förskjuten 1,0 s.
+
+- 10,5 s ljud tog 0,29 s. Enheten rapporterar 92,5 ms fördröjning; den dras bort.
+- Bruset i pausen: −42,3 → −95,4 dBFS i den isolerade filen, −42,5 → −114 dBFS i exporten.
+  Talet −17,5 → −17,3 dBFS (orört).
+- Synk mot det rena talet (hölje i 1 ms-steg, korskorrelation): 0 ms, både i filen och i
+  exporten. Den inledande sekunden (mikrofonens senare start) är tyst i filen.

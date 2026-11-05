@@ -35,6 +35,7 @@ final class EditorModel: ObservableObject {
 
     private var built: CompositionBuilder.Result?
     private var builtSegments: [EditProject.ClipSegment] = []
+    private var builtIsolation = false
     private var rebuildTask: Task<Void, Never>?
     private var saveTask: Task<Void, Never>?
     private var timeObserver: Any?
@@ -110,7 +111,7 @@ final class EditorModel: ObservableObject {
 
     private func projectChanged() {
         rebuildTask?.cancel()
-        let full = project.segments != builtSegments
+        let full = project.segments != builtSegments || project.audio.voiceIsolation != builtIsolation
         rebuildTask = Task {
             try? await Task.sleep(for: .milliseconds(full ? 120 : 30))
             guard !Task.isCancelled else { return }
@@ -142,6 +143,7 @@ final class EditorModel: ObservableObject {
                 let result = try await CompositionBuilder.build(recording, plan: newPlan, fps: Self.previewFPS)
                 built = result
                 builtSegments = project.segments
+                builtIsolation = project.audio.voiceIsolation
                 plan = newPlan
                 let item = AVPlayerItem(asset: result.composition)
                 item.videoComposition = result.videoComposition
@@ -440,13 +442,38 @@ final class EditorModel: ObservableObject {
         if selectedMaskID == id { selectedMaskID = nil }
     }
 
+    @Published private(set) var isolating: Double?
+
+    /// Slår på eller av röstisoleringen. Första gången körs den på mikrofonspåret (några
+    /// sekunder för en lång inspelning) och sparas i paketet.
+    func setVoiceIsolation(_ on: Bool) {
+        guard on else { update { $0.audio.voiceIsolation = false }; return }
+        if recording.isolatedMicrophone != nil { update { $0.audio.voiceIsolation = true }; return }
+        guard let mic = recording.asset(.microphone), isolating == nil else { return }
+        isolating = 0
+        let url = recording.bundle.isolatedMicrophoneURL
+        Task {
+            do {
+                _ = try await VoiceIsolation.process(mic, to: url) { p in
+                    Task { @MainActor [weak self] in if self?.isolating != nil { self?.isolating = p } }
+                }
+                recording.isolatedMicrophone = AVURLAsset(url: url)
+                update { $0.audio.voiceIsolation = true }
+            } catch {
+                loudnessNote = error.localizedDescription
+            }
+            isolating = nil
+        }
+    }
+
     @Published private(set) var measuringLoudness = false
     @Published private(set) var loudnessNote: String?
 
     /// Mäter mikrofonen (EBU R128) och sätter volymen så att filmen hamnar på −16 LUFS,
     /// utan att topparna går över −1 dBFS. Volymen går att ändra efteråt som vanligt.
     func normalizeMicrophone() {
-        guard let mic = recording.asset(.microphone), !measuringLoudness else { return }
+        let isolated = project.audio.voiceIsolation ? recording.isolatedMicrophone : nil
+        guard let mic = isolated ?? recording.asset(.microphone), !measuringLoudness else { return }
         measuringLoudness = true
         Task {
             defer { measuringLoudness = false }

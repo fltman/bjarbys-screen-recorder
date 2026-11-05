@@ -10,6 +10,8 @@ public struct LoadedRecording: @unchecked Sendable {
     public let mapping: ContentMapping
     /// Vad som sades, om inspelningen är transkriberad.
     public var transcript: Transcript?
+    /// Mikrofonen efter röstisolering, om den är gjord.
+    public var isolatedMicrophone: AVURLAsset?
     let assets: [RecordingMeta.TrackKind: AVURLAsset]
 
     public static func load(_ bundle: RecordingBundle) throws -> LoadedRecording {
@@ -24,7 +26,10 @@ public struct LoadedRecording: @unchecked Sendable {
         }
         return LoadedRecording(bundle: bundle, meta: meta, events: events, cursors: bundle.readCursors(),
                                mapping: ContentMapping(meta: meta, events: events),
-                               transcript: bundle.readTranscript(), assets: assets)
+                               transcript: bundle.readTranscript(),
+                               isolatedMicrophone: FileManager.default.fileExists(atPath: bundle.isolatedMicrophoneURL.path)
+                                   ? AVURLAsset(url: bundle.isolatedMicrophoneURL) : nil,
+                               assets: assets)
     }
 
     public var hasCamera: Bool { assets[.camera] != nil }
@@ -59,7 +64,9 @@ public enum CompositionBuilder {
         let timescale: CMTimeScale = 600
 
         func sourceTrack(_ kind: RecordingMeta.TrackKind, _ type: AVMediaType) async -> AVAssetTrack? {
-            guard let asset = rec.asset(kind) else { return nil }
+            // Röstisolerad mikrofon om den är vald och gjord; den har samma tidslinje som originalet.
+            let isolated = kind == .microphone && plan.project.audio.voiceIsolation ? rec.isolatedMicrophone : nil
+            guard let asset = isolated ?? rec.asset(kind) else { return nil }
             return try? await asset.loadTracks(withMediaType: type).first
         }
         guard let screenSource = await sourceTrack(.screen, .video),

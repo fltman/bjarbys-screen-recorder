@@ -354,13 +354,16 @@ public struct EditProject: Codable, Equatable, Sendable {
         public var duckSystem: Bool
         /// Datorljudets nivå under tal, andel av den vanliga.
         public var duckLevel: Double
+        /// Använd den röstisolerade mikrofonen (`derived/mic-isolated.caf`) i stället för originalet.
+        public var voiceIsolation: Bool
 
         public init(microphoneVolume: Double = 1, systemVolume: Double = 0.8,
                     microphoneMuted: Bool = false, systemMuted: Bool = false,
-                    duckSystem: Bool = false, duckLevel: Double = 0.25) {
+                    duckSystem: Bool = false, duckLevel: Double = 0.25, voiceIsolation: Bool = false) {
             self.microphoneVolume = microphoneVolume; self.systemVolume = systemVolume
             self.microphoneMuted = microphoneMuted; self.systemMuted = systemMuted
             self.duckSystem = duckSystem; self.duckLevel = duckLevel
+            self.voiceIsolation = voiceIsolation
         }
 
         public init(from decoder: Decoder) throws {
@@ -372,6 +375,7 @@ public struct EditProject: Codable, Equatable, Sendable {
             systemMuted = c.value(.systemMuted, d.systemMuted)
             duckSystem = c.value(.duckSystem, d.duckSystem)
             duckLevel = c.value(.duckLevel, d.duckLevel)
+            voiceIsolation = c.value(.voiceIsolation, d.voiceIsolation)
         }
     }
 }

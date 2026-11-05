@@ -42,7 +42,8 @@ translation that follows the system language.
   stay visible, struck through, and can be restored.
 - Captions burned into the video, and an `.srt` file next to the export.
 - Cut dead time, where nobody speaks and neither mouse nor keyboard moves, with one button.
-- Lower the computer audio while you speak, and level the microphone to −16 LUFS (EBU R128).
+- Lower the computer audio while you speak, level the microphone to −16 LUFS (EBU R128), and
+  remove background noise with Apple's voice isolation.
 
 **Privacy**
 - Find emails, phone numbers, Swedish personal ID numbers, card numbers and API keys on
@@ -111,7 +112,7 @@ folder.
 
 The recording engine, the editor and export are done, and most of the speech phase of
 [`docs/FÄRDPLAN.md`](docs/FÄRDPLAN.md). Masking of sensitive text is
-done too. Next on the roadmap are noise reduction, a "save the last minutes" buffer, and HDR
+done too. Next on the roadmap are a "save the last minutes" buffer, control from scripts and agents, and HDR
 and 120 fps.
 
 Built and tested on macOS 26.1 on an Apple M5 only. Not yet tried with a real camera or

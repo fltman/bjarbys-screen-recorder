@@ -11,6 +11,7 @@ import SwiftUI
 ///     Skarminspelare --prov-aterstall <mapp>
 ///     Skarminspelare --prov-transkribera <paket> [--modell <fil>] [--sprak sv]
 ///     Skarminspelare --prov-ljudstyrka <ljudfil>
+///     Skarminspelare --prov-rostisolering <ljudfil> <ut.caf>
 ///     Skarminspelare --prov-maskera <paket> <t1,t2,…> <mapp>   (söker känslig text, renderar)
 ///
 /// Skriver en JSON-rapport på stdout och avslutar med 0 vid lyckat prov.
@@ -46,6 +47,17 @@ enum TestMode {
                 code = await renderTest(bundle: URL(fileURLWithPath: args[i + 1]),
                                         times: args[i + 2].split(separator: ",").compactMap { Double($0) },
                                         out: URL(fileURLWithPath: args[i + 3]), scanMasks: true)
+            } else if let i = args.firstIndex(of: "--prov-rostisolering"), args.count > i + 2 {
+                do {
+                    let started = Date()
+                    let r = try await VoiceIsolation.process(AVURLAsset(url: URL(fileURLWithPath: args[i + 1])),
+                                                             to: URL(fileURLWithPath: args[i + 2]))
+                    print(String(format: #"{"fordrojning_ms":%.1f,"sekunder":%.2f,"fil":"%@"}"#, r.latency * 1000,
+                                 Date().timeIntervalSince(started), r.url.path))
+                    code = 0
+                } catch {
+                    print(#"{"fel":"\#(error.localizedDescription)"}"#); code = 1
+                }
             } else if let i = args.firstIndex(of: "--prov-ljudstyrka"), args.count > i + 1 {
                 let m = try? await Loudness.measure(AVURLAsset(url: URL(fileURLWithPath: args[i + 1])))
                 print(m.map { String(format: #"{"lufs":%.2f,"topp_dbfs":%.2f,"forstarkning_db":%.2f}"#, $0.integrated,

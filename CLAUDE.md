@@ -29,6 +29,7 @@ open Skarminspelare.xcodeproj
   - `--prov-transkribera <paket> [--modell <fil>] [--sprak sv]` — whisper.cpp, skriver orden
   - `--prov-maskera <paket> <t1,…> <mapp>` — söker känslig text och renderar rutor (sparar inte)
   - `--prov-ljudstyrka <ljudfil>` — LUFS enligt BS.1770 och förstärkningen till −16
+  - `--prov-rostisolering <ljudfil> <ut.caf>` — Apples röstisolering offline
   Startad från terminalen lånar binären terminalens skärminspelningsbehörighet.
 - `./scripts/sync-check.sh` mäter A/V-synk mot en blixt+pip-referens i QuickTime.
 - `swift scripts/make-icon.swift <png>` ritar appikonen (skalas in i `App/Assets.xcassets`).

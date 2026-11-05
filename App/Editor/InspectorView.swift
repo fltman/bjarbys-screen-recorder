@@ -348,6 +348,13 @@ struct InspectorView: View {
                     LabeledSlider("Mikrofon", value: decibels(\.audio.microphoneVolume), range: -30...20, format: "%+.1f dB")
                 }
                 HStack {
+                    Toggle("Ta bort bakgrundsljud", isOn: Binding(get: { model.project.audio.voiceIsolation },
+                                                                 set: { model.setVoiceIsolation($0) }))
+                        .disabled(model.isolating != nil)
+                    if let p = model.isolating { ProgressView(value: p).frame(maxWidth: 80) }
+                }
+                .help("Apples röstisolering: brus, fläktar och tangentbord tas bort, rösten blir kvar.")
+                HStack {
                     Button("Jämna ut till \(Int(Loudness.target)) LUFS") { model.normalizeMicrophone() }
                         .controlSize(.small)
                         .disabled(model.measuringLoudness)

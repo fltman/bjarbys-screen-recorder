@@ -81,7 +81,15 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 | `captions` | `visible`, `size` — undertexter ur `transcript.json` |
 | `masks[]` | `start`, `end`, `keyframes[]` (`t`, `rect` normaliserat), `style` (`blur`, `pixelate`, `solid`), `kind`, `hint` (aldrig själva texten), `enabled` |
 | `camera` | `visible`, `shape`, `size`, `corner`, `mirror` |
-| `audio` | volym och tystning per spår; `duckSystem`, `duckLevel` sänker datorljudet under tal |
+| `audio` | volym och tystning per spår; `duckSystem`, `duckLevel` sänker datorljudet under tal; `voiceIsolation` använder `derived/mic-isolated.caf` |
+
+## derived/
+
+Filer som räknas fram ur inspelningen och alltid går att göra om.
+
+| Fil | Innehåll |
+|---|---|
+| `mic-isolated.caf` | mikrofonen efter Apples röstisolering, 48 kHz mono, börjar vid tidslinjens nollpunkt |
 
 ## transcript.json
 

@@ -256,6 +256,23 @@
         }
       }
     },
+    "Apples röstisolering: brus, fläktar och tangentbord tas bort, rösten blir kvar.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple’s voice isolation: noise, fans and keyboards are removed, the voice stays."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apples röstisolering: brus, fläktar och tangentbord tas bort, rösten blir kvar."
+          }
+        }
+      }
+    },
     "Avbryt": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2768,6 +2785,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ta bort"
+          }
+        }
+      }
+    },
+    "Ta bort bakgrundsljud": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove background noise"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta bort bakgrundsljud"
           }
         }
       }
