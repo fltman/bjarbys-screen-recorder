@@ -526,6 +526,7 @@ enum TestMode {
             try await shot("manus", NSSize(width: 560, height: 460), ScriptEditorView(settings: app.settings))
             try await shot("delning", NSSize(width: 520, height: 700), SharingSettingsView())
             try await shot("kortkommandon", NSSize(width: 520, height: 300), HotKeySettingsView())
+            try await shot("insticksprogram", NSSize(width: 520, height: 520), PluginSettingsView())
             try await shot("sla-ihop", NSSize(width: 560, height: 470),
                            MergeSheet(library: app.library, selected: Set(app.library.items.prefix(2).map(\.bundle.url))) { _ in })
             let model = EditorModel(recording: try LoadedRecording.load(RecordingBundle(url: bundle)))

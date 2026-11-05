@@ -138,6 +138,9 @@ is included; to have the app follow your system language instead, run
   the screen, join takes, transcribe, edit (format, Reel, captions, cuts, dead time, noise, loudness,
   hiding sensitive text), render frames to look at, make a step-by-step guide, take polished
   screenshots of an app's window, make a bug report, and export.
+- Plugins in any language: a folder with `plugin.json` and a program that runs when a recording
+  or an export is finished, or as an action after the export (event as JSON on stdin, reply on
+  stdout). New plugins are off until you turn them on. See [docs/PLUGINS.md](docs/PLUGINS.md).
 - A URL scheme (`skarminspelare://spela-in`, `…/stoppa`, `…/paus`, `…/oppna?sokvag=…`) and
   Shortcuts actions for the app itself.
 

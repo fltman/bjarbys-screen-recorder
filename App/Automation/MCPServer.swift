@@ -141,6 +141,15 @@ enum MCPServer {
              "inputSchema": schema([:])],
             ["name": "stop_recording", "description": "Stop the recording started with start_recording.",
              "inputSchema": schema([:])],
+            ["name": "list_plugins", "description": "Plugins installed in ~/Library/Application Support/Bjarbys skärminspelare/Plugins: name, whether the user has enabled them, hooks and actions.",
+             "inputSchema": schema([:])],
+            ["name": "run_plugin_action",
+             "description": "Run an action of an enabled plugin on a file (e.g. an export). Returns the plugin's message or link.",
+             "inputSchema": schema(["plugin": ["type": "string", "description": "Plugin id (its folder name)."],
+                                    "action": ["type": "string"],
+                                    "file": ["type": "string", "description": "Path to the file the action works on."],
+                                    "recording": recordingArg],
+                                   required: ["plugin", "action"])],
             ["name": "merge_recordings",
              "description": "Join takes into one new recording, one after the other in the given order (no re-encoding). Events, cursors and transcripts follow. The originals are not changed. All must have the same resolution and the same HDR/SDR.",
              "inputSchema": schema(["recordings": ["type": "array", "items": recordingArg, "minItems": 2]],
@@ -331,6 +340,26 @@ enum MCPServer {
             active = nil
             let meta = await s.stop()
             return describe(s.bundle, meta: meta)
+        case "list_plugins":
+            let enabled = Set(UserDefaults.standard.stringArray(forKey: "enabledPlugins") ?? [])
+            let plugins = Plugins.discover()
+            guard !plugins.isEmpty else { return "No plugins in \(Plugins.directory.path)." }
+            return plugins.map { p in
+                "- \(p.id) «\(p.name)» \(enabled.contains(p.id) ? "enabled" : "disabled (the user turns it on under Plugins …)")"
+                    + (p.hooks.isEmpty ? "" : "; hooks: " + p.hooks.joined(separator: ", "))
+                    + (p.actions.isEmpty ? "" : "; actions: " + p.actions.map { "\($0.id) «\($0.title)»" }.joined(separator: ", "))
+            }.joined(separator: "\n")
+        case "run_plugin_action":
+            let enabled = Set(UserDefaults.standard.stringArray(forKey: "enabledPlugins") ?? [])
+            guard let p = Plugins.discover().first(where: { $0.id == a["plugin"] as? String }) else { throw ToolError("No such plugin.") }
+            guard enabled.contains(p.id) else { throw ToolError("The plugin is disabled; the user must turn it on under Plugins … first.") }
+            guard let action = p.actions.first(where: { $0.id == a["action"] as? String }) else { throw ToolError("No such action.") }
+            var payload: [String: Any] = ["action": action.id]
+            if let f = a["file"] as? String { payload["file"] = NSString(string: f).expandingTildeInPath }
+            if a["recording"] != nil { payload["recording"] = try resolve(a).bundle.url.path }
+            let reply = await Plugins.run(p, event: Plugins.action, payload: payload)
+            guard reply.ok else { throw ToolError("Plugin failed (\(reply.status)): \(reply.errorOutput)") }
+            return [reply.message, reply.url?.absoluteString, reply.file?.path].compactMap { $0 }.joined(separator: "\n").ifEmpty("Done.")
         case "merge_recordings":
             let refs = a["recordings"] as? [String] ?? []
             guard refs.count >= 2 else { throw ToolError("Give at least two recordings.") }
@@ -940,3 +969,7 @@ enum MCPServer {
 }
 
 private final class UncheckedResult: @unchecked Sendable { var value: Double? }
+
+private extension String {
+    func ifEmpty(_ fallback: String) -> String { isEmpty ? fallback : self }
+}

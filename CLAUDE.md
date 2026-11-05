@@ -68,6 +68,7 @@ open Skarminspelare.xcodeproj
   ska vara `LocalizedStringKey`/`String(localized:)`, annars hamnar den inte i katalogen.
 - `RecorderKit/Sources/RecorderKit/` — `Capture/` `Writing/` `Telemetry/` `Project/`
   `Motion/` `Render/` `Export/`. Identifierare på engelska, kommentarer på svenska.
+- `docs/PLUGINS.md` — insticksprogrammen (`RecorderKit/Plugins/`, exempel i `examples/plugins/`).
 - `docs/FORMAT.md` — projektpaketet `.bsrec`. `docs/VERIFIERAD-STACK.md` — uppmätta fakta.
   `docs/FÄRDPLAN.md` — faserna. `docs/TESTLISTA.md` — det som väntar på ett test med mus och
   tangentbord (bocka av, eller flytta in fynden i VERIFIERAD-STACK).

@@ -1956,6 +1956,23 @@
         }
       }
     },
+    "Ett insticksprogram är en mapp med plugin.json och ett program i valfritt språk. Det körs när en inspelning eller export blir klar, eller som en åtgärd efter exporten. Nya insticksprogram är avslagna: slå bara på sådant du litar på — det körs på din dator.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A plugin is a folder with plugin.json and a program in any language. It runs when a recording or export is finished, or as an action after the export. New plugins are off: only turn on what you trust — it runs on your Mac."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ett insticksprogram är en mapp med plugin.json och ett program i valfritt språk. Det körs när en inspelning eller export blir klar, eller som en åtgärd efter exporten. Nya insticksprogram är avslagna: slå bara på sådant du litar på — det körs på din dator."
+          }
+        }
+      }
+    },
     "Ett kort, mjukt klick vid varje musklick i filmen.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3214,6 +3231,23 @@
         }
       }
     },
+    "Inga insticksprogram i mappen.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No plugins in the folder."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inga insticksprogram i mappen."
+          }
+        }
+      }
+    },
     "Inga klick eller kortkommandon i de delar som är kvar.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3669,6 +3703,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Inspelningens"
+          }
+        }
+      }
+    },
+    "Installerade": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installed"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installerade"
+          }
+        }
+      }
+    },
+    "Insticksprogram": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plugins"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insticksprogram"
+          }
+        }
+      }
+    },
+    "Insticksprogram …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plugins…"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insticksprogram …"
           }
         }
       }
@@ -4519,6 +4604,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Läs mer"
+          }
+        }
+      }
+    },
+    "Läs om": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Läs om"
           }
         }
       }
@@ -5947,6 +6049,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Senaste inspelningen"
+          }
+        }
+      }
+    },
+    "Senaste körningarna": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent runs"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senaste körningarna"
           }
         }
       }
@@ -8433,6 +8552,40 @@
         }
       }
     },
+    "när en export är klar": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "when an export is finished"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "när en export är klar"
+          }
+        }
+      }
+    },
+    "när en inspelning är klar": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "when a recording is finished"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "när en inspelning är klar"
+          }
+        }
+      }
+    },
     "till": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -8582,6 +8735,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Öppna inställningar"
+          }
+        }
+      }
+    },
+    "Öppna mappen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Folder"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öppna mappen"
           }
         }
       }

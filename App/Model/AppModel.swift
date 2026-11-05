@@ -21,7 +21,10 @@ final class AppModel: ObservableObject {
 
     private init() {
         recorder = RecordingController(settings: settings, library: library)
-        recorder.onFinished = { [weak self] bundle in self?.openEditor(bundle) }
+        recorder.onFinished = { [weak self] bundle in
+            self?.openEditor(bundle)
+            PluginStore.shared.fire(Plugins.recordingFinished, payload: ["recording": bundle.url.path])
+        }
         recorder.onNeedsPermissions = { [weak self] in self?.showPermissions() }
     }
 
@@ -65,6 +68,25 @@ final class AppModel: ObservableObject {
         }
         NSApp.activate()
         hotKeyWindow?.makeKeyAndOrderFront(nil)
+    }
+
+    private var pluginWindow: NSWindow?
+
+    func showPluginSettings() {
+        PluginStore.shared.reload()
+        if pluginWindow == nil {
+            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 520, height: 520),
+                             styleMask: [.titled, .closable], backing: .buffered, defer: false)
+            w.title = String(localized: "Insticksprogram")
+            w.isReleasedWhenClosed = false
+            let host = NSHostingController(rootView: PluginSettingsView())
+            host.sizingOptions = [.preferredContentSize]
+            w.contentViewController = host
+            w.center()
+            pluginWindow = w
+        }
+        NSApp.activate()
+        pluginWindow?.makeKeyAndOrderFront(nil)
     }
 
     func showSharingSettings() {

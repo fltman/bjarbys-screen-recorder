@@ -1,0 +1,8 @@
+{
+  "name": "Kontrollsumma",
+  "version": "1",
+  "description": "Visar storleken och SHA-256 för den exporterade filen. Ett exempel att utgå från.",
+  "run": "run.sh",
+  "hooks": [],
+  "actions": [{ "id": "sha256", "title": "Visa kontrollsumma", "on": "export" }]
+}

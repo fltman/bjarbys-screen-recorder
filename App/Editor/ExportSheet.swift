@@ -15,6 +15,8 @@ struct ExportSheet: View {
     @State private var uploading: Double?
     @State private var fullFrameRate = true
     @State private var sharedURL: URL?
+    /// Svaret från ett insticksprogram (när det inte var en länk).
+    @State private var pluginMessage: String?
     /// Kapitlen som YouTube-text för det som exporterades (nil utan kapitel).
     @State private var finishedChapters: String?
     /// Fler förval i samma svep (⌘-klick), utöver `presetID`.
@@ -188,6 +190,9 @@ struct ExportSheet: View {
             if let error {
                 Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
             }
+            if let pluginMessage {
+                Label(pluginMessage, systemImage: "puzzlepiece.extension").foregroundStyle(.secondary)
+            }
 
             HStack {
                 if progress == nil && finishedURL == nil {
@@ -220,6 +225,15 @@ struct ExportSheet: View {
                             Button("Dropbox") { uploadCloud(.dropbox, finishedURL) }
                                 .help("Laddar upp till \(CloudStore.dropboxFolder) och kopierar en delningslänk.")
                         }
+                    }
+                    let actions = PluginStore.shared.actions(on: "export")
+                    if !actions.isEmpty {
+                        Menu {
+                            ForEach(actions, id: \.action.id) { entry in
+                                Button(entry.action.title) { runPlugin(entry.plugin, entry.action, finishedURL) }
+                            }
+                        } label: { Label("Insticksprogram", systemImage: "puzzlepiece.extension") }
+                        .fixedSize()
                     }
                     ShareLink(items: finishedAll.isEmpty ? [finishedURL] : finishedAll) { Label("Dela …", systemImage: "square.and.arrow.up") }
                         .help("AirDrop, Mail, Meddelanden … (systemets Dela-meny)")
@@ -306,6 +320,23 @@ struct ExportSheet: View {
         var n = 2
         while FileManager.default.fileExists(atPath: url.path) { url = make("\(base) (\(n))"); n += 1 }
         return url
+    }
+
+    /// En åtgärd från ett insticksprogram på den exporterade filen; svaret visas (länken i urklipp).
+    private func runPlugin(_ plugin: Plugin, _ action: Plugin.Action, _ file: URL) {
+        uploading = 0
+        Task {
+            let reply = await PluginStore.shared.run(plugin, action: action, payload: [
+                "file": file.path, "files": (finishedAll.isEmpty ? [file] : finishedAll).map(\.path),
+                "recording": model.recording.bundle.url.path])
+            uploading = nil
+            if reply.ok {
+                if let url = reply.url { sharedURL = url }
+                else if let m = reply.message { error = nil; pluginMessage = m }
+            } else {
+                error = "\(plugin.name): \(reply.errorOutput.isEmpty ? "kod \(reply.status)" : reply.errorOutput)"
+            }
+        }
     }
 
     /// YouTube (privat, med kapitlen i beskrivningen) eller Dropbox; länken hamnar i urklipp.
@@ -439,6 +470,9 @@ struct ExportSheet: View {
             finishedAll = done
             finishedURL = first
             progress = 1
+            PluginStore.shared.fire(Plugins.exportFinished, payload: [
+                "file": first.path, "files": done.map(\.path), "recording": model.recording.bundle.url.path,
+                "presets": jobs.map(\.preset.id)])
         }
     }
 }

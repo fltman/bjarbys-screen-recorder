@@ -84,6 +84,12 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Insticksprogram (2026-11-05): mappar med `plugin.json` och ett körbart program i
+  `~/Library/Application Support/Bjarbys skärminspelare/Plugins/` (programmet måste ligga i
+  mappen). Händelserna `recording.finished` och `export.finished` (i bakgrunden) och åtgärder i
+  exportfönstret; JSON på stdin, svar på stdout (`message`, `url`, `file`), avbryts efter 10 min.
+  Avslagna tills användaren slår på dem (Insticksprogram …, med en logg över körningarna). MCP
+  `list_plugins` och `run_plugin_action` (bara påslagna). Exempel: `examples/plugins/kontrollsumma`.
 - YouTube och Dropbox (2026-11-05): Delning … har YouTube (eget OAuth-klient-id av typen
   Skrivbordsapp; inloggningen landar på en tillfällig mottagare på 127.0.0.1) och Dropbox (egen
   appnyckel; koden klistras in, eftersom Dropbox kräver exakt registrerade adresser) — båda med
