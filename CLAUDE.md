@@ -91,6 +91,9 @@ för taldetektering). Roten letas upp i `~/Projekt/whisper.cpp` m.fl., eller vä
   `osascript -e 'tell application id "com.brattoo.skarminspelare" to quit'`.
 - Förrenderade bilder i renderingen ska ligga i IOSurface-backade pixelbuffertar
   (`RenderPlan.prerender`), aldrig som `CGImage` — de laddas annars upp till GPU:n varje ruta.
+- Efter en krasch visar AppKit en modal "Öppna fönstren igen?" vid nästa start; provlägen och
+  `--mcp` slår av det med `ApplePersistenceIgnoreState` (annars hänger de, osynligt).
+- ProRes får bara skrivas i .mov (i .mp4 kastar AVAssetWriter ett undantag).
 - Musdata: ett glapp > 0,1 s mellan händelser betyder att musen stod still. Interpolera aldrig
   över det (`CursorPath.stillGap`).
 - ⚠️ Disken är nästan full (≈12 GB ledigt nov 2026). Provinspelningar hålls korta och raderas.

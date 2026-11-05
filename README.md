@@ -67,7 +67,8 @@ is included; to have the app follow your system language instead, run
 - A URL scheme (`skarminspelare://spela-in`, `…/stoppa`, `…/paus`, `…/oppna?sokvag=…`) and
   Shortcuts actions for the app itself.
 
-**Export:** MP4 (H.264, 1080p), MP4 (HEVC, 4K), ProRes 422 and GIF.
+**Export:** MP4 (H.264, 1080p), MP4 (HEVC, 4K), ProRes 422, ProRes 4444 with a transparent
+background (to put the polished screen on top of something else in your editor) and GIF.
 
 ## Measured, not assumed
 
@@ -139,7 +140,7 @@ the screen recording permission of the terminal it runs from.
 
 The recording engine, the editor, export, speech, masking of sensitive text, the flashback
 buffer and control from agents are done (see [`docs/FÄRDPLAN.md`](docs/FÄRDPLAN.md)). Next are
-a bug-report bundle, HDR, 120 fps, ProRes with alpha and per-app audio.
+a bug-report bundle, HDR, 120 fps and per-app audio.
 
 Built and tested on macOS 26.1 on an Apple M5 only. Not yet tried with a real camera or
 with a window that moves during recording. Transcription has been measured on synthetic

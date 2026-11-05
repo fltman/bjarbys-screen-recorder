@@ -7,7 +7,7 @@ import VideoToolbox
 
 /// Förvalen i exportdialogen.
 public struct ExportPreset: Identifiable, Hashable, Sendable {
-    public enum Codec: String, Sendable { case h264, hevc, prores, gif }
+    public enum Codec: String, Sendable { case h264, hevc, prores, proresAlpha, gif }
 
     public let id: String
     public let name: String
@@ -21,16 +21,22 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
         .init(id: "mp4-1080", name: "MP4 1080p", detail: "H.264 — spelas överallt", codec: .h264, shortSide: 1080, fps: 60),
         .init(id: "mp4-4k", name: "MP4 4K", detail: "HEVC — skarpast, mindre filer", codec: .hevc, shortSide: 2160, fps: 60),
         .init(id: "prores", name: "ProRes 422", detail: "För vidare redigering i Final Cut, Resolve, Premiere", codec: .prores, shortSide: 1080, fps: 60),
+        .init(id: "prores-alfa", name: "ProRes 4444 med alfa",
+              detail: "Genomskinlig bakgrund — lägg skärmen ovanpå något eget i Final Cut, Resolve, Premiere",
+              codec: .proresAlpha, shortSide: 1080, fps: 60),
         .init(id: "gif", name: "GIF", detail: "För Slack och GitHub, högst 800 px", codec: .gif, shortSide: 450, fps: 15),
     ]
 
     public var fileExtension: String {
         switch codec {
         case .h264, .hevc: "mp4"
-        case .prores: "mov"
+        case .prores, .proresAlpha: "mov"
         case .gif: "gif"
         }
     }
+
+    /// Bakgrunden lämnas genomskinlig (bara skärmen, skuggan, markören, bubblan och texterna ritas).
+    public var transparentBackground: Bool { codec == .proresAlpha }
 
     /// Bitrate i bit/s för en bildyta.
     public func bitrate(for canvas: CGSize) -> Int {
@@ -39,6 +45,7 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
         case .h264: return Int(pixels * Double(fps) * 0.09)
         case .hevc: return Int(pixels * Double(fps) * 0.06)
         case .prores: return Int(pixels * Double(fps) * 1.6) // bara för uppskattningen
+        case .proresAlpha: return Int(pixels * Double(fps) * 3.6)
         case .gif: return Int(pixels * Double(fps) * 0.25)
         }
     }
@@ -97,7 +104,7 @@ public final class Exporter: @unchecked Sendable {
     /// Kör exporten. `progress` anropas med 0–1 från en bakgrundskö.
     public func run(to url: URL, progress: @escaping @Sendable (Double) -> Void) async throws {
         let canvas = preset.canvas(aspect: project.aspect, source: recording.sourceSize)
-        let plan = recording.makePlan(project: project, canvas: canvas)
+        let plan = recording.makePlan(project: project, canvas: canvas, transparentBackground: preset.transparentBackground)
         let built = try await CompositionBuilder.build(recording, plan: plan, fps: preset.fps)
         try? FileManager.default.removeItem(at: url)
         if preset.codec == .gif {
@@ -137,9 +144,10 @@ public final class Exporter: @unchecked Sendable {
             audioOut = out
         }
 
-        let fileType: AVFileType = preset.codec == .prores ? .mov : .mp4
-        let writer = try AVAssetWriter(outputURL: url, fileType: fileType)
-        writer.shouldOptimizeForNetworkUse = preset.codec != .prores
+        // ProRes (även 4444) bara i .mov; i .mp4 kastar AVAssetWriter ett undantag.
+        let isMov = preset.fileExtension == "mov"
+        let writer = try AVAssetWriter(outputURL: url, fileType: isMov ? .mov : .mp4)
+        writer.shouldOptimizeForNetworkUse = !isMov
         let videoIn = AVAssetWriterInput(mediaType: .video, outputSettings: videoSettings(canvas: canvas))
         videoIn.expectsMediaDataInRealTime = false
         writer.add(videoIn)
@@ -147,7 +155,7 @@ public final class Exporter: @unchecked Sendable {
         if audioOut != nil {
             var layout = AudioChannelLayout()
             layout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo
-            let settings: [String: Any] = preset.codec == .prores
+            let settings: [String: Any] = isMov
                 ? [AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: 48_000, AVNumberOfChannelsKey: 2,
                    AVLinearPCMBitDepthKey: 24, AVLinearPCMIsFloatKey: false, AVLinearPCMIsBigEndianKey: false,
                    AVLinearPCMIsNonInterleaved: false,
@@ -206,6 +214,9 @@ public final class Exporter: @unchecked Sendable {
         case .prores:
             return [AVVideoCodecKey: AVVideoCodecType.proRes422, AVVideoWidthKey: canvas.width,
                     AVVideoHeightKey: canvas.height, AVVideoColorPropertiesKey: color]
+        case .proresAlpha:
+            return [AVVideoCodecKey: AVVideoCodecType.proRes4444, AVVideoWidthKey: canvas.width,
+                    AVVideoHeightKey: canvas.height, AVVideoColorPropertiesKey: color]
         case .hevc:
             return [AVVideoCodecKey: AVVideoCodecType.hevc, AVVideoWidthKey: canvas.width,
                     AVVideoHeightKey: canvas.height, AVVideoColorPropertiesKey: color,
@@ -241,6 +252,11 @@ public final class Exporter: @unchecked Sendable {
                         return
                     }
                     progress(CMSampleBufferGetPresentationTimeStamp(buffer).seconds)
+                    // Core Image ritar förmultiplicerad alfa; säg det till kodaren (ProRes 4444).
+                    if let image = CMSampleBufferGetImageBuffer(buffer) {
+                        CVBufferSetAttachment(image, kCVImageBufferAlphaChannelModeKey,
+                                              kCVImageBufferAlphaChannelMode_PremultipliedAlpha, .shouldPropagate)
+                    }
                     if !input.append(buffer) {
                         finished = true
                         done.resume()

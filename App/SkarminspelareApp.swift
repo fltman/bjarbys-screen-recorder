@@ -7,6 +7,12 @@ struct SkarminspelareApp: App {
 
     init() {
         Self.lockLanguage()
+        // Provlägen och MCP-servern ska aldrig fastna på "Öppna fönstren igen?" efter en
+        // krasch: frågan är modal, och ingen ser den (uppmätt: varje provstart hängde efter
+        // en krasch). Registreringsdomänen gäller bara den här processen.
+        if CommandLine.arguments.contains(where: { $0.hasPrefix("--prov-") || $0 == "--mcp" }) {
+            UserDefaults.standard.register(defaults: ["ApplePersistenceIgnoreState": true])
+        }
     }
 
     /// Gränssnittet är svenskt oavsett systemspråk — samma mekanism som språkval per program i

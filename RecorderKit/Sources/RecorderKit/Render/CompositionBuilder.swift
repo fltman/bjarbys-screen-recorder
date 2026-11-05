@@ -41,11 +41,11 @@ public struct LoadedRecording: @unchecked Sendable {
         CGSize(width: meta.source.pixelWidth, height: meta.source.pixelHeight)
     }
 
-    public func makePlan(project: EditProject, canvas: CGSize, cursorPath: CursorPath? = nil,
-                         cameraPath: CameraPath? = nil) -> RenderPlan {
+    public func makePlan(project: EditProject, canvas: CGSize, transparentBackground: Bool = false,
+                         cursorPath: CursorPath? = nil, cameraPath: CameraPath? = nil) -> RenderPlan {
         RenderPlan(canvas: canvas, project: project, meta: meta, events: events, cursors: cursors,
                    cursorsDir: bundle.cursorsDir, hasCamera: hasCamera, words: transcript?.words ?? [],
-                   cursorPath: cursorPath, cameraPath: cameraPath)
+                   transparentBackground: transparentBackground, cursorPath: cursorPath, cameraPath: cameraPath)
     }
 }
 

@@ -177,3 +177,18 @@ huvudskärmen + datorljud.
 - Appen har en egen `TimelineView` (tidslinjen) som skuggar SwiftUI:s — skriv `SwiftUI.TimelineView`.
 - Ögonblicksbild efter 4 s rullning i 150 ord/min: ~10 ord lästa, raden med dem precis ovanför
   läslinjen; nederkanten tonar ut.
+
+## ProRes 4444 med alfa (2026-11-05)
+
+- Exporten: `prores, 4444, yuva444p12le`. Bildpunkter (RGBA, ffmpeg): hörnet 0,0,0,0; skärmen
+  50,114,213,255; skuggan under 0,0,0,62; utanför det rundade hörnet alfa 2. Ovanpå magenta: mjuk
+  skugga, rena hörn. Kräver en helt klar bas över hela bildytan (återanvända buffertar) och
+  `kCVImageBufferAlphaChannelMode_PremultipliedAlpha` på rutorna.
+- ⚠️ **ProRes i .mp4 kastar ett NSException** i `AVAssetWriter` — behållaren väljs nu efter
+  filändelsen, inte efter `codec == .prores`.
+- ⚠️ **Efter en krasch hänger varje följande start** på AppKits modala "Öppna fönstren igen?"
+  (`NSPersistentUIRestorer`, syns i `sample`). Provlägen och `--mcp` registrerar
+  `ApplePersistenceIgnoreState` för sin egen process.
+- Färgskillnaden mot källan (51,102,204 → 50,114,213) finns likadant i MP4-exporten: provfilen
+  från ffmpeg saknar färgmärkning och tolkas som BT.601 respektive BT.709. Riktiga inspelningar
+  är märkta BT.709.

@@ -40,6 +40,8 @@ public final class RenderPlan: @unchecked Sendable {
     let cameraRect: CGRect
     /// Inspelningen fyller bildytan (Reel-läge) i stället för att ligga med marginal.
     let fills: Bool
+    /// Ingen bakgrund: allt utanför skärmytan (och skuggan, bubblan, texterna) är genomskinligt.
+    public let transparent: Bool
     public let shortcuts: ShortcutTrack?
     /// Kortkommandobubblorna, ritade i förväg i bildytans pixlar, per text.
     let shortcutPills: [String: CIImage]
@@ -75,7 +77,9 @@ public final class RenderPlan: @unchecked Sendable {
 
     public init(canvas: CGSize, project: EditProject, meta: RecordingMeta, events: [InputEvent],
                 cursors: CursorCatalog, cursorsDir: URL, hasCamera: Bool, words: [Transcript.Word] = [],
+                transparentBackground: Bool = false,
                 cursorPath: CursorPath? = nil, cameraPath: CameraPath? = nil) {
+        self.transparent = transparentBackground
         self.canvas = canvas
         self.project = project
         timeMap = TimeMap(segments: project.segments)
@@ -351,6 +355,9 @@ public final class RenderPlan: @unchecked Sendable {
     }
 
     private func backgroundImage(screen: CIImage?) -> CIImage {
+        // Genomskinligt: en helt klar yta över hela bildytan, så att varje bildpunkt skrivs
+        // (återanvända buffertar kan annars ha kvar förra rutans innehåll).
+        if transparent { return CIImage(color: .clear).cropped(to: CGRect(origin: .zero, size: canvas)) }
         if let background { return background }
         // Oskärpa: skärmen själv, fylld över hela bildytan, suddig och lite mörkare.
         guard let screen else { return CIImage(color: .black).cropped(to: CGRect(origin: .zero, size: canvas)) }
