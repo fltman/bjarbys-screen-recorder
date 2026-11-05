@@ -27,6 +27,11 @@ mkdir -p dist
 ditto "$BYGGD" "$APP_UT"
 
 codesign --verify --strict --verbose=1 "$APP_UT" 2>&1 | sed 's/^/  /'
+# Bara dist-appen ska vara registrerad: annars kan `open`, URL-schemat och Genvägar
+# starta byggkopian i build/ (samma bundle-id), som Dock dessutom visar utan ikon.
+LSREG=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+"$LSREG" -u "$PWD/$BYGGD" 2>/dev/null || true
+"$LSREG" -f "$PWD/$APP_UT" 2>/dev/null || true
 plutil -p "$APP_UT/Contents/Info.plist" | grep -q NSAudioCaptureUsageDescription \
     || { echo "✗ NSAudioCaptureUsageDescription saknas i den byggda Info.plist"; exit 1; }
 echo "→ klart: $APP_UT"
