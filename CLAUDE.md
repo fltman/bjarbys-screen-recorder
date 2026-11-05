@@ -26,6 +26,7 @@ open Skarminspelare.xcodeproj
   - `--prov-rendera <paket> <t1,t2,…> <mapp>` — färdiga rutor som PNG (läs dem som bild!)
   - `--prov-exportera <paket> mp4-1080|mp4-4k|prores|gif <fil>`
   - `--prov-redigerare <paket> <png> [--markera-zoom]` — redigerarens layout utanför skärmen
+  - `--prov-transkribera <paket> [--modell <fil>] [--sprak sv]` — whisper.cpp, skriver orden
   Startad från terminalen lånar binären terminalens skärminspelningsbehörighet.
 - `./scripts/sync-check.sh` mäter A/V-synk mot en blixt+pip-referens i QuickTime.
 - `swift scripts/make-icon.swift <png>` ritar appikonen (skalas in i `App/Assets.xcassets`).
@@ -43,6 +44,14 @@ open Skarminspelare.xcodeproj
 - `docs/FORMAT.md` — projektpaketet `.bsrec`. `docs/VERIFIERAD-STACK.md` — uppmätta fakta.
   `docs/FÄRDPLAN.md` — faserna.
 - `vault/` — Obsidian-valv för arbetsanteckningar, gitignorerat, kommer aldrig in i repot.
+
+## Tal (whisper.cpp)
+
+Transkriberingen kör whisper.cpp som extern process: `whisper-cli` och `vad-speech-segments`
+i `<rot>/build/bin`, modeller i `<rot>/models` (KB-Whisper för svenska, `ggml-silero-v5.1.2.bin`
+för taldetektering). Roten letas upp i `~/Projekt/whisper.cpp` m.fl., eller väljs i appen.
+⚠️ Använd inte `whisper-cli --vad` — ordtiderna hamnar på en hoptryckt tidslinje. Se
+`RecorderKit/Speech/Whisper.swift` och `docs/VERIFIERAD-STACK.md`.
 
 ## Fällor (läs innan du ändrar inspelningen)
 

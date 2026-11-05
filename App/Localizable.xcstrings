@@ -579,6 +579,23 @@
         }
       }
     },
+    "Dödtid längre än": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dead time longer than"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dödtid längre än"
+          }
+        }
+      }
+    },
     "Dölj när den står still": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -885,6 +902,23 @@
         }
       }
     },
+    "Ger undertexter, redigering via texten och bortklippning av pauser. Görs lokalt med whisper.cpp.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gives captions, editing by text and removal of pauses. Runs locally with whisper.cpp."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ger undertexter, redigering via texten och bortklippning av pauser. Görs lokalt med whisper.cpp."
+          }
+        }
+      }
+    },
     "Gradient": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -987,6 +1021,23 @@
         }
       }
     },
+    "Hittar inte whisper.cpp. Välj mappen med build/bin/whisper-cli och models/.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can’t find whisper.cpp. Choose the folder with build/bin/whisper-cli and models/."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hittar inte whisper.cpp. Välj mappen med build/bin/whisper-cli och models/."
+          }
+        }
+      }
+    },
     "Hörn": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1072,6 +1123,23 @@
         }
       }
     },
+    "Ingen dödtid": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No dead time"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen dödtid"
+          }
+        }
+      }
+    },
     "Ingen kamera": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1140,6 +1208,23 @@
         }
       }
     },
+    "Inget tal hittades.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No speech was found."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inget tal hittades."
+          }
+        }
+      }
+    },
     "Innehåll": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1204,6 +1289,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Inspelningen gick inte att öppna"
+          }
+        }
+      }
+    },
+    "Inspelningen har inget ljud.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recording has no sound."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspelningen har inget ljud."
+          }
+        }
+      }
+    },
+    "Inspelningen har inget ljudspår att transkribera.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recording has no audio track to transcribe."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspelningen har inget ljudspår att transkribera."
           }
         }
       }
@@ -1327,6 +1446,91 @@
         }
       }
     },
+    "Klipp": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clips"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klipp"
+          }
+        }
+      }
+    },
+    "Klipp bort": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cut"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klipp bort"
+          }
+        }
+      }
+    },
+    "Klipp bort %lld eh och öh": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cut %lld ums and uhs"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klipp bort %lld eh och öh"
+          }
+        }
+      }
+    },
+    "Klipp bort %lld pauser (%@ s)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cut %lld pauses (%@ s)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klipp bort %lld pauser (%@ s)"
+          }
+        }
+      }
+    },
+    "Klipp bort de markerade orden ur filmen (⌫)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cut the selected words from the video (⌫)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klipp bort de markerade orden ur filmen (⌫)"
+          }
+        }
+      }
+    },
     "Kortkommandon": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1408,6 +1612,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Låter auto-zoomen rama in knappen du klickar på i stället för en ruta runt pekaren."
+          }
+        }
+      }
+    },
+    "Mappen med build/bin/whisper-cli och models/": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The folder with build/bin/whisper-cli and models/"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mappen med build/bin/whisper-cli och models/"
           }
         }
       }
@@ -1527,6 +1748,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mitt, sidled"
+          }
+        }
+      }
+    },
+    "Modellen %@ saknas": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The model %@ is missing"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modellen %@ saknas"
           }
         }
       }
@@ -1888,6 +2126,23 @@
         }
       }
     },
+    "Spara undertexter (.srt) bredvid filmen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save captions (.srt) next to the video"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spara undertexter (.srt) bredvid filmen"
+          }
+        }
+      }
+    },
     "Spegelvänd": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2092,6 +2347,23 @@
         }
       }
     },
+    "Stunder då ingen talar och varken mus eller tangentbord används.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moments when nobody speaks and neither mouse nor keyboard is used."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stunder då ingen talar och varken mus eller tangentbord används."
+          }
+        }
+      }
+    },
     "Stäng": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2105,6 +2377,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stäng"
+          }
+        }
+      }
+    },
+    "Sänk datorljudet när du pratar": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lower computer audio while you speak"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sänk datorljudet när du pratar"
           }
         }
       }
@@ -2160,6 +2449,23 @@
         }
       }
     },
+    "Ta bort markerad zoom, del eller markerade ord (⌫)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete the selected zoom, part or words (⌫)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta bort markerad zoom, del eller markerade ord (⌫)"
+          }
+        }
+      }
+    },
     "Ta bort zoomen": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2177,6 +2483,91 @@
         }
       }
     },
+    "Ta tillbaka": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta tillbaka"
+          }
+        }
+      }
+    },
+    "Tal": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tal"
+          }
+        }
+      }
+    },
+    "Taldetektorn %@ saknas": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The speech detector %@ is missing"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taldetektorn %@ saknas"
+          }
+        }
+      }
+    },
+    "Text": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text"
+          }
+        }
+      }
+    },
+    "Textstorlek": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text size"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Textstorlek"
+          }
+        }
+      }
+    },
     "Tillgänglighet": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2190,6 +2581,91 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tillgänglighet"
+          }
+        }
+      }
+    },
+    "Transkribera": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcribe"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkribera"
+          }
+        }
+      }
+    },
+    "Transkribera först, så att pauser när du pratar inte räknas som dödtid.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcribe first, so that pauses while you talk don’t count as dead time."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkribera först, så att pauser när du pratar inte räknas som dödtid."
+          }
+        }
+      }
+    },
+    "Transkribera inspelningen för att redigera den som text, få undertexter och klippa bort pauser.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcribe the recording to edit it as text, get captions and cut pauses."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkribera inspelningen för att redigera den som text, få undertexter och klippa bort pauser."
+          }
+        }
+      }
+    },
+    "Transkribera om": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcribe again"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkribera om"
+          }
+        }
+      }
+    },
+    "Transkriberar …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcribing …"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkriberar …"
           }
         }
       }
@@ -2224,6 +2700,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Typ"
+          }
+        }
+      }
+    },
+    "Undertexter i filmen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captions in the video"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undertexter i filmen"
           }
         }
       }
@@ -2415,6 +2908,40 @@
         }
       }
     },
+    "Visa texten": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show the text"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visa texten"
+          }
+        }
+      }
+    },
+    "Välj whisper.cpp-mappen …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the whisper.cpp folder …"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Välj whisper.cpp-mappen …"
+          }
+        }
+      }
+    },
     "Zoom": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2445,6 +2972,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "till"
+          }
+        }
+      }
+    },
+    "vad-speech-segments saknas i %@/build/bin": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vad-speech-segments is missing in %@/build/bin"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vad-speech-segments saknas i %@/build/bin"
+          }
+        }
+      }
+    },
+    "whisper-cli saknas i %@/build/bin": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "whisper-cli is missing in %@/build/bin"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "whisper-cli saknas i %@/build/bin"
+          }
+        }
+      }
+    },
+    "whisper.cpp misslyckades: %@": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "whisper.cpp failed: %@"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "whisper.cpp misslyckades: %@"
           }
         }
       }

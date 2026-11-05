@@ -37,6 +37,13 @@ translation that follows the system language.
 - Split, delete and change the speed of parts of the recording, with undo.
 - A camera bubble in any corner, round or rounded square.
 
+**Speech** (with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), locally)
+- Transcribe the recording and edit the video by striking out words in the text. Cut words
+  stay visible, struck through, and can be restored.
+- Captions burned into the video, and an `.srt` file next to the export.
+- Cut dead time, where nobody speaks and neither mouse nor keyboard moves, with one button.
+- Lower the computer audio while you speak.
+
 **Export:** MP4 (H.264, 1080p), MP4 (HEVC, 4K), ProRes 422 and GIF.
 
 ## Measured, not assumed
@@ -74,12 +81,21 @@ button you clicked rather than a box around the pointer) and **Input Monitoring*
 records keyboard shortcuts so they can be shown in the video: only keys pressed with ⌘, ⌃
 or ⌥, never text.
 
+For speech, build [whisper.cpp](https://github.com/ggml-org/whisper.cpp) (its
+`build/bin/whisper-cli` and `build/bin/vad-speech-segments`) and put the models in its
+`models/` folder: the Silero VAD model `ggml-silero-v5.1.2.bin`, plus
+[KB-Whisper](https://huggingface.co/KBLab) for Swedish or any multilingual Whisper model. The
+app looks in `~/Projekt/whisper.cpp`, `~/whisper.cpp` and a few other places, or you choose the
+folder.
+
 ## How it is put together
 
 - `RecorderKit/` holds all the logic as a local Swift package: `Capture` (ScreenCaptureKit,
   camera), `Writing` (one `AVAssetWriter` per track on a shared clock), `Telemetry` (mouse,
   clicks, cursor images), `Project`, `Motion` (springs, cursor and camera paths), `Render`
   (one Core Image compositor on Metal for both preview and export) and `Export`.
+- `RecorderKit/Speech/` runs whisper.cpp, maps word times back onto the recording and builds
+  the captions.
 - `App/` is the SwiftUI and AppKit interface: menu bar, recording panel, area selector,
   library and editor.
 - A recording is a `.bsrec` package: the raw tracks, an `events.jsonl` log and a
@@ -87,12 +103,13 @@ or ⌥, never text.
 
 ## Status
 
-The first three phases of [`docs/FÄRDPLAN.md`](docs/FÄRDPLAN.md) are done: the recording
-engine, the editor and export. Next on the roadmap are editing by transcript, automatic
-masking of sensitive text, a "save the last minutes" buffer, and HDR and 120 fps.
+The recording engine, the editor and export are done, and most of the speech phase of
+[`docs/FÄRDPLAN.md`](docs/FÄRDPLAN.md). Next on the roadmap are noise reduction and loudness,
+automatic masking of sensitive text, a "save the last minutes" buffer, and HDR and 120 fps.
 
 Built and tested on macOS 26.1 on an Apple M5 only. Not yet tried with a real camera or
-with a window that moves during recording. There is no notarized binary release yet.
+with a window that moves during recording. Transcription has been measured on synthetic
+Swedish speech, not yet on a real microphone recording. There is no notarized binary release yet.
 
 `docs/utredningar/` holds the three research reports the app was planned from, unedited.
 Their claims about other products have not been checked.

@@ -8,6 +8,8 @@ public struct LoadedRecording: @unchecked Sendable {
     public let events: [InputEvent]
     public let cursors: CursorCatalog
     public let mapping: ContentMapping
+    /// Vad som sades, om inspelningen är transkriberad.
+    public var transcript: Transcript?
     let assets: [RecordingMeta.TrackKind: AVURLAsset]
 
     public static func load(_ bundle: RecordingBundle) throws -> LoadedRecording {
@@ -21,7 +23,8 @@ public struct LoadedRecording: @unchecked Sendable {
             }
         }
         return LoadedRecording(bundle: bundle, meta: meta, events: events, cursors: bundle.readCursors(),
-                               mapping: ContentMapping(meta: meta, events: events), assets: assets)
+                               mapping: ContentMapping(meta: meta, events: events),
+                               transcript: bundle.readTranscript(), assets: assets)
     }
 
     public var hasCamera: Bool { assets[.camera] != nil }
@@ -36,7 +39,8 @@ public struct LoadedRecording: @unchecked Sendable {
     public func makePlan(project: EditProject, canvas: CGSize, cursorPath: CursorPath? = nil,
                          cameraPath: CameraPath? = nil) -> RenderPlan {
         RenderPlan(canvas: canvas, project: project, meta: meta, events: events, cursors: cursors,
-                   cursorsDir: bundle.cursorsDir, hasCamera: hasCamera, cursorPath: cursorPath, cameraPath: cameraPath)
+                   cursorsDir: bundle.cursorsDir, hasCamera: hasCamera, words: transcript?.words ?? [],
+                   cursorPath: cursorPath, cameraPath: cameraPath)
     }
 }
 
@@ -101,7 +105,7 @@ public enum CompositionBuilder {
         }
 
         let video = videoComposition(plan: plan, duration: cursor, fps: fps, hasCamera: hasCamera)
-        let mix = audioMix(for: composition, audio: plan.project.audio)
+        let mix = audioMix(for: composition, audio: plan.project.audio, speech: plan.speech)
         return Result(composition: composition, videoComposition: video, audioMix: mix, duration: cursor)
     }
 
@@ -124,18 +128,57 @@ public enum CompositionBuilder {
             renderSize: plan.canvas))
     }
 
-    public static func audioMix(for composition: AVComposition, audio mix: EditProject.AudioMix) -> AVMutableAudioMix {
+    /// `speech` är talet i utdatatid; med `duckSystem` sänks datorljudet under det.
+    public static func audioMix(for composition: AVComposition, audio mix: EditProject.AudioMix,
+                                speech: [ClosedRange<Double>] = []) -> AVMutableAudioMix {
         var params: [AVMutableAudioMixInputParameters] = []
         for track in composition.tracks(withMediaType: .audio) {
             let p = AVMutableAudioMixInputParameters(track: track)
             let isMic = track.trackID == microphoneTrackID
             let volume = isMic ? (mix.microphoneMuted ? 0 : mix.microphoneVolume) : (mix.systemMuted ? 0 : mix.systemVolume)
-            p.setVolume(Float(volume), at: .zero)
+            let ramps = !isMic && mix.duckSystem && volume > 0
+                ? Ducking.ramps(speech: speech, level: volume * mix.duckLevel, normal: volume) : []
+            // En punkt och en ramp får inte överlappa; börjar en ramp direkt bär den nivån.
+            if ramps.first.map({ $0.start > 0.001 }) ?? true { p.setVolume(Float(volume), at: .zero) }
+            do {
+                for ramp in ramps {
+                    p.setVolumeRamp(fromStartVolume: Float(ramp.from), toEndVolume: Float(ramp.to),
+                                    timeRange: CMTimeRange(start: CMTime(seconds: ramp.start, preferredTimescale: 600),
+                                                           end: CMTime(seconds: ramp.end, preferredTimescale: 600)))
+                }
+            }
             p.audioTimePitchAlgorithm = .spectral
             params.append(p)
         }
         let m = AVMutableAudioMix()
         m.inputParameters = params
         return m
+    }
+}
+
+/// Datorljudet sänks mjukt strax före talet och höjs igen en stund efter. Pauser kortare än
+/// en sekund behåller sänkningen, så att ljudet inte pumpar mellan meningarna.
+public enum Ducking {
+    public struct Ramp: Equatable, Sendable {
+        public let start: Double, end: Double, from: Double, to: Double
+    }
+    static let down = 0.25, up = 0.5, hold = 1.0
+
+    public static func ramps(speech: [ClosedRange<Double>], level: Double, normal: Double) -> [Ramp] {
+        var merged: [ClosedRange<Double>] = []
+        for r in speech.sorted(by: { $0.lowerBound < $1.lowerBound }) {
+            if let last = merged.last, r.lowerBound - last.upperBound < hold + down + up {
+                merged[merged.count - 1] = last.lowerBound...max(last.upperBound, r.upperBound)
+            } else {
+                merged.append(r)
+            }
+        }
+        var out: [Ramp] = []
+        for r in merged {
+            let a = max(0, r.lowerBound - down)
+            out.append(Ramp(start: a, end: max(a + 0.01, r.lowerBound), from: normal, to: level))
+            out.append(Ramp(start: r.upperBound, end: r.upperBound + up, from: level, to: normal))
+        }
+        return out
     }
 }

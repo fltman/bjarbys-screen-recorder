@@ -43,6 +43,12 @@ public final class RenderPlan: @unchecked Sendable {
     public let shortcuts: ShortcutTrack?
     /// Kortkommandobubblorna, ritade i förväg i bildytans pixlar, per text.
     let shortcutPills: [String: CIImage]
+    /// Undertexterna i utdatatid (också underlaget för .srt), eller nil utan transkript.
+    public let captions: Captions?
+    let showsCaptions: Bool
+    let captionImages = CaptionImageCache()
+    /// Talet i utdatatid, för att sänka datorljudet under det.
+    public let speech: [ClosedRange<Double>]
 
     struct Sprite {
         let image: CIImage
@@ -68,7 +74,7 @@ public final class RenderPlan: @unchecked Sendable {
     // MARK: - Bygga
 
     public init(canvas: CGSize, project: EditProject, meta: RecordingMeta, events: [InputEvent],
-                cursors: CursorCatalog, cursorsDir: URL, hasCamera: Bool,
+                cursors: CursorCatalog, cursorsDir: URL, hasCamera: Bool, words: [Transcript.Word] = [],
                 cursorPath: CursorPath? = nil, cameraPath: CameraPath? = nil) {
         self.canvas = canvas
         self.project = project
@@ -151,6 +157,21 @@ public final class RenderPlan: @unchecked Sendable {
             cameraMask = nil
             cameraShadow = nil
         }
+
+        // Undertexter och tal i utdatatid.
+        if words.isEmpty {
+            captions = nil
+            speech = []
+        } else {
+            captions = Captions(words: words, timeMap: timeMap)
+            let map = timeMap
+            speech = Transcript(words: words).speech().compactMap { r in
+                guard let a = map.output(at: r.lowerBound) ?? map.output(at: r.upperBound),
+                      let b = map.output(at: r.upperBound) ?? map.output(at: r.lowerBound), b >= a else { return nil }
+                return a...b
+            }
+        }
+        showsCaptions = project.captions.visible && !(captions?.cues.isEmpty ?? true)
 
         // Kortkommandon: bara de texter som faktiskt förekommer ritas, en gång var.
         let track = ShortcutTrack(events: events, timeMap: timeMap)
@@ -252,11 +273,22 @@ public final class RenderPlan: @unchecked Sendable {
             out = bubble.composited(over: out)
         }
 
+        // Undertexten: fast i bildytan, nere i mitten.
+        if showsCaptions, let captions, let cue = captions.cue(at: t) {
+            let image = captionImages.image(for: cue.text) { Self.makeCaption(cue.text, canvas: canvas, size: project.captions.size) }
+            let e = image.extent
+            let margin = (min(canvas.width, canvas.height) * 0.05).rounded()
+            out = image.transformed(by: CGAffineTransform(translationX: ((canvas.width - e.width) / 2).rounded() - e.minX,
+                                                          y: margin - e.minY)).composited(over: out)
+        }
+
         // Kortkommandot ligger fast i bildytan, ovanpå allt, och glider upp när det dyker upp.
         if let shortcuts, let shown = shortcuts.visible(at: t), let pill = shortcutPills[shown.text],
            shown.opacity > 0.01 {
             let e = pill.extent
-            let margin = (min(canvas.width, canvas.height) * 0.055).rounded()
+            var margin = (min(canvas.width, canvas.height) * 0.055).rounded()
+            // Med undertexter nere ligger kortkommandot ovanför dem.
+            if showsCaptions && project.shortcuts.position == .bottom { margin += Self.captionReserve(canvas: canvas, size: project.captions.size) }
             let rise = (1 - shown.entrance) * e.height * 0.3
             let y = project.shortcuts.position == .bottom ? margin - rise : canvas.height - margin - e.height + rise
             let placed = pill.transformed(by: CGAffineTransform(translationX: ((canvas.width - e.width) / 2).rounded() - e.minX,
@@ -434,11 +466,77 @@ public final class RenderPlan: @unchecked Sendable {
         return prerender(ci, extent: ci.extent)
     }
 
+    /// Undertextens radhöjd i pixlar.
+    static func captionFontSize(canvas: CGSize, size: Double) -> CGFloat {
+        (min(canvas.width, canvas.height) * 0.042 * size).rounded()
+    }
+
+    /// Höjden två rader undertext tar, för att lägga annat ovanför.
+    static func captionReserve(canvas: CGSize, size: Double) -> CGFloat {
+        captionFontSize(canvas: canvas, size: size) * 2.9
+    }
+
+    /// En undertext: vit text på en mörk, rundad platta, en eller två rader, centrerade.
+    static func makeCaption(_ text: String, canvas: CGSize, size: Double) -> CIImage {
+        let fontSize = captionFontSize(canvas: canvas, size: size)
+        let font = NSFont.systemFont(ofSize: fontSize, weight: .semibold)
+        let lines = text.split(separator: "\n").map { line in
+            CTLineCreateWithAttributedString(NSAttributedString(string: String(line), attributes: [
+                .font: font, .foregroundColor: CGColor(red: 1, green: 1, blue: 1, alpha: 1)]))
+        }
+        guard !lines.isEmpty else { return CIImage.empty() }
+        let widths = lines.map { CTLineGetBoundsWithOptions($0, .useOpticalBounds).width }
+        let lineHeight = (fontSize * 1.28).rounded()
+        let padX = (fontSize * 0.6).rounded(), padY = (fontSize * 0.38).rounded()
+        let width = (min(widths.max() ?? 0, canvas.width * 0.9) + padX * 2).rounded(.up)
+        let height = lineHeight * CGFloat(lines.count) + padY * 2
+        guard let ctx = CGContext(data: nil, width: Int(width), height: Int(height), bitsPerComponent: 8, bytesPerRow: 0,
+                                  space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return CIImage.empty() }
+        let radius = fontSize * 0.35
+        ctx.addPath(CGPath(roundedRect: CGRect(x: 0, y: 0, width: width, height: height),
+                           cornerWidth: radius, cornerHeight: radius, transform: nil))
+        ctx.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: 0.62))
+        ctx.fillPath()
+        let descent = -font.descender
+        for (i, line) in lines.enumerated() {
+            // Första raden överst.
+            let baseline = height - padY - lineHeight * CGFloat(i + 1) + (lineHeight - fontSize) / 2 + descent
+            ctx.textPosition = CGPoint(x: ((width - widths[i]) / 2).rounded(), y: baseline.rounded())
+            CTLineDraw(line, ctx)
+        }
+        guard let img = ctx.makeImage() else { return CIImage.empty() }
+        let ci = CIImage(cgImage: img)
+        return prerender(ci, extent: ci.extent)
+    }
+
     static func arrowSprite() -> Sprite {
         let cursor = NSCursor.arrow
         var rect = NSRect(origin: .zero, size: NSSize(width: cursor.image.size.width * 2, height: cursor.image.size.height * 2))
         let cg = cursor.image.cgImage(forProposedRect: &rect, context: nil, hints: nil)
         let image = cg.map { CIImage(cgImage: $0) }.map { prerender($0, extent: $0.extent) } ?? CIImage.empty()
         return Sprite(image: image, size: cursor.image.size, hotSpot: cursor.hotSpot)
+    }
+}
+
+/// Undertexterna ritas när de behövs och sparas, eftersom en lång inspelning kan ha hundratals.
+/// Kompositören ritar rutor parallellt, därav låset.
+final class CaptionImageCache: @unchecked Sendable {
+    private let lock = NSLock()
+    private var images: [String: CIImage] = [:]
+    private var order: [String] = []
+    static let capacity = 12
+
+    func image(for text: String, make: () -> CIImage) -> CIImage {
+        lock.lock()
+        if let hit = images[text] { lock.unlock(); return hit }
+        lock.unlock()
+        let made = make()
+        lock.lock()
+        images[text] = made
+        order.append(text)
+        if order.count > Self.capacity { images[order.removeFirst()] = nil }
+        lock.unlock()
+        return made
     }
 }

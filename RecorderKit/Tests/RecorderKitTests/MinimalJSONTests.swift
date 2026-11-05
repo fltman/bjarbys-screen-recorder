@@ -63,6 +63,12 @@ import Foundation
         let keys = try BundleJSON.decoder.decode(EditProject.ShortcutStyle.self, from: Data("{}".utf8))
         #expect(keys.visible && keys.position == .bottom && keys.size == 1)
         #expect(p.framing == .fit && p.shortcuts.visible)
+        let caps = try BundleJSON.decoder.decode(EditProject.CaptionStyle.self, from: Data("{}".utf8))
+        #expect(caps.visible && caps.size == 1)
+        #expect(!p.audio.duckSystem && p.audio.duckLevel == 0.25)
+        let t = try BundleJSON.decoder.decode(Transcript.self, from: Data("{}".utf8))
+        #expect(t.words.isEmpty && t.track == .microphone)
+        _ = try BundleJSON.decoder.decode(Transcript.Word.self, from: Data("{}".utf8))
     }
 
     @Test func unknownAspectFallsBack() throws {

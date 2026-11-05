@@ -78,5 +78,17 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 | `framing` | `fit` (hela inspelningen med bakgrund) eller `fill` (fyller bilden, följer markören) |
 | `cursor` | `visible`, `scale`, `smoothing`, `hideWhenIdle`, `clickEffect` |
 | `shortcuts` | `visible`, `position` (`bottom`, `top`), `size` |
+| `captions` | `visible`, `size` — undertexter ur `transcript.json` |
 | `camera` | `visible`, `shape`, `size`, `corner`, `mirror` |
-| `audio` | volym och tystning per spår |
+| `audio` | volym och tystning per spår; `duckSystem`, `duckLevel` sänker datorljudet under tal |
+
+## transcript.json
+
+Härlett ur inspelningen och går alltid att göra om (`Transkribera om`). Bortklippta ord är inte
+borttagna här; de ligger i luckor mellan `segments` i `project.json`.
+
+| Fält | Betydelse |
+|---|---|
+| `model`, `language` | modellfilen och språket, t.ex. `kb_whisper_ggml_medium.bin`, `sv` |
+| `track` | spåret som transkriberades: `microphone`, annars `system` |
+| `words[]` | `start`, `end` (källtid, ±0,1 s), `text` med skiljetecken, `startsSegment` |

@@ -9,7 +9,7 @@ import RecorderKit
 /// videokompositionen på den spelare som redan finns; ändras klippen byggs kompositionen om.
 @MainActor
 final class EditorModel: ObservableObject {
-    let recording: LoadedRecording
+    private(set) var recording: LoadedRecording
     let player = AVPlayer()
     static let previewShortSide = 1080
     static let previewFPS = 60
@@ -17,14 +17,21 @@ final class EditorModel: ObservableObject {
     @Published private(set) var project: EditProject
     @Published var currentTime: Double = 0
     @Published private(set) var isPlaying = false
-    @Published var selectedZoomID: UUID?
-    @Published var selectedSegmentID: UUID?
+    @Published var selectedZoomID: UUID? { didSet { if selectedZoomID != nil { wordSelection = nil } } }
+    @Published var selectedSegmentID: UUID? { didSet { if selectedSegmentID != nil { wordSelection = nil } } }
     @Published private(set) var plan: RenderPlan
     @Published private(set) var thumbnails: [(t: Double, image: CGImage)] = []
     @Published private(set) var micWave: [Float] = []
     @Published private(set) var systemWave: [Float] = []
     @Published var exportPresented = false
     @Published private(set) var loadError: String?
+    /// Transkriberingens förlopp 0–1 medan den pågår.
+    @Published private(set) var transcribing: Double?
+    @Published private(set) var transcriptionError: String?
+    /// Markerade ord i texten (index i transkriptet).
+    @Published var wordSelection: ClosedRange<Int>?
+    @Published var transcriptShown = true
+    private var transcriptionTask: Task<Void, Never>?
 
     private var built: CompositionBuilder.Result?
     private var builtSegments: [EditProject.ClipSegment] = []
@@ -152,7 +159,7 @@ final class EditorModel: ObservableObject {
             plan = newPlan
             item.videoComposition = CompositionBuilder.videoComposition(
                 plan: newPlan, duration: built.duration, fps: Self.previewFPS, hasCamera: recording.hasCamera)
-            item.audioMix = CompositionBuilder.audioMix(for: built.composition, audio: project.audio)
+            item.audioMix = CompositionBuilder.audioMix(for: built.composition, audio: project.audio, speech: newPlan.speech)
             if !isPlaying { await seek(to: currentTime) }
         }
     }
@@ -273,7 +280,120 @@ final class EditorModel: ObservableObject {
     }
 
     func deleteSelection() {
-        if let z = selectedZoomID { deleteZoom(z) } else if let s = selectedSegmentID { deleteSegment(s) }
+        if let z = selectedZoomID { deleteZoom(z) }
+        else if let w = wordSelection { cutWords(w) }
+        else if let s = selectedSegmentID { deleteSegment(s) }
+    }
+
+    // MARK: - Tal
+
+    var words: [Transcript.Word] { recording.transcript?.words ?? [] }
+
+    func transcribe() {
+        guard transcribing == nil else { return }
+        transcriptionError = nil
+        guard let setup = AppModel.shared.settings.whisperSetup else {
+            transcriptionError = String(localized: "Hittar inte whisper.cpp. Välj mappen med build/bin/whisper-cli och models/.")
+            return
+        }
+        transcribing = 0
+        let rec = recording
+        transcriptionTask = Task {
+            do {
+                let transcript = try await Transcriber.run(rec, setup: setup) { p in
+                    Task { @MainActor [weak self] in if self?.transcribing != nil { self?.transcribing = p } }
+                }
+                try rec.bundle.saveTranscript(transcript)
+                recording.transcript = transcript
+                wordSelection = nil
+                transcribing = nil
+                await rebuild(full: false)
+            } catch {
+                transcribing = nil
+                if !Task.isCancelled { transcriptionError = error.localizedDescription }
+            }
+        }
+    }
+
+    func cancelTranscription() {
+        transcriptionTask?.cancel()
+        transcriptionTask = nil
+        transcribing = nil
+    }
+
+    /// Källintervallet orden täcker, utvidgat till mitten av pauserna mot grannarna, så att
+    /// ett klipp inte kapar början eller slutet på orden intill (ordtiderna är ±0,1 s).
+    func sourceRange(ofWords r: ClosedRange<Int>) -> ClosedRange<Double>? {
+        let w = words
+        guard r.lowerBound >= 0, r.upperBound < w.count else { return nil }
+        let first = w[r.lowerBound], last = w[r.upperBound]
+        let a = r.lowerBound > 0 ? (w[r.lowerBound - 1].end + first.start) / 2 : max(0, first.start - 0.15)
+        let b = r.upperBound + 1 < w.count ? (last.end + w[r.upperBound + 1].start) / 2
+                                           : min(recording.meta.duration, last.end + 0.15)
+        return min(a, first.start)...max(b, last.end)
+    }
+
+    func cutWords(_ r: ClosedRange<Int>) {
+        guard let range = sourceRange(ofWords: r) else { return }
+        update { $0.cut(range) }
+        wordSelection = nil
+    }
+
+    func restoreWords(_ r: ClosedRange<Int>) {
+        guard let range = sourceRange(ofWords: r) else { return }
+        update { $0.restore(range) }
+    }
+
+    func isWordKept(_ i: Int) -> Bool {
+        let w = words[i]
+        return project.isKept((w.start + w.end) / 2)
+    }
+
+    /// Ordet som sägs vid spelhuvudet.
+    var wordAtPlayhead: Int? {
+        let s = sourceTimeAtPlayhead
+        let w = words
+        var lo = 0, hi = w.count
+        while lo < hi { let m = (lo + hi) / 2; if w[m].start <= s { lo = m + 1 } else { hi = m } }
+        guard lo > 0, s <= w[lo - 1].end + 0.15 else { return nil }
+        return lo - 1
+    }
+
+    func seek(toWord i: Int) {
+        guard i < words.count, let t = timeMap.output(at: (words[i].start + words[i].end) / 2) else { return }
+        scrub(to: max(0, t - (words[i].end - words[i].start) / 2))
+    }
+
+    /// Dödtiden som skulle tas bort: inget tal, ingen mus, inga tangenter.
+    func deadTime(minimum: Double) -> [ClosedRange<Double>] {
+        // Inspektören ritas om i takt med spelhuvudet; sökningen går igenom alla mushändelser.
+        let key = "\(minimum)|\(words.count)"
+        let found: [ClosedRange<Double>]
+        if let cached = deadTimeCache, cached.key == key {
+            found = cached.ranges
+        } else {
+            found = DeadTime.find(events: recording.events, speech: recording.transcript?.speech() ?? [],
+                                  duration: recording.meta.duration, minimum: minimum)
+            deadTimeCache = (key, found)
+        }
+        return found.filter { r in project.isKept((r.lowerBound + r.upperBound) / 2) }
+    }
+    private var deadTimeCache: (key: String, ranges: [ClosedRange<Double>])?
+
+    func removeDeadTime(minimum: Double) {
+        let ranges = deadTime(minimum: minimum)
+        guard !ranges.isEmpty else { return }
+        update { p in for r in ranges { p.cut(r) } }
+    }
+
+    var fillerWords: [Int] {
+        words.indices.filter { FillerWords.isFiller(words[$0].text) && isWordKept($0) }
+    }
+
+    func removeFillerWords() {
+        let ranges = fillerWords.compactMap { sourceRange(ofWords: $0...$0) }
+        guard !ranges.isEmpty else { return }
+        update { p in for r in ranges { p.cut(r) } }
     }
 
     var selectedZoom: EditProject.ZoomSegment? {

@@ -39,6 +39,11 @@ struct EditorView: View {
 
     var body: some View {
         HStack(spacing: 0) {
+            if model.transcriptShown {
+                TranscriptView(model: model)
+                    .frame(width: 290)
+                Divider()
+            }
             VStack(spacing: 0) {
                 PlayerView(player: model.player)
                     .background(Color(nsColor: .underPageBackgroundColor))
@@ -109,8 +114,11 @@ private struct TransportBar: View {
             Button { model.addZoomAtPlayhead() } label: { Label("Zoom", systemImage: "plus.magnifyingglass") }
                 .help("Lägg till en zoom vid spelhuvudet")
             Button { model.deleteSelection() } label: { Label("Ta bort", systemImage: "trash") }
-                .disabled(model.selectedZoomID == nil && model.selectedSegmentID == nil)
-                .help("Ta bort markerad zoom eller del (⌫)")
+                .disabled(model.selectedZoomID == nil && model.selectedSegmentID == nil && model.wordSelection == nil)
+                .help("Ta bort markerad zoom, del eller markerade ord (⌫)")
+            Toggle(isOn: $model.transcriptShown) { Label("Text", systemImage: "text.quote") }
+                .toggleStyle(.button)
+                .help("Visa texten")
             Spacer()
             Button { model.undo() } label: { Image(systemName: "arrow.uturn.backward") }
                 .disabled(!model.canUndo).help("Ångra (⌘Z)")

@@ -12,6 +12,22 @@ final class AppSettings: ObservableObject {
     @AppStorage("keystrokes") var keystrokes: Bool = false
     @AppStorage("fps") var fps: Int = 60
     @AppStorage("countdown") var countdown: Bool = true
+    /// whisper.cpp-mappen (med build/bin och models). Tom = leta på de vanliga ställena.
+    @AppStorage("whisperRoot") var whisperRoot: String = ""
+    /// Modellfilen; tom = bästa som finns för språket.
+    @AppStorage("whisperModel") var whisperModel: String = ""
+    @AppStorage("speechLanguage") var speechLanguage: String = "sv"
+
+    /// Inställningarna för transkribering, eller nil om whisper.cpp inte går att hitta.
+    var whisperSetup: WhisperSetup? {
+        let root = whisperRoot.isEmpty ? WhisperSetup.findRoot() : URL(fileURLWithPath: whisperRoot)
+        guard let root else { return nil }
+        var setup = WhisperSetup(root: root, model: whisperModel, language: speechLanguage)
+        if whisperModel.isEmpty || !setup.availableModels.contains(whisperModel) {
+            setup.model = WhisperSetup.preferredModel(among: setup.availableModels, language: speechLanguage) ?? ""
+        }
+        return setup
+    }
 
     @Published private(set) var microphones: [Devices.Device] = []
     @Published private(set) var cameras: [Devices.Device] = []

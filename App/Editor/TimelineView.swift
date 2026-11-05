@@ -55,9 +55,9 @@ struct TimelineView: View {
     }
 
     private var lanesLegend: String {
-        var parts = ["Klipp", "Zoom"]
-        if !model.micWave.isEmpty { parts.append("Mikrofon") }
-        if !model.systemWave.isEmpty { parts.append("Datorljud") }
+        var parts = [String(localized: "Klipp"), String(localized: "Zoom")]
+        if !model.micWave.isEmpty { parts.append(String(localized: "Mikrofon")) }
+        if !model.systemWave.isEmpty { parts.append(String(localized: "Datorljud")) }
         return parts.joined(separator: " · ")
     }
 

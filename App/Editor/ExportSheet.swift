@@ -11,6 +11,7 @@ struct ExportSheet: View {
     @State private var exporter: Exporter?
     @State private var finishedURL: URL?
     @State private var error: String?
+    @AppStorage("exportSubtitles") private var subtitles = true
 
     private var preset: ExportPreset { ExportPreset.all.first { $0.id == presetID } ?? ExportPreset.all[0] }
 
@@ -40,6 +41,11 @@ struct ExportSheet: View {
                     .contentShape(Rectangle())
                     .onTapGesture { if progress == nil { presetID = p.id } }
                 }
+            }
+
+            if model.plan.captions != nil && presetID != "gif" {
+                Toggle("Spara undertexter (.srt) bredvid filmen", isOn: $subtitles)
+                    .disabled(progress != nil)
             }
 
             if let progress {
@@ -93,6 +99,9 @@ struct ExportSheet: View {
             do {
                 try await exporter.run(to: url) { p in
                     Task { @MainActor in progress = p }
+                }
+                if subtitles, presetID != "gif", let srt = model.plan.captions?.srt {
+                    try? srt.write(to: url.deletingPathExtension().appendingPathExtension("srt"), atomically: true, encoding: .utf8)
                 }
                 finishedURL = url
                 progress = 1

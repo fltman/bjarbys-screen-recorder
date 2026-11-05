@@ -27,6 +27,7 @@ public struct EditProject: Codable, Equatable, Sendable {
     public var camera: CameraStyle
     public var audio: AudioMix
     public var shortcuts: ShortcutStyle
+    public var captions: CaptionStyle
 
     public init() {
         schemaVersion = RecorderKit.formatVersion
@@ -44,6 +45,7 @@ public struct EditProject: Codable, Equatable, Sendable {
         camera = CameraStyle()
         audio = AudioMix()
         shortcuts = ShortcutStyle()
+        captions = CaptionStyle()
     }
 
     /// Ett nytt projekt för en inspelning: allt med, i normal hastighet.
@@ -71,6 +73,7 @@ public struct EditProject: Codable, Equatable, Sendable {
         camera = c.value(.camera, d.camera)
         audio = c.value(.audio, d.audio)
         shortcuts = c.value(.shortcuts, d.shortcuts)
+        captions = c.value(.captions, d.captions)
     }
 
     // MARK: - Delar
@@ -268,16 +271,40 @@ public struct EditProject: Codable, Equatable, Sendable {
         }
     }
 
+    /// Undertexter ur transkriptet, inbrända i bilden.
+    public struct CaptionStyle: Codable, Equatable, Hashable, Sendable {
+        public var visible: Bool
+        /// Storlek relativt standard (1).
+        public var size: Double
+
+        public init(visible: Bool = true, size: Double = 1) {
+            self.visible = visible; self.size = size
+        }
+
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            let d = CaptionStyle()
+            visible = c.value(.visible, d.visible)
+            size = c.value(.size, d.size)
+        }
+    }
+
     public struct AudioMix: Codable, Equatable, Hashable, Sendable {
         public var microphoneVolume: Double
         public var systemVolume: Double
         public var microphoneMuted: Bool
         public var systemMuted: Bool
+        /// Sänk datorljudet medan någon talar (kräver transkript).
+        public var duckSystem: Bool
+        /// Datorljudets nivå under tal, andel av den vanliga.
+        public var duckLevel: Double
 
         public init(microphoneVolume: Double = 1, systemVolume: Double = 0.8,
-                    microphoneMuted: Bool = false, systemMuted: Bool = false) {
+                    microphoneMuted: Bool = false, systemMuted: Bool = false,
+                    duckSystem: Bool = false, duckLevel: Double = 0.25) {
             self.microphoneVolume = microphoneVolume; self.systemVolume = systemVolume
             self.microphoneMuted = microphoneMuted; self.systemMuted = systemMuted
+            self.duckSystem = duckSystem; self.duckLevel = duckLevel
         }
 
         public init(from decoder: Decoder) throws {
@@ -287,6 +314,8 @@ public struct EditProject: Codable, Equatable, Sendable {
             systemVolume = c.value(.systemVolume, d.systemVolume)
             microphoneMuted = c.value(.microphoneMuted, d.microphoneMuted)
             systemMuted = c.value(.systemMuted, d.systemMuted)
+            duckSystem = c.value(.duckSystem, d.duckSystem)
+            duckLevel = c.value(.duckLevel, d.duckLevel)
         }
     }
 }

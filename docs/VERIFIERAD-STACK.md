@@ -69,3 +69,26 @@ Uppmätt 2026-11-04 på en 21 s områdesinspelning (1874×1434) med `--prov-rend
 - `NSHostingView.cacheDisplay` ritar layouten utanför skärmen men inte `AVPlayerView`s
   videolager — spelarytan blir svart i `--prov-redigerare`; rutorna granskas med
   `--prov-rendera`.
+
+## Fas 3: tal (2026-11-05)
+
+Uppmätt på syntetiskt svenskt tal (`say -v Alva`, två meningar med 4 s tystnad emellan, lagt
+som mikrofonspår som börjar 1,0 s in), whisper.cpp i `~/Projekt/whisper.cpp`, Apple M5.
+
+- ⚠️ **whisper-cli `--vad` ger ordtider på en hoptryckt tidslinje.** Tystnaden tas bort före
+  avkodningen och tokentiderna räknas inte tillbaka: «Först», som sägs vid ~8,6 s i filen,
+  fick 4,75 s. Därför gör appen uppdelningen själv: `vad-speech-segments` (samma Silero-modell)
+  → taldelarna läggs efter varandra med 0,4 s tystnad → en körning av whisper-cli →
+  `SpeechChunks` räknar tillbaka. `vad-speech-segments` skriver tider i **hundradelar**.
+- ⚠️ **Utan DTW driver ordtiderna över tystnader** även utan VAD: samma ord fick 4,49 s på
+  hela filen. Med `-dtw small` (KB-Whispers modeller är finjusterade ur OpenAI:s och har samma
+  uppmärksamhetshuvuden) fick det 8,74 s. `t_dtw` i `-ojf` är i hundradelar.
+- whisper sätter gärna början på ett ord i pausen före det; en tid i tystnaden mellan två
+  taldelar räknas därför till delen efter, och ett ord räknas alltid inom en och samma del.
+- Resultat med DTW + egen uppdelning: «Hej» 0,97 s (sägs ~1,04), «Först» 9,74 s (~9,64).
+  Ordtiderna är alltså ±0,1 s; ett klipp i texten går därför till mitten av pausen mot
+  grannorden, inte till ordets kant.
+- Hastighet på 14 s tal: KB small 0,9 s, KB medium 2,3 s (hela kedjan, inklusive VAD och
+  modellladdning). Båda transkriberade texten ordagrant rätt; medium satte punkt där small satte
+  komma.
+- Inbrända undertexter kostar inget märkbart i exporten: 8,2 s 1080p60 på 2,33 s (3,5× realtid).

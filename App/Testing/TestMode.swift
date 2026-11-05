@@ -9,6 +9,7 @@ import SwiftUI
 ///
 ///     Skarminspelare --prov-inspelning 5 [--mik] [--kamera] [--katalog <mapp>]
 ///     Skarminspelare --prov-aterstall <mapp>
+///     Skarminspelare --prov-transkribera <paket> [--modell <fil>] [--sprak sv]
 ///
 /// Skriver en JSON-rapport på stdout och avslutar med 0 vid lyckat prov.
 /// Behörigheterna (skärminspelning m.m.) måste ha getts till appen.
@@ -35,6 +36,10 @@ enum TestMode {
             } else if let i = args.firstIndex(of: "--prov-redigerare"), args.count > i + 2 {
                 code = await editorSnapshot(bundle: URL(fileURLWithPath: args[i + 1]), out: URL(fileURLWithPath: args[i + 2]),
                                             selectFirstZoom: args.contains("--markera-zoom"))
+            } else if let i = args.firstIndex(of: "--prov-transkribera"), args.count > i + 1 {
+                code = await transcribeTest(bundle: URL(fileURLWithPath: args[i + 1]),
+                                            model: value(after: "--modell", in: args),
+                                            language: value(after: "--sprak", in: args) ?? "sv")
             } else if let i = args.firstIndex(of: "--prov-aterstall"), args.count > i + 1 {
                 code = await recoveryTest(directory: URL(fileURLWithPath: args[i + 1]))
             } else {
@@ -181,6 +186,36 @@ enum TestMode {
     }
 
     /// `--prov-exportera <paket> <förval-id> <fil>`.
+    /// `--prov-transkribera <paket> [--modell <fil>] [--sprak sv]`: transkriberar med
+    /// whisper.cpp, sparar transcript.json och skriver orden och undertexterna.
+    static func transcribeTest(bundle url: URL, model: String?, language: String) async -> Int32 {
+        do {
+            let rec = try LoadedRecording.load(RecordingBundle(url: url))
+            guard let root = WhisperSetup.findRoot() else {
+                print(#"{"fel":"hittar inte whisper.cpp"}"#); return 1
+            }
+            var setup = WhisperSetup(root: root, model: "", language: language)
+            setup.model = model ?? WhisperSetup.preferredModel(among: setup.availableModels, language: language) ?? ""
+            let started = Date()
+            let transcript = try await Transcriber.run(rec, setup: setup)
+            try rec.bundle.saveTranscript(transcript)
+            let project = rec.bundle.loadProject(duration: rec.meta.duration)
+            let captions = Captions(words: transcript.words, timeMap: TimeMap(segments: project.segments))
+            let report: [String: Any] = [
+                "modell": setup.model,
+                "sekunder": (Date().timeIntervalSince(started) * 10).rounded() / 10,
+                "ord": transcript.words.map { String(format: "%.2f–%.2f %@", $0.start, $0.end, $0.text) },
+                "undertexter": captions.cues.map { String(format: "%.2f–%.2f ", $0.start, $0.end) + $0.text.replacingOccurrences(of: "\n", with: " / ") },
+            ]
+            let data = try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys])
+            print(String(data: data, encoding: .utf8) ?? "")
+            return transcript.words.isEmpty ? 1 : 0
+        } catch {
+            print("{\"fel\":\"\(error.localizedDescription)\"}")
+            return 1
+        }
+    }
+
     static func exportTest(bundle url: URL, preset id: String, out: URL) async -> Int32 {
         guard let preset = ExportPreset.all.first(where: { $0.id == id }) else {
             print("{\"fel\":\"okänt förval\"}"); return 64

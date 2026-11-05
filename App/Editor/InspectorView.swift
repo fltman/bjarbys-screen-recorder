@@ -21,7 +21,10 @@ struct InspectorView: View {
                 cursorSection
                 shortcutSection
                 if model.recording.hasCamera { cameraSection }
-                if model.recording.hasMicrophone || model.recording.hasSystemAudio { audioSection }
+                if model.recording.hasMicrophone || model.recording.hasSystemAudio {
+                    speechSection
+                    audioSection
+                }
             }
             .padding(16)
         }
@@ -169,6 +172,54 @@ struct InspectorView: View {
                 Text("Inga kortkommandon i den här inspelningen. Slå på «Spela in kortkommandon» i menyn före nästa inspelning; det kräver Indataövervakning.")
                     .font(.caption).foregroundStyle(.secondary)
             }
+        }
+    }
+
+    @State private var deadMinimum = 2.0
+
+    private var speechSection: some View {
+        Section2("Tal", systemImage: "captions.bubble") {
+            if model.words.isEmpty {
+                if let p = model.transcribing {
+                    ProgressView(value: p) { Text("Transkriberar …") }
+                } else {
+                    Button("Transkribera") { model.transcribe() }
+                    Text("Ger undertexter, redigering via texten och bortklippning av pauser. Görs lokalt med whisper.cpp.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            } else {
+                Toggle("Undertexter i filmen", isOn: binding(\.captions.visible))
+                LabeledSlider("Textstorlek", value: binding(\.captions.size), range: 0.6...1.6, format: "%.0f %%", scale: 100)
+                    .disabled(!model.project.captions.visible)
+                if model.recording.hasSystemAudio && model.recording.hasMicrophone {
+                    Toggle("Sänk datorljudet när du pratar", isOn: binding(\.audio.duckSystem))
+                }
+                let fillers = model.fillerWords
+                if !fillers.isEmpty {
+                    Button("Klipp bort \(fillers.count) eh och öh") { model.removeFillerWords() }
+                }
+                Button("Transkribera om") { model.transcribe() }
+                    .controlSize(.small)
+                    .disabled(model.transcribing != nil)
+            }
+            if let e = model.transcriptionError, model.words.isEmpty == false || model.transcribing == nil {
+                Text(e).font(.caption).foregroundStyle(.red)
+            }
+
+            Divider()
+            // Dödtid: utan transkript räknas pauser i talet som dödtid, så det krävs om det finns mikrofon.
+            let canFind = !model.recording.hasMicrophone || !model.words.isEmpty
+            LabeledSlider("Dödtid längre än", value: $deadMinimum, range: 1...8, format: "%.1f s")
+            let dead = canFind ? model.deadTime(minimum: deadMinimum) : []
+            let total = dead.map { $0.upperBound - $0.lowerBound }.reduce(0, +)
+            Button(dead.isEmpty ? String(localized: "Ingen dödtid") :
+                    String(localized: "Klipp bort \(dead.count) pauser (\(String(format: "%.1f", total)) s)")) {
+                model.removeDeadTime(minimum: deadMinimum)
+            }
+            .disabled(dead.isEmpty)
+            Text(canFind ? "Stunder då ingen talar och varken mus eller tangentbord används."
+                         : "Transkribera först, så att pauser när du pratar inte räknas som dödtid.")
+                .font(.caption).foregroundStyle(.secondary)
         }
     }
 
