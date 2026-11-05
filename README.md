@@ -55,6 +55,11 @@ is included; to have the app follow your system language instead, run
   screen (Vision OCR, locally) and blur, pixelate or cover them. The masks follow text that
   scrolls. Add your own areas too.
 
+**Bug reports**
+- A folder and a zip with `rapport.md` (what you said, the environment with the app's version,
+  steps to reproduce with times), the video, a step-by-step guide and the app's system log for
+  the recording. macOS redacts private log fields, but read it through before you send it.
+
 **Polished screenshots**
 - A window, an area or the whole screen on the same background, with padding and a shadow that
   follows the window's own rounded corners. Saved and copied to the clipboard.
@@ -68,7 +73,7 @@ is included; to have the app follow your system language instead, run
 - An MCP server built into the app: `--mcp` gives agents such as Claude Code tools to record
   the screen, transcribe, edit (format, Reel, captions, cuts, dead time, noise, loudness,
   hiding sensitive text), render frames to look at, make a step-by-step guide, take polished
-  screenshots of an app's window, and export.
+  screenshots of an app's window, make a bug report, and export.
 - A URL scheme (`skarminspelare://spela-in`, `…/stoppa`, `…/paus`, `…/oppna?sokvag=…`) and
   Shortcuts actions for the app itself.
 
@@ -145,7 +150,7 @@ the screen recording permission of the terminal it runs from.
 
 The recording engine, the editor, export, speech, masking of sensitive text, the flashback
 buffer and control from agents are done (see [`docs/FÄRDPLAN.md`](docs/FÄRDPLAN.md)). Next are
-a bug-report bundle, HDR, 120 fps and per-app audio.
+HDR, 120 fps and per-app audio.
 
 Built and tested on macOS 26.1 on an Apple M5 only. Not yet tried with a real camera or
 with a window that moves during recording. Transcription has been measured on synthetic

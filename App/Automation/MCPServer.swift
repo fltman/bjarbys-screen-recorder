@@ -165,6 +165,13 @@ enum MCPServer {
                                     "polish": ["type": "boolean", "description": "Background, padding and shadow (default true)."],
                                     "background_preset": ["type": "integer", "minimum": 0, "maximum": 7],
                                     "path": ["type": "string"]])],
+            ["name": "make_bug_report",
+             "description": "Make a bug report from a recording: rapport.md (what was said, environment, steps to reproduce), the video, a step-by-step guide with images and the app's system log for the recording's time. Returns the folder and a zip.",
+             "inputSchema": schema(["recording": recordingArg,
+                                    "title": ["type": "string"],
+                                    "app": ["type": "string", "description": "The app the bug is in (for its version and log)."],
+                                    "directory": ["type": "string"]],
+                                   required: ["recording"])],
             ["name": "make_guide",
              "description": "Make a step-by-step guide from the recording: one finished image per click or keyboard shortcut, with what was said as the text. Writes guide.md, guide.html (self-contained) and PNGs.",
              "inputSchema": schema(["recording": recordingArg,
@@ -210,6 +217,16 @@ enum MCPServer {
         case "export": return try await export(a)
         case "make_guide": return try await makeGuide(a)
         case "screenshot": return try await screenshot(a)
+        case "make_bug_report":
+            let rec = try resolve(a)
+            let project = rec.bundle.loadProject(duration: rec.meta.duration)
+            let movies = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first!
+            let dir = (a["directory"] as? String).map { URL(fileURLWithPath: NSString(string: $0).expandingTildeInPath) }
+                ?? movies.appendingPathComponent("Felrapport – \(rec.bundle.name)", isDirectory: true)
+            let out = try await BugReport.make(rec, project: project, title: a["title"] as? String ?? rec.bundle.name,
+                                               app: a["app"] as? String, in: dir)
+            return "Bug report: \(out.report.path)\nFolder: \(out.folder.path)" + (out.zip.map { "\nZip: \($0.path)" } ?? "")
+                + "\n\n" + ((try? String(contentsOf: out.report, encoding: .utf8)) ?? "")
         default: throw ToolError("Unknown tool \(name)")
         }
     }

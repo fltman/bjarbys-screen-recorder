@@ -35,3 +35,25 @@ import Foundation
         #expect(try BundleJSON.decoder.decode(RecordingMeta.self, from: Data("{}".utf8)).startHostTime == 0)
     }
 }
+
+@Suite struct BugReportTests {
+    @Test func reportHasStepsEnvironmentAndAttachments() {
+        let ev = [InputEvent(t: 2, k: .down, x: 1, y: 1, b: 0, n: 1),
+                  InputEvent(t: 2, k: .element, label: "knapp «Spara»"),
+                  InputEvent(t: 5, k: .key, label: "⌘S")]
+        let words = [Transcript.Word(start: 1, end: 1.4, text: "Nu", startsSegment: true),
+                     Transcript.Word(start: 1.5, end: 1.9, text: "sparar"), Transcript.Word(start: 2.0, end: 2.3, text: "jag."),
+                     Transcript.Word(start: 5.5, end: 6, text: "Ingenting", startsSegment: true),
+                     Transcript.Word(start: 6.1, end: 6.5, text: "händer.")]
+        let guide = StepGuide(events: ev, words: words, timeMap: TimeMap(segments: [.init(start: 0, end: 10)]), language: "sv")
+        let env = BugReport.Environment(macOS: "macOS 26.1.0", model: "Mac17,2", app: "Kundkoll", appVersion: "1.2 (34)")
+        let md = BugReport.markdown(title: "Spara fungerar inte", guide: guide, environment: env,
+                                    recordedAt: Date(timeIntervalSince1970: 0), duration: 10, video: "film.mp4", hasLog: true)
+        #expect(md.hasPrefix("# Spara fungerar inte\n"))
+        #expect(md.contains("## Vad som händer\n\nNu sparar jag. Ingenting händer."))
+        #expect(md.contains("- Program: Kundkoll 1.2 (34)"))
+        #expect(md.contains("1. Klicka på knapp «Spara». _(2.0 s)_ — Nu sparar jag."))
+        #expect(md.contains("2. Tryck ⌘S. _(5.0 s)_ — Ingenting händer."))
+        #expect(md.contains("[Systemlogg](logg.txt)") && md.contains("[Filmen](film.mp4)"))
+    }
+}

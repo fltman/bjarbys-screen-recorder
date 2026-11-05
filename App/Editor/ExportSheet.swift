@@ -61,6 +61,8 @@ struct ExportSheet: View {
 
             HStack {
                 if progress == nil && finishedURL == nil {
+                    Button("Felrapport …") { makeBugReport() }
+                        .help("Film, steg för att återskapa, miljö och systemlogg i en mapp och en zip.")
                     Button("Steg-för-steg-guide …") { makeGuide() }
                         .help("En bild per klick och kortkommando, med det du sa som text. Markdown och HTML.")
                 }
@@ -91,6 +93,27 @@ struct ExportSheet: View {
         if let type = UTType(filenameExtension: preset.fileExtension) { panel.allowedContentTypes = [type] }
         guard panel.runModal() == .OK, let url = panel.url else { return }
         start(url)
+    }
+
+    private func makeBugReport() {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = String(localized: "Felrapport – \(model.recording.bundle.name)")
+        panel.directoryURL = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        error = nil
+        progress = 0
+        model.player.pause()
+        let rec = model.recording, project = model.project
+        Task {
+            do {
+                let out = try await BugReport.make(rec, project: project, title: rec.bundle.name, app: nil, in: url)
+                progress = 1
+                finishedURL = out.zip ?? out.report
+            } catch {
+                self.error = error.localizedDescription
+                progress = nil
+            }
+        }
     }
 
     private func makeGuide() {

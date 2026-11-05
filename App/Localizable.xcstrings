@@ -936,6 +936,57 @@
         }
       }
     },
+    "Felrapport – %@": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bug report – %@"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felrapport – %@"
+          }
+        }
+      }
+    },
+    "Felrapport …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bug report …"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felrapport …"
+          }
+        }
+      }
+    },
+    "Film, steg för att återskapa, miljö och systemlogg i en mapp och en zip.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video, steps to reproduce, environment and system log in a folder and a zip."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Film, steg för att återskapa, miljö och systemlogg i en mapp och en zip."
+          }
+        }
+      }
+    },
     "Flashback": {
       "extractionState": "extracted_with_value",
       "localizations": {

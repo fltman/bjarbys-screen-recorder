@@ -199,3 +199,10 @@ huvudskärmen + datorljud.
   upplösning med genomskinliga, egna rundade hörn; skuggan görs ur bildens alfa och följer
   formen. Finder-fönster: 1988×1076 med marginal. Område 600×400 pt → 1328×928.
 - Okänd app i MCP-verktyget svarar med listan över appar som har fönster på skärmen.
+
+## Felrapport (2026-11-05)
+
+Via MCP på ett provpaket (källa: fönster «Finder», ett klick med elementnamn, ⌘⇧N, transkript):
+rapport med "Program: Finder 26.1 (1828.1.8)", "macOS 26.1.0, Mac17,2", två steg med tid och
+tal, film 0,57 MB, guide, 42 rader `log show` för Finder, zip 1,1 MB (`ditto -c -k --keepParent`).
+`log show` utan admin fungerar; privata fält är redigerade av macOS.
