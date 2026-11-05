@@ -249,7 +249,16 @@ struct InspectorView: View {
                     Toggle("", isOn: Binding(get: { !model.project.audio.microphoneMuted },
                                              set: { v in model.update { $0.audio.microphoneMuted = !v } }))
                         .labelsHidden()
-                    LabeledSlider("Mikrofon", value: binding(\.audio.microphoneVolume), range: 0...2, format: "%.0f %%", scale: 100)
+                    LabeledSlider("Mikrofon", value: decibels(\.audio.microphoneVolume), range: -30...20, format: "%+.1f dB")
+                }
+                HStack {
+                    Button("Jämna ut till \(Int(Loudness.target)) LUFS") { model.normalizeMicrophone() }
+                        .controlSize(.small)
+                        .disabled(model.measuringLoudness)
+                    if model.measuringLoudness { ProgressView().controlSize(.small) }
+                }
+                if let note = model.loudnessNote {
+                    Text(note).font(.caption).foregroundStyle(.secondary)
                 }
             }
             if model.recording.hasSystemAudio {
@@ -257,10 +266,16 @@ struct InspectorView: View {
                     Toggle("", isOn: Binding(get: { !model.project.audio.systemMuted },
                                              set: { v in model.update { $0.audio.systemMuted = !v } }))
                         .labelsHidden()
-                    LabeledSlider("Datorljud", value: binding(\.audio.systemVolume), range: 0...2, format: "%.0f %%", scale: 100)
+                    LabeledSlider("Datorljud", value: decibels(\.audio.systemVolume), range: -30...20, format: "%+.1f dB")
                 }
             }
         }
+    }
+
+    /// En linjär volym visad och ändrad i dB.
+    private func decibels(_ keyPath: WritableKeyPath<EditProject, Double>) -> Binding<Double> {
+        Binding(get: { 20 * log10(max(model.project[keyPath: keyPath], 0.0316)) },
+                set: { db in model.update { $0[keyPath: keyPath] = pow(10, db / 20) } })
     }
 
     private func hexBinding(_ keyPath: WritableKeyPath<EditProject, String>) -> Binding<Color> {

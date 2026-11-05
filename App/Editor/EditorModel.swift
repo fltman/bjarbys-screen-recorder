@@ -386,6 +386,30 @@ final class EditorModel: ObservableObject {
         update { p in for r in ranges { p.cut(r) } }
     }
 
+    @Published private(set) var measuringLoudness = false
+    @Published private(set) var loudnessNote: String?
+
+    /// Mäter mikrofonen (EBU R128) och sätter volymen så att filmen hamnar på −16 LUFS,
+    /// utan att topparna går över −1 dBFS. Volymen går att ändra efteråt som vanligt.
+    func normalizeMicrophone() {
+        guard let mic = recording.asset(.microphone), !measuringLoudness else { return }
+        measuringLoudness = true
+        Task {
+            defer { measuringLoudness = false }
+            guard let m = try? await Loudness.measure(mic) else {
+                loudnessNote = String(localized: "Mikrofonspåret är tyst.")
+                return
+            }
+            let (gain, limited) = Loudness.gain(for: m)
+            update { $0.audio.microphoneVolume = gain; $0.audio.microphoneMuted = false }
+            let db = String(format: "%+.1f", 20 * log10(gain))
+            let measured = String(format: "%.1f", m.integrated)
+            loudnessNote = limited
+                ? String(localized: "Mikrofonen låg på \(measured) LUFS. Höjd \(db) dB, mindre än målet så att topparna inte klipps.")
+                : String(localized: "Mikrofonen låg på \(measured) LUFS. Ändrad \(db) dB.")
+        }
+    }
+
     var fillerWords: [Int] {
         words.indices.filter { FillerWords.isFiller(words[$0].text) && isWordKept($0) }
     }

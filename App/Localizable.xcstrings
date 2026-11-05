@@ -1395,6 +1395,23 @@
         }
       }
     },
+    "Jämna ut till %lld LUFS": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Level to %lld LUFS"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jämna ut till %lld LUFS"
+          }
+        }
+      }
+    },
     "Kamera": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1714,6 +1731,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mikrofon"
+          }
+        }
+      }
+    },
+    "Mikrofonen låg på %@ LUFS. Höjd %@ dB, mindre än målet så att topparna inte klipps.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The microphone was at %@ LUFS. Raised %@ dB, less than the target so the peaks don’t clip."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofonen låg på %@ LUFS. Höjd %@ dB, mindre än målet så att topparna inte klipps."
+          }
+        }
+      }
+    },
+    "Mikrofonen låg på %@ LUFS. Ändrad %@ dB.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The microphone was at %@ LUFS. Changed %@ dB."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofonen låg på %@ LUFS. Ändrad %@ dB."
+          }
+        }
+      }
+    },
+    "Mikrofonspåret är tyst.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The microphone track is silent."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofonspåret är tyst."
           }
         }
       }

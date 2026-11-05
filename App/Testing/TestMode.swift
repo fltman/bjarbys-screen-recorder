@@ -10,6 +10,7 @@ import SwiftUI
 ///     Skarminspelare --prov-inspelning 5 [--mik] [--kamera] [--katalog <mapp>]
 ///     Skarminspelare --prov-aterstall <mapp>
 ///     Skarminspelare --prov-transkribera <paket> [--modell <fil>] [--sprak sv]
+///     Skarminspelare --prov-ljudstyrka <ljudfil>
 ///
 /// Skriver en JSON-rapport på stdout och avslutar med 0 vid lyckat prov.
 /// Behörigheterna (skärminspelning m.m.) måste ha getts till appen.
@@ -40,6 +41,11 @@ enum TestMode {
                 code = await transcribeTest(bundle: URL(fileURLWithPath: args[i + 1]),
                                             model: value(after: "--modell", in: args),
                                             language: value(after: "--sprak", in: args) ?? "sv")
+            } else if let i = args.firstIndex(of: "--prov-ljudstyrka"), args.count > i + 1 {
+                let m = try? await Loudness.measure(AVURLAsset(url: URL(fileURLWithPath: args[i + 1])))
+                print(m.map { String(format: #"{"lufs":%.2f,"topp_dbfs":%.2f,"forstarkning_db":%.2f}"#, $0.integrated,
+                                     20 * log10($0.peak), 20 * log10(Loudness.gain(for: $0).gain)) } ?? #"{"fel":"tyst eller oläsbar"}"#)
+                code = m == nil ? 1 : 0
             } else if let i = args.firstIndex(of: "--prov-aterstall"), args.count > i + 1 {
                 code = await recoveryTest(directory: URL(fileURLWithPath: args[i + 1]))
             } else {

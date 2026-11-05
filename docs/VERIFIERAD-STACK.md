@@ -92,3 +92,10 @@ som mikrofonspår som börjar 1,0 s in), whisper.cpp i `~/Projekt/whisper.cpp`, 
   modellladdning). Båda transkriberade texten ordagrant rätt; medium satte punkt där small satte
   komma.
 - Inbrända undertexter kostar inget märkbart i exporten: 8,2 s 1080p60 på 2,33 s (3,5× realtid).
+- **Ljudstyrka (EBU R128 / BS.1770-4)** i `Loudness.swift`, kalibrerad mot ffmpeg `ebur128`:
+  syntetiskt tal −18,36 (ffmpeg −18,3), JFK-provet −15,47 (−15,5), 1 kHz-sinus −41,07 (−41,1).
+- **AVAudioMix förstärker över 1,0**: mikrofonvolym 0,5 / 1 / 2 gav medelnivå −26,2 / −20,2 /
+  −14,3 dB, men topparna klipps vid 0 dBFS (ingen limiter). Utjämningen begränsar därför
+  förstärkningen så att topparna stannar under −1 dBFS.
+- Exporten lägger monomikrofonen i båda kanalerna: filmen blir 3 dB starkare än spåret ensamt.
+  Prov: spår −32,37 LUFS → +13,36 dB → exporten mätte −16,0 LUFS, topp −3,5 dBFS.

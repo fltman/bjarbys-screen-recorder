@@ -168,3 +168,26 @@ import Foundation
         #expect(ramps.first?.start == 0)
     }
 }
+
+@Suite struct LoudnessTests {
+    /// 1 kHz-sinus: K-viktningen är ~0 dB där, så LUFS ≈ RMS i dBFS − 0,691 + 0,7 (filtret).
+    /// Referens: ffmpeg `ebur128` gav −41,1 LUFS för en sinus med toppen −38,05 dBFS.
+    @Test func sineMatchesFfmpegReference() {
+        let amplitude = pow(10, -38.05 / 20)
+        let samples = (0..<(48_000 * 5)).map { Float(amplitude * sin(2 * .pi * 1000 * Double($0) / 48_000)) }
+        let lufs = Loudness.integrated(samples)
+        #expect(lufs.map { abs($0 - (-41.07)) < 0.1 } == true)
+    }
+
+    @Test func silenceIsNotMeasured() {
+        #expect(Loudness.integrated([Float](repeating: 0, count: 48_000 * 2)) == nil)
+    }
+
+    @Test func gainHitsTheTargetForStereoUnlessPeaksStopIt() {
+        // Uppmätt: −32,37 LUFS mono → +13,36 dB → exporten mätte −16,0 LUFS i ffmpeg.
+        let quiet = Loudness.gain(for: .init(integrated: -32.37, peak: pow(10, -16.85 / 20)))
+        #expect(abs(20 * log10(quiet.gain) - 13.36) < 0.01 && !quiet.limitedByPeaks)
+        let peaky = Loudness.gain(for: .init(integrated: -40, peak: pow(10, -6 / 20)))
+        #expect(abs(20 * log10(peaky.gain) - 5) < 0.01 && peaky.limitedByPeaks)
+    }
+}
