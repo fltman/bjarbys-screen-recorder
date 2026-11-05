@@ -81,7 +81,7 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 | `framing` | `fit` (hela inspelningen med bakgrund) eller `fill` (fyller bilden, följer markören) |
 | `cursor` | `visible`, `scale`, `smoothing`, `hideWhenIdle`, `clickEffect` |
 | `shortcuts` | `visible`, `position` (`bottom`, `top`), `size` |
-| `captions` | `visible`, `size` — undertexter ur `transcript.json` |
+| `captions` | `visible`, `size`, `highlightWord` (ordet som sägs lyser) — undertexter ur `transcript.json` |
 | `masks[]` | `start`, `end`, `keyframes[]` (`t`, `rect` normaliserat), `style` (`blur`, `pixelate`, `solid`), `kind`, `hint` (aldrig själva texten), `enabled` |
 | `camera` | `visible`, `shape`, `size`, `corner`, `mirror` |
 | `transition`, `fadeInOut` | standardövergång i snitten (`kind`: `none`, `dip`, `blur`, `flash`, `crossfade`; `duration`) och toning i början/slutet |

@@ -508,6 +508,14 @@ final class EditorModel: ObservableObject {
     }
     private var deadTimeCache: (key: String, ranges: [ClosedRange<Double>])?
 
+    /// Dödtiden i 4× i stället för bortklippt: man ser fortfarande vad som hände (en sida som
+    /// laddar), men det går fort.
+    func speedUpDeadTime(minimum: Double, speed: Double = 4) {
+        let ranges = deadTime(minimum: minimum)
+        guard !ranges.isEmpty else { return }
+        update { p in for r in ranges { p.setSpeed(speed, in: r) } }
+    }
+
     func removeDeadTime(minimum: Double) {
         let ranges = deadTime(minimum: minimum)
         guard !ranges.isEmpty else { return }

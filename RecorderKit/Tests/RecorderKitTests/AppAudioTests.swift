@@ -83,3 +83,16 @@ import Foundation
         #expect(decoded.animation == .fade)
     }
 }
+
+@Suite struct SpeedUpTests {
+    /// Ett intervall i 4× delar delen i kanterna; snitten får ingen övergång; filmen blir kortare.
+    @Test func speedUpSplitsAndKeepsEverything() throws {
+        var p = EditProject.initial(duration: 10)
+        p.transition = .init(kind: .crossfade, duration: 0.5)
+        p.setSpeed(4, in: 3...7)
+        #expect(p.segments.map(\.start) == [0, 3, 7] && p.segments.map(\.end) == [3, 7, 10])
+        #expect(p.segments.map(\.speed) == [1, 4, 1])
+        #expect(p.segments[1].transitionIn?.kind == EditProject.Transition.Kind.none && p.segments[2].transitionIn?.kind == EditProject.Transition.Kind.none)
+        #expect(abs(TimeMap(segments: p.segments).outputDuration - 7) < 1e-9)   // 3 + 1 + 3
+    }
+}

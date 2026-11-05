@@ -438,9 +438,11 @@ public struct EditProject: Codable, Equatable, Sendable {
         public var visible: Bool
         /// Storlek relativt standard (1).
         public var size: Double
+        /// Ordet som sägs lyser (som i sociala medier).
+        public var highlightWord: Bool
 
-        public init(visible: Bool = true, size: Double = 1) {
-            self.visible = visible; self.size = size
+        public init(visible: Bool = true, size: Double = 1, highlightWord: Bool = false) {
+            self.visible = visible; self.size = size; self.highlightWord = highlightWord
         }
 
         public init(from decoder: Decoder) throws {
@@ -448,6 +450,7 @@ public struct EditProject: Codable, Equatable, Sendable {
             let d = CaptionStyle()
             visible = c.value(.visible, d.visible)
             size = c.value(.size, d.size)
+            highlightWord = c.value(.highlightWord, d.highlightWord)
         }
     }
 

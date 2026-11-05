@@ -158,12 +158,14 @@ enum MCPServer {
                 "zoom_scale": ["type": "number", "minimum": 1.25, "maximum": 4],
                 "cursor_scale": ["type": "number", "minimum": 0.8, "maximum": 3],
                 "captions": ["type": "boolean", "description": "Burn in captions (needs a transcript)."],
+                "caption_highlight": ["type": "boolean", "description": "Highlight the word being said in the burned-in captions."],
                 "shortcuts": ["type": "boolean", "description": "Show recorded keyboard shortcuts."],
                 "cut": ["type": "array", "items": ["type": "array", "items": ["type": "number"], "minItems": 2, "maxItems": 2],
                         "description": "Ranges [start, end] in seconds to cut out."],
                 "restore": ["type": "array", "items": ["type": "array", "items": ["type": "number"], "minItems": 2, "maxItems": 2],
                             "description": "Previously cut ranges to bring back."],
                 "remove_dead_time": ["type": "number", "description": "Cut stretches longer than this many seconds with no speech and no input."],
+                "speed_up_dead_time": ["type": "number", "description": "Like remove_dead_time, but play those stretches at 4× instead of cutting them."],
                 "voice_isolation": ["type": "boolean", "description": "Remove background noise from the microphone."],
                 "normalize_loudness": ["type": "boolean", "description": "Set the microphone level to -16 LUFS."],
                 "duck_system_audio": ["type": "boolean"],
@@ -481,6 +483,7 @@ enum MCPServer {
         }
         if let v = a["padding"] as? Double { p.padding = min(0.25, max(0, v)) }
         if let v = a["cursor_scale"] as? Double { p.cursor.scale = min(3, max(0.8, v)) }
+        if let v = a["caption_highlight"] as? Bool { p.captions.highlightWord = v }
         if let v = a["captions"] as? Bool {
             p.captions.visible = v
             if v && rec.transcript == nil { notes.append("Captions need a transcript: run transcribe first.") }
@@ -511,6 +514,17 @@ enum MCPServer {
                                          duration: rec.meta.duration, minimum: max(0.5, minimum))
                 for r in dead { p.cut(r) }
                 notes.append("Removed \(dead.count) dead stretches (\(String(format: "%.1f", dead.map { $0.upperBound - $0.lowerBound }.reduce(0, +))) s).")
+            }
+        }
+        if let minimum = a["speed_up_dead_time"] as? Double {
+            if rec.hasMicrophone && rec.transcript == nil {
+                notes.append("Dead time not sped up: the recording has a microphone but no transcript. Run transcribe first.")
+            } else {
+                let dead = DeadTime.find(events: rec.events, speech: rec.transcript?.speech() ?? [],
+                                         duration: rec.meta.duration, minimum: max(0.5, minimum))
+                    .filter { r in p.isKept((r.lowerBound + r.upperBound) / 2) }
+                for r in dead { p.setSpeed(4, in: r) }
+                notes.append("Sped up \(dead.count) dead stretches to 4×.")
             }
         }
         if let v = a["voice_isolation"] as? Bool {

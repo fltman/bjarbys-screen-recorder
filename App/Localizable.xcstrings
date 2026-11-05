@@ -3588,6 +3588,23 @@
         }
       }
     },
+    "Markera ordet som sägs": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlight the spoken word"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markera ordet som sägs"
+          }
+        }
+      }
+    },
     "Markerad del": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4166,6 +4183,23 @@
         }
       }
     },
+    "Ordet som sägs just nu lyser gult, som i undertexter på sociala medier.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The word being said lights up yellow, like captions on social media."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordet som sägs just nu lyser gult, som i undertexter på sociala medier."
+          }
+        }
+      }
+    },
     "Oskärpa": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4281,6 +4315,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pausa och fortsätt"
+          }
+        }
+      }
+    },
+    "Pauserna går i fyrdubbel fart i stället för att klippas bort — man ser vad som hände, men det går fort.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pauses play at four times the speed instead of being cut — you still see what happened, but fast."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauserna går i fyrdubbel fart i stället för att klippas bort — man ser vad som hände, men det går fort."
           }
         }
       }
@@ -4842,6 +4893,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Släng tagningen"
+          }
+        }
+      }
+    },
+    "Snabba upp 4×": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speed up 4×"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snabba upp 4×"
           }
         }
       }

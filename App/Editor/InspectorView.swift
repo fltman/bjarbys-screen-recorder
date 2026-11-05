@@ -435,6 +435,9 @@ struct InspectorView: View {
                 Toggle("Undertexter i filmen", isOn: binding(\.captions.visible))
                 LabeledSlider("Textstorlek", value: binding(\.captions.size), range: 0.6...1.6, format: "%.0f %%", scale: 100)
                     .disabled(!model.project.captions.visible)
+                Toggle("Markera ordet som sägs", isOn: binding(\.captions.highlightWord))
+                    .disabled(!model.project.captions.visible)
+                    .help("Ordet som sägs just nu lyser gult, som i undertexter på sociala medier.")
                 if model.recording.hasComputerAudio && model.recording.hasMicrophone {
                     Toggle("Sänk datorljudet när du pratar", isOn: binding(\.audio.duckSystem))
                 }
@@ -456,11 +459,17 @@ struct InspectorView: View {
             LabeledSlider("Dödtid längre än", value: $deadMinimum, range: 1...8, format: "%.1f s")
             let dead = canFind ? model.deadTime(minimum: deadMinimum) : []
             let total = dead.map { $0.upperBound - $0.lowerBound }.reduce(0, +)
-            Button(dead.isEmpty ? String(localized: "Ingen dödtid") :
-                    String(localized: "Klipp bort \(dead.count) pauser (\(AppLocale.format("%.1f", total)) s)")) {
-                model.removeDeadTime(minimum: deadMinimum)
+            HStack {
+                Button(dead.isEmpty ? String(localized: "Ingen dödtid") :
+                        String(localized: "Klipp bort \(dead.count) pauser (\(AppLocale.format("%.1f", total)) s)")) {
+                    model.removeDeadTime(minimum: deadMinimum)
+                }
+                .disabled(dead.isEmpty)
+                if !dead.isEmpty {
+                    Button("Snabba upp 4×") { model.speedUpDeadTime(minimum: deadMinimum) }
+                        .help("Pauserna går i fyrdubbel fart i stället för att klippas bort — man ser vad som hände, men det går fort.")
+                }
             }
-            .disabled(dead.isEmpty)
             Text(canFind ? "Stunder då ingen talar och varken mus eller tangentbord används."
                          : "Transkribera först, så att pauser när du pratar inte räknas som dödtid.")
                 .font(.caption).foregroundStyle(.secondary)

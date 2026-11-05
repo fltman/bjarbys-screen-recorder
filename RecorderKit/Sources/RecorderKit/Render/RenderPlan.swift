@@ -477,7 +477,10 @@ public final class RenderPlan: @unchecked Sendable {
 
         // Undertexten: fast i bildytan, nere i mitten.
         if showsCaptions, let captions, let cue = captions.cue(at: t) {
-            let image = captionImages.image(for: cue.text) { Self.makeCaption(cue.text, canvas: canvas, size: project.captions.size) }
+            let lit = project.captions.highlightWord ? cue.word(at: t) : nil
+            let image = captionImages.image(for: cue.text + (lit.map { "|w\($0)" } ?? "")) {
+                Self.makeCaption(cue.text, canvas: canvas, size: project.captions.size, highlight: lit)
+            }
             let e = image.extent
             let margin = (min(canvas.width, canvas.height) * 0.05).rounded()
             out = image.transformed(by: CGAffineTransform(translationX: ((canvas.width - e.width) / 2).rounded() - e.minX,
@@ -1109,13 +1112,30 @@ public final class RenderPlan: @unchecked Sendable {
         captionFontSize(canvas: canvas, size: size) * 2.9
     }
 
+    /// Ordmarkeringens färg (gul, som i sociala medier).
+    static let captionHighlight = CGColor(red: 1, green: 0.84, blue: 0.04, alpha: 1)
+
     /// En undertext: vit text på en mörk, rundad platta, en eller två rader, centrerade.
-    static func makeCaption(_ text: String, canvas: CGSize, size: Double) -> CIImage {
+    /// `highlight`: ordet (index bland alla ord i texten) som ritas gult.
+    static func makeCaption(_ text: String, canvas: CGSize, size: Double, highlight: Int? = nil) -> CIImage {
         let fontSize = captionFontSize(canvas: canvas, size: size)
         let font = NSFont.systemFont(ofSize: fontSize, weight: .semibold)
-        let lines = text.split(separator: "\n").map { line in
-            CTLineCreateWithAttributedString(NSAttributedString(string: String(line), attributes: [
-                .font: font, .foregroundColor: CGColor(red: 1, green: 1, blue: 1, alpha: 1)]))
+        var wordIndex = 0
+        let lines = text.split(separator: "\n").map { line -> CTLine in
+            let attributed = NSMutableAttributedString(string: String(line), attributes: [
+                .font: font, .foregroundColor: CGColor(red: 1, green: 1, blue: 1, alpha: 1)])
+            // Orden på raden, i ordning; det markerade får egen färg.
+            let ns = String(line) as NSString
+            var location = 0
+            for word in String(line).split(separator: " ", omittingEmptySubsequences: true) {
+                let r = ns.range(of: String(word), range: NSRange(location: location, length: ns.length - location))
+                if r.location != NSNotFound {
+                    if wordIndex == highlight { attributed.addAttribute(.foregroundColor, value: captionHighlight, range: r) }
+                    location = r.location + r.length
+                }
+                wordIndex += 1
+            }
+            return CTLineCreateWithAttributedString(attributed)
         }
         guard !lines.isEmpty else { return CIImage.empty() }
         let widths = lines.map { CTLineGetBoundsWithOptions($0, .useOpticalBounds).width }

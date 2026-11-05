@@ -230,3 +230,17 @@ import Foundation
         #expect(abs(stereo - mono - 3.01) < 0.02)
     }
 }
+
+@Suite struct CaptionHighlightTests {
+    @Test func wordAtTimeFollowsTheWords() throws {
+        let words = ["Det", "här", "är", "ett", "prov."].enumerated().map { i, w in
+            Transcript.Word(start: Double(i) * 0.5, end: Double(i) * 0.5 + 0.4, text: w, startsSegment: i == 0)
+        }
+        let captions = Captions(words: words, timeMap: TimeMap(segments: [.init(start: 0, end: 10)]))
+        let cue = try #require(captions.cues.first)
+        #expect(cue.wordStarts.count == 5)
+        #expect(cue.word(at: 0.1) == 0 && cue.word(at: 1.2) == 2 && cue.word(at: 2.3) == 4)
+        let style = try BundleJSON.decoder.decode(EditProject.CaptionStyle.self, from: Data("{}".utf8))
+        #expect(!style.highlightWord)
+    }
+}

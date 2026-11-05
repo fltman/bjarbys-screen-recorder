@@ -8,6 +8,13 @@ public struct Captions: Equatable, Sendable {
         public var end: Double
         /// En eller två rader, åtskilda av "\n".
         public var text: String
+        /// När varje ord börjar (utdatatid), i samma ordning som orden i `text`.
+        public var wordStarts: [Double] = []
+
+        /// Ordet som sägs vid `t` (index bland orden i `text`), eller nil före första.
+        public func word(at t: Double) -> Int? {
+            wordStarts.lastIndex { $0 <= t }
+        }
     }
 
     /// Högst så många tecken per rad (gängse för undertexter), och högst två rader.
@@ -55,7 +62,7 @@ public struct Captions: Equatable, Sendable {
             let start = g.first!.start
             var end = max(g.last!.end + Self.linger, start + Self.minimumDuration)
             if i + 1 < groups.count { end = min(end, groups[i + 1].first!.start) }
-            cues.append(Cue(start: start, end: max(end, start + 0.1), text: Self.wrap(g.map(\.text))))
+            cues.append(Cue(start: start, end: max(end, start + 0.1), text: Self.wrap(g.map(\.text)), wordStarts: g.map(\.start)))
         }
         self.cues = cues
     }

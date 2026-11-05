@@ -69,6 +69,9 @@ tagning, sedan redigerbar polish, sedan resten.
 
 - Kortkommandon i filmen (2026-11-05): bubbla nere eller uppe i mitten, räknar upp
   upprepningar ("⌘Z ×3"), visas i utdatatid så att 4×-delar inte blinkar förbi.
+- Snabba upp pauser och ordmarkering (2026-11-05): dödtiden kan spelas i 4× i stället för att
+  klippas (nya snitt utan övergång; MCP `speed_up_dead_time`). Undertexterna kan markera ordet
+  som sägs i gult (ordens starttider per ruta; MCP `caption_highlight`).
 - Animerade lager (2026-11-05): In — tona, glid upp, poppa (växer med en liten studs) eller
   skrivmaskin (text och rubrik, 35 ms per tecken, 0,4–1,5 s; kortet har full storlek från början
   eftersom resten ritas genomskinligt). MCP: `animation` i `set_overlays`.

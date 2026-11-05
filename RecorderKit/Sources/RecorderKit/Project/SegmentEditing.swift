@@ -55,6 +55,28 @@ extension EditProject {
         segments = sorted
     }
 
+    /// Spelar källintervallet `range` i farten `speed` i stället för att klippa bort det: delarna
+    /// delas i kanterna, och de nya snitten får ingen övergång (det ska se ut som ett svep).
+    public mutating func setSpeed(_ speed: Double, in range: ClosedRange<Double>) {
+        let a = range.lowerBound, b = range.upperBound
+        guard b - a > Self.epsilon else { return }
+        var out: [ClipSegment] = []
+        for s in segments {
+            guard s.end > a, s.start < b else { out.append(s); continue }
+            if a - s.start > Self.epsilon {
+                var left = s; left.end = a; out.append(left)
+            }
+            var mid = s
+            mid.start = max(s.start, a); mid.end = min(s.end, b); mid.speed = speed
+            if a - s.start > Self.epsilon { mid.id = UUID(); mid.transitionIn = Transition(kind: .none) }
+            out.append(mid)
+            if s.end - b > Self.epsilon {
+                var right = s; right.id = UUID(); right.start = b; right.transitionIn = Transition(kind: .none); out.append(right)
+            }
+        }
+        segments = out
+    }
+
     /// Är källtiden `t` med i filmen?
     public func isKept(_ t: Double) -> Bool {
         segments.contains { t >= $0.start && t < $0.end }
