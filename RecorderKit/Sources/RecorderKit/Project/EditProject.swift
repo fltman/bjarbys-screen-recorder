@@ -490,9 +490,17 @@ public struct EditProject: Codable, Equatable, Sendable {
         public var size: Double
         /// Ordet som sägs lyser (som i sociala medier).
         public var highlightWord: Bool
+        /// Var i bilden: nere (standard), mitt i (stående filmer) eller uppe.
+        public enum Position: String, Codable, Sendable, CaseIterable { case bottom, middle, top }
+        public var position: Position
+        /// Vit text på en mörk platta, eller fet text med svart kontur utan platta.
+        public enum Look: String, Codable, Sendable, CaseIterable { case box, outline }
+        public var look: Look
 
-        public init(visible: Bool = true, size: Double = 1, highlightWord: Bool = false) {
+        public init(visible: Bool = true, size: Double = 1, highlightWord: Bool = false,
+                    position: Position = .bottom, look: Look = .box) {
             self.visible = visible; self.size = size; self.highlightWord = highlightWord
+            self.position = position; self.look = look
         }
 
         public init(from decoder: Decoder) throws {
@@ -501,6 +509,8 @@ public struct EditProject: Codable, Equatable, Sendable {
             visible = c.value(.visible, d.visible)
             size = c.value(.size, d.size)
             highlightWord = c.value(.highlightWord, d.highlightWord)
+            position = c.value(.position, d.position)
+            look = c.value(.look, d.look)
         }
     }
 

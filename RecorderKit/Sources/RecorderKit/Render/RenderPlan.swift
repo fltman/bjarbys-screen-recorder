@@ -518,16 +518,22 @@ public final class RenderPlan: @unchecked Sendable {
             out = Self.withAlpha(placed, banner.opacity).composited(over: out)
         }
 
-        // Undertexten: fast i bildytan, nere i mitten.
+        // Undertexten: fast i bildytan, centrerad — nere, mitt i (något under mitten) eller uppe.
         if showsCaptions, let captions, let cue = captions.cue(at: t) {
             let lit = project.captions.highlightWord ? cue.word(at: t) : nil
-            let image = captionImages.image(for: cue.text + (lit.map { "|w\($0)" } ?? "")) {
-                Self.makeCaption(cue.text, canvas: canvas, size: project.captions.size, highlight: lit)
+            let look = project.captions.look
+            let image = captionImages.image(for: cue.text + (lit.map { "|w\($0)" } ?? "") + "|\(look.rawValue)") {
+                Self.makeCaption(cue.text, canvas: canvas, size: project.captions.size, highlight: lit, look: look)
             }
             let e = image.extent
             let margin = (min(canvas.width, canvas.height) * 0.05).rounded()
+            let y: CGFloat = switch project.captions.position {
+            case .bottom: margin
+            case .middle: (canvas.height * 0.36 - e.height / 2).rounded()
+            case .top: canvas.height - margin - e.height
+            }
             out = image.transformed(by: CGAffineTransform(translationX: ((canvas.width - e.width) / 2).rounded() - e.minX,
-                                                          y: margin - e.minY)).composited(over: out)
+                                                          y: y - e.minY)).composited(over: out)
         }
 
         // Kortkommandot ligger fast i bildytan, ovanpå allt, och glider upp när det dyker upp.
@@ -535,8 +541,11 @@ public final class RenderPlan: @unchecked Sendable {
            shown.opacity > 0.01 {
             let e = pill.extent
             var margin = (min(canvas.width, canvas.height) * 0.055).rounded()
-            // Med undertexter nere ligger kortkommandot ovanför dem.
-            if showsCaptions && project.shortcuts.position == .bottom { margin += Self.captionReserve(canvas: canvas, size: project.captions.size) }
+            // Med undertexter på samma kant ligger kortkommandot innanför dem.
+            let captionsBottom = project.captions.position == .bottom, captionsTop = project.captions.position == .top
+            if showsCaptions && ((project.shortcuts.position == .bottom && captionsBottom) || (project.shortcuts.position == .top && captionsTop)) {
+                margin += Self.captionReserve(canvas: canvas, size: project.captions.size, look: project.captions.look)
+            }
             let rise = (1 - shown.entrance) * e.height * 0.3
             let y = project.shortcuts.position == .bottom ? margin - rise : canvas.height - margin - e.height + rise
             let placed = pill.transformed(by: CGAffineTransform(translationX: ((canvas.width - e.width) / 2).rounded() - e.minX,
@@ -871,7 +880,8 @@ public final class RenderPlan: @unchecked Sendable {
         let bottom = o.corner == .bottomLeft || o.corner == .bottomRight
         var y = bottom ? m : canvas.height - m - e.height
         // Inte under undertexterna, och inte över kamerabubblan i samma hörn.
-        if bottom && showsCaptions { y += Self.captionReserve(canvas: canvas, size: project.captions.size) }
+        if showsCaptions && bottom && project.captions.position == .bottom { y += Self.captionReserve(canvas: canvas, size: project.captions.size, look: project.captions.look) }
+        if showsCaptions && !bottom && project.captions.position == .top { y -= Self.captionReserve(canvas: canvas, size: project.captions.size, look: project.captions.look) }
         if cameraMask != nil && project.camera.visible && Self.sameCorner(o.corner, project.camera.corner) {
             y += bottom ? cameraRect.height + m * 0.5 : -(cameraRect.height + m * 0.5)
         }
@@ -1277,8 +1287,8 @@ public final class RenderPlan: @unchecked Sendable {
     }
 
     /// Höjden två rader undertext tar, för att lägga annat ovanför.
-    static func captionReserve(canvas: CGSize, size: Double) -> CGFloat {
-        captionFontSize(canvas: canvas, size: size) * 2.9
+    static func captionReserve(canvas: CGSize, size: Double, look: EditProject.CaptionStyle.Look = .box) -> CGFloat {
+        captionFontSize(canvas: canvas, size: size) * (look == .outline ? 3.4 : 2.9)
     }
 
     /// Ordmarkeringens färg (gul, som i sociala medier).
@@ -1286,13 +1296,16 @@ public final class RenderPlan: @unchecked Sendable {
 
     /// En undertext: vit text på en mörk, rundad platta, en eller två rader, centrerade.
     /// `highlight`: ordet (index bland alla ord i texten) som ritas gult.
-    static func makeCaption(_ text: String, canvas: CGSize, size: Double, highlight: Int? = nil) -> CIImage {
-        let fontSize = captionFontSize(canvas: canvas, size: size)
-        let font = NSFont.systemFont(ofSize: fontSize, weight: .semibold)
+    static func makeCaption(_ text: String, canvas: CGSize, size: Double, highlight: Int? = nil,
+                            look: EditProject.CaptionStyle.Look = .box) -> CIImage {
+        let outline = look == .outline
+        // Utan platta: lite större och fetare, så att konturen bär texten.
+        let fontSize = (captionFontSize(canvas: canvas, size: size) * (outline ? 1.15 : 1)).rounded()
+        let font = NSFont.systemFont(ofSize: fontSize, weight: outline ? .heavy : .semibold)
         var wordIndex = 0
         let lines = text.split(separator: "\n").map { line -> CTLine in
-            let attributed = NSMutableAttributedString(string: String(line), attributes: [
-                .font: font, .foregroundColor: CGColor(red: 1, green: 1, blue: 1, alpha: 1)])
+            let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: CGColor(red: 1, green: 1, blue: 1, alpha: 1)]
+            let attributed = NSMutableAttributedString(string: String(line), attributes: attributes)
             // Orden på raden, i ordning; det markerade får egen färg.
             let ns = String(line) as NSString
             var location = 0
@@ -1307,26 +1320,47 @@ public final class RenderPlan: @unchecked Sendable {
             return CTLineCreateWithAttributedString(attributed)
         }
         guard !lines.isEmpty else { return CIImage.empty() }
+        // Konturen ritas för sig, under fyllningen: SF har överlappande konturer i glyferna, och
+        // fyllning + kontur i ett pass gav synliga inre streck (i en "2:a").
+        let strokeLines: [CTLine] = outline ? text.split(separator: "\n").map { line in
+            CTLineCreateWithAttributedString(NSAttributedString(string: String(line), attributes: [
+                .font: font, .strokeColor: CGColor(red: 0, green: 0, blue: 0, alpha: 1), .strokeWidth: 18]))
+        } : []
         let widths = lines.map { CTLineGetBoundsWithOptions($0, .useOpticalBounds).width }
         let lineHeight = (fontSize * 1.28).rounded()
-        let padX = (fontSize * 0.6).rounded(), padY = (fontSize * 0.38).rounded()
+        let padX = (fontSize * (outline ? 0.3 : 0.6)).rounded(), padY = (fontSize * (outline ? 0.12 : 0.38)).rounded()
         let width = (min(widths.max() ?? 0, canvas.width * 0.9) + padX * 2).rounded(.up)
         let height = lineHeight * CGFloat(lines.count) + padY * 2
         guard let ctx = CGContext(data: nil, width: Int(width), height: Int(height), bitsPerComponent: 8, bytesPerRow: 0,
                                   space: CGColorSpace(name: CGColorSpace.sRGB)!,
                                   bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return CIImage.empty() }
-        let radius = fontSize * 0.35
-        ctx.addPath(CGPath(roundedRect: CGRect(x: 0, y: 0, width: width, height: height),
-                           cornerWidth: radius, cornerHeight: radius, transform: nil))
-        ctx.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: 0.62))
-        ctx.fillPath()
+        if outline {
+            // En mjuk skugga i stället för plattan, så att texten syns på ljus bakgrund. Texten ritas
+            // i ett genomskinlighetslager: annars kastar konturen skugga över fyllningen (grå text).
+            ctx.setShadow(offset: CGSize(width: 0, height: -fontSize * 0.05), blur: fontSize * 0.25,
+                          color: CGColor(red: 0, green: 0, blue: 0, alpha: 0.6))
+            ctx.beginTransparencyLayer(auxiliaryInfo: nil)
+            // Rundade fogar: en spetsig fog stack ut som en tagg ur överlappande konturer.
+            ctx.setLineJoin(.round)
+        } else {
+            let radius = fontSize * 0.35
+            ctx.addPath(CGPath(roundedRect: CGRect(x: 0, y: 0, width: width, height: height),
+                               cornerWidth: radius, cornerHeight: radius, transform: nil))
+            ctx.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: 0.62))
+            ctx.fillPath()
+        }
         let descent = -font.descender
         for (i, line) in lines.enumerated() {
             // Första raden överst.
             let baseline = height - padY - lineHeight * CGFloat(i + 1) + (lineHeight - fontSize) / 2 + descent
             ctx.textPosition = CGPoint(x: ((width - widths[i]) / 2).rounded(), y: baseline.rounded())
+            if i < strokeLines.count {
+                CTLineDraw(strokeLines[i], ctx)
+                ctx.textPosition = CGPoint(x: ((width - widths[i]) / 2).rounded(), y: baseline.rounded())
+            }
             CTLineDraw(line, ctx)
         }
+        if outline { ctx.endTransparencyLayer() }
         guard let img = ctx.makeImage() else { return CIImage.empty() }
         let ci = CIImage(cgImage: img)
         return prerender(ci, extent: ci.extent)

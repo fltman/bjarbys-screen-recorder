@@ -476,6 +476,21 @@ struct InspectorView: View {
                 Toggle("Markera ordet som sägs", isOn: binding(\.captions.highlightWord))
                     .disabled(!model.project.captions.visible)
                     .help("Ordet som sägs just nu lyser gult, som i undertexter på sociala medier.")
+                Group {
+                    Picker("Placering", selection: binding(\.captions.position)) {
+                        Text("Nere").tag(EditProject.CaptionStyle.Position.bottom)
+                        Text("Mitt i").tag(EditProject.CaptionStyle.Position.middle)
+                        Text("Uppe").tag(EditProject.CaptionStyle.Position.top)
+                    }
+                    .pickerStyle(.segmented)
+                    Picker("Utseende", selection: binding(\.captions.look)) {
+                        Text("Platta").tag(EditProject.CaptionStyle.Look.box)
+                        Text("Kontur").tag(EditProject.CaptionStyle.Look.outline)
+                    }
+                    .pickerStyle(.segmented)
+                    .help("Vit text på en mörk platta, eller fet text med svart kontur som i sociala medier.")
+                }
+                .disabled(!model.project.captions.visible)
                 if model.recording.hasComputerAudio && model.recording.hasMicrophone {
                     Toggle("Sänk datorljudet när du pratar", isOn: binding(\.audio.duckSystem))
                 }

@@ -86,7 +86,7 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 | `chrome` | fönsterram: `kind` (`none`, `mac`, `browser`), `dark`, `title` (macOS-fönstrets titel), `address` (webbläsarens adressfält) |
 | `showsInk`, `inkHold` | visa pennans streck, och hur länge ett färdigt streck ligger kvar (s, standard 3) innan det tonas bort på 0,4 s |
 | `shortcuts` | `visible`, `position` (`bottom`, `top`), `size` |
-| `captions` | `visible`, `size`, `highlightWord` (ordet som sägs lyser) — undertexter ur `transcript.json` |
+| `captions` | `visible`, `size`, `highlightWord` (ordet som sägs lyser), `position` (`bottom`, `middle`, `top`), `look` (`box` = platta, `outline` = kontur) — undertexter ur `transcript.json` |
 | `masks[]` | `start`, `end`, `keyframes[]` (`t`, `rect` normaliserat), `style` (`blur`, `pixelate`, `solid`), `kind`, `hint` (aldrig själva texten), `enabled` |
 | `camera` | `visible`, `shape`, `size`, `corner`, `mirror`, `backdrop`, `followFace` (utsnittet följer ansiktet) |
 | `transition`, `fadeInOut` | standardövergång i snitten (`kind`: `none`, `dip`, `blur`, `flash`, `crossfade`; `duration`) och toning i början/slutet |

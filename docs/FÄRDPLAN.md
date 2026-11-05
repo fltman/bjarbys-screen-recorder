@@ -84,6 +84,10 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Undertextstil (2026-11-05): Tal › Placering (nere, mitt i — 36 % upp, för stående filmer —
+  eller uppe) och Utseende (platta, eller fet text med svart kontur och mjuk skugga). Det som
+  annars lägger sig ovanför undertexterna (kortkommandon, faktarutor) gör det bara på samma kant.
+  MCP: `caption_position`, `caption_style`.
 - Markeringar (2026-11-05): ⌃⌥⌘M, HUD:ens flagga (med räknare) eller menyn sätter en `marker`
   under inspelningen (inte under paus; inget ljud, mikrofonen hade tagit upp det). I redigeraren:
   orange flaggor i tidslinjen, och Lager › Markeringar — hoppa dit, Gör till kapitel ("Markering

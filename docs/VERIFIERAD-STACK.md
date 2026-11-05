@@ -306,6 +306,15 @@ växer fram. ⚠️ Först förstorades den råa skärmbilden — en mask hade s
 den maskade (provat med ifylld och pixlad mask: ingen läsbar text i luppen). ⚠️ En svart ruta
 som bakgrund i `CIBlendWithMask` gav svarta hörn runt cirkeln; bakgrunden ska vara `.empty()`.
 
+## Konturtext (2026-11-05)
+
+- Text med kontur i Core Text (`.strokeWidth`) + `CGContext.setShadow`: skuggan läggs för varje
+  ritsteg, så konturens skugga mörkade fyllningen (grå text i stället för vit). Ritat i ett
+  genomskinlighetslager blev fyllningen vit.
+- Fyllning och kontur i ett pass (negativ bredd) gav ett svart streck inne i "2" — SF har
+  överlappande konturer i glyferna. Två pass (kontur, sedan fyllning ovanpå) och rundade fogar
+  (`setLineJoin(.round)`, annars en tagg ur fogen) gav ren text.
+
 ## Kapitel i filen (2026-11-05)
 
 - Ett metadataspår (`AVTimedMetadataGroup`, `mebx`) med `chapterList`-koppling gav rätt tider men

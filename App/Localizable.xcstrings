@@ -3639,6 +3639,23 @@
         }
       }
     },
+    "Kontur": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outline"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontur"
+          }
+        }
+      }
+    },
     "Kopiera kapitel": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4353,6 +4370,23 @@
         }
       }
     },
+    "Mitt i": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Middle"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mitt i"
+          }
+        }
+      }
+    },
     "Mitt, höjdled": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4978,6 +5012,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Placering"
+          }
+        }
+      }
+    },
+    "Platta": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Box"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Platta"
           }
         }
       }
@@ -7494,6 +7545,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vit"
+          }
+        }
+      }
+    },
+    "Vit text på en mörk platta, eller fet text med svart kontur som i sociala medier.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "White text on a dark box, or bold text with a black outline as on social media."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vit text på en mörk platta, eller fet text med svart kontur som i sociala medier."
           }
         }
       }

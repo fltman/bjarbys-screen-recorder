@@ -89,8 +89,9 @@ is included; to have the app follow your system language instead, run
 **Speech** (with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), locally)
 - Transcribe the recording and edit the video by striking out words in the text. Cut words
   stay visible, struck through, and can be restored.
-- Captions burned into the video, optionally with the spoken word highlighted, and an `.srt`
-  file next to the export.
+- Captions burned into the video — at the bottom, in the middle (for vertical Reels) or at the
+  top, on a dark box or as bold outlined text — optionally with the spoken word highlighted, and
+  an `.srt` file next to the export.
 - Cut dead time, where nobody speaks and neither mouse nor keyboard moves, with one button — or
   play it at 4× so you still see what happened.
 - Lower the computer audio while you speak, level the microphone to −16 LUFS (EBU R128), and

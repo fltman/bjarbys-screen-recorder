@@ -163,6 +163,8 @@ enum MCPServer {
                 "cursor_scale": ["type": "number", "minimum": 0.8, "maximum": 3],
                 "captions": ["type": "boolean", "description": "Burn in captions (needs a transcript)."],
                 "caption_highlight": ["type": "boolean", "description": "Highlight the word being said in the burned-in captions."],
+                "caption_position": ["type": "string", "enum": ["bottom", "middle", "top"], "description": "Where captions sit (middle suits vertical Reels)."],
+                "caption_style": ["type": "string", "enum": ["box", "outline"], "description": "White text on a dark box, or bold text with a black outline and no box."],
                 "shortcuts": ["type": "boolean", "description": "Show recorded keyboard shortcuts."],
                 "cut": ["type": "array", "items": ["type": "array", "items": ["type": "number"], "minItems": 2, "maxItems": 2],
                         "description": "Ranges [start, end] in seconds to cut out."],
@@ -504,6 +506,8 @@ enum MCPServer {
         if let v = a["padding"] as? Double { p.padding = min(0.25, max(0, v)) }
         if let v = a["cursor_scale"] as? Double { p.cursor.scale = min(3, max(0.8, v)) }
         if let v = a["caption_highlight"] as? Bool { p.captions.highlightWord = v }
+        if let v = (a["caption_position"] as? String).flatMap(EditProject.CaptionStyle.Position.init(rawValue:)) { p.captions.position = v }
+        if let v = (a["caption_style"] as? String).flatMap(EditProject.CaptionStyle.Look.init(rawValue:)) { p.captions.look = v }
         if let v = a["captions"] as? Bool {
             p.captions.visible = v
             if v && rec.transcript == nil { notes.append("Captions need a transcript: run transcribe first.") }
