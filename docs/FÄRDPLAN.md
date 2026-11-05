@@ -84,6 +84,12 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Rensa mikrofonen under inspelningen (2026-11-05): Inspelning › Rensa mikrofonen under
+  inspelningen (MCP `clean_microphone`). AVAudioEngine med röstbehandling (eko mot det som spelas,
+  brus; nivåreglering av, andra appar tonas inte ned) blir mikrofonspåret, startad före
+  skärmströmmen. Rådatan sparas inte: med röstbehandlingen igång fick ScreenCaptureKits mikrofon
+  inte den obehandlade signalen (uppmätt). ⚠️ Ekoreduceringen och synken mot bilden är inte
+  mätta (kräver högtalare; `sync-check.sh` med valet på).
 - Bara kamera och iPhone/iPad (2026-11-05): Spela in kamera eller iPhone (menyraden, "Enhet" i
   biblioteket). `DeviceSession` spelar in en AVCaptureDevice som skärmspår (`source.kind` =
   `device`), enhetens eget ljud som datorljud och mikrofonen i en egen session; tiderna räknas om

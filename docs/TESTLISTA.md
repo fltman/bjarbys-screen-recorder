@@ -23,6 +23,11 @@ Bygg först: `./scripts/build.sh`, öppna `dist/Bjarbys skärminspelare.app`.
   Accessibility är bara provad med påhittade händelser — olika appar svarar olika (Safari, Pages,
   Terminal, VS Code). Inga tecken sparas, bara när och var: titta gärna i `events.jsonl`.
 
+- [ ] **Rensa mikrofonen** — Inspelning › Rensa mikrofonen under inspelningen, spela in med
+  högtalare (inte hörlurar) medan något låter: ekot ska vara borta. ⚠️ Kör också
+  `./scripts/sync-check.sh` med valet på (röstbehandlingens fördröjning är inte mätt).
+- [ ] **Kamera / iPhone** — Spela in kamera eller iPhone. ⚠️ En iPhone via kabel är inte provad.
+
 ## Redigeraren
 
 - [ ] **Ansiktet i mitten** — en inspelning med kamera där du sitter lite åt sidan: Stil › Kamera

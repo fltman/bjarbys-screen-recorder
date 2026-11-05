@@ -1684,6 +1684,23 @@
         }
       }
     },
+    "Eko från högtalarna och brus tas bort direkt (Apples röstbehandling, som i FaceTime) — bra med högtalare i stället för hörlurar. Den orensade mikrofonen sparas då inte (macOS ger den inte samtidigt).": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaker echo and noise are removed live (Apple's voice processing, as in FaceTime) — good with speakers instead of headphones. The unprocessed microphone is then not kept (macOS doesn't deliver both at once)."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eko från högtalarna och brus tas bort direkt (Apples röstbehandling, som i FaceTime) — bra med högtalare i stället för hörlurar. Den orensade mikrofonen sparas då inte (macOS ger den inte samtidigt)."
+          }
+        }
+      }
+    },
     "En bild per klick och kortkommando, med det du sa som text. Markdown och HTML.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -5471,6 +5488,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Region"
+          }
+        }
+      }
+    },
+    "Rensa mikrofonen under inspelningen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clean Microphone While Recording"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rensa mikrofonen under inspelningen"
           }
         }
       }

@@ -143,6 +143,11 @@ public struct CaptureOptions: Sendable {
     /// skrivbordswidgets, hålls utanför inspelningen. Skärmen och systemet ändras inte.
     public var hideDesktopIcons: Bool = false
     public var hideNotifications: Bool = false
+    /// Eko- och brusreducering under inspelningen (Apples röstbehandling): den behandlade
+    /// signalen blir mikrofonspåret, rådatan sparas inte (se `LiveVoiceProcessing`).
+    public var liveVoiceProcessing: Bool = false
+    /// Mikrofonen tas från ScreenCaptureKit (inte från röstbehandlingen).
+    var microphoneFromStream: Bool { microphone != nil && !liveVoiceProcessing }
 
     public init(fps: Int = 60, systemAudio: Bool = true, microphone: Devices.Device? = nil,
                 camera: Devices.Device? = nil, keystrokes: Bool = false, apps: [AudioSourceChoice] = []) {

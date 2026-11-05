@@ -67,6 +67,8 @@ struct MenuBarContent: View {
                 Divider()
                 Toggle("Dölj skrivbordssymboler", isOn: $settings.hideDesktopIcons)
                 Toggle("Dölj notiser och widgets", isOn: $settings.hideNotifications)
+                Toggle("Rensa mikrofonen under inspelningen", isOn: $settings.liveVoiceProcessing)
+                    .help("Eko från högtalarna och brus tas bort direkt (Apples röstbehandling, som i FaceTime) — bra med högtalare i stället för hörlurar. Den orensade mikrofonen sparas då inte (macOS ger den inte samtidigt).")
                 Picker("Bildfrekvens", selection: $settings.fps) {
                     Text("30 bilder/s").tag(30)
                     Text("60 bilder/s").tag(60)

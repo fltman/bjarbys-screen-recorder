@@ -306,6 +306,15 @@ växer fram. ⚠️ Först förstorades den råa skärmbilden — en mask hade s
 den maskade (provat med ifylld och pixlad mask: ingen läsbar text i luppen). ⚠️ En svart ruta
 som bakgrund i `CIBlendWithMask` gav svarta hörn runt cirkeln; bakgrunden ska vara `.empty()`.
 
+## Röstbehandling under inspelningen (2026-11-05)
+
+- Med `setVoiceProcessingEnabled(true)` på mikrofonen sjönk ScreenCaptureKits samtidiga
+  mikrofonspår från −51,6 till −78,4 dBFS (samma tysta rum): andra klienter får inte den
+  obehandlade signalen. Den behandlade blir därför själva mikrofonspåret.
+- Med automatisk nivåreglering på låg den behandlade på −45 dBFS i tystnad (brusgolvet lyftes);
+  av: −69 dBFS. Röstbehandlingen tog ~0,7 s att starta — startad efter strömmen började
+  mikrofonen 0,74 s in, startad före 0,04 s in.
+
 ## MKV (2026-11-05)
 
 - Egen Matroska-skrivare, omkodning bara av behållaren: 6 s 1080p60 → 360 rutor, ffmpeg avkodar

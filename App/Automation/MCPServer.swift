@@ -131,7 +131,8 @@ enum MCPServer {
                                     "apps": appsArg,
                                     "hdr": ["type": "boolean", "description": "Record in HDR (10-bit BT.2020 PQ; export with preset mp4-4k-hdr for HLG)."],
                                     "hide_desktop_icons": ["type": "boolean", "description": "Keep desktop icons out of the recording."],
-                                    "hide_notifications": ["type": "boolean", "description": "Keep notifications and desktop widgets out of the recording."]],
+                                    "hide_notifications": ["type": "boolean", "description": "Keep notifications and desktop widgets out of the recording."],
+                                    "clean_microphone": ["type": "boolean", "description": "Remove speaker echo and noise from the microphone while recording (Apple voice processing, good with speakers instead of headphones). The unprocessed microphone is then not kept (macOS doesn't deliver both at once)."]],
                                    required: ["seconds"])],
             ["name": "start_recording", "description": "Start recording the main display. Stop with stop_recording.",
              "inputSchema": schema(["microphone": ["type": "boolean"], "system_audio": ["type": "boolean"], "keystrokes": ["type": "boolean"],
@@ -406,6 +407,7 @@ enum MCPServer {
         options.hdr = a["hdr"] as? Bool ?? false
         options.hideDesktopIcons = a["hide_desktop_icons"] as? Bool ?? false
         options.hideNotifications = a["hide_notifications"] as? Bool ?? false
+        options.liveVoiceProcessing = a["clean_microphone"] as? Bool ?? false
         let running = AudioProcesses.apps()
         options.apps = (a["apps"] as? [String] ?? []).map { id in
             AudioSourceChoice(bundleID: id, name: running.first { $0.bundleID == id }?.name ?? id)

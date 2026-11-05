@@ -102,6 +102,8 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
     private let audioQueue = DispatchQueue(label: "skarminspelare.audio", qos: .userInteractive)
     private let micQueue = DispatchQueue(label: "skarminspelare.mic", qos: .userInteractive)
     private var statusTimer: Timer?
+    /// Eko- och brusreduceringen under inspelningen, när den är vald.
+    private var liveVoice: LiveVoiceProcessing?
     private var lastDiskCheck = Date.distantPast
     private var freeBytes: Int64?
     private var restartAttempts = 0
@@ -150,7 +152,20 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         }
         if let mic = options.microphone {
             writers[.microphone] = try TrackWriter(kind: .microphone, url: bundle.trackURL(.microphone), settings: .audio)
-            meta.tracks.append(.init(kind: .microphone, file: RecordingBundle.fileName(for: .microphone), deviceName: mic.name))
+            meta.tracks.append(.init(kind: .microphone, file: RecordingBundle.fileName(for: .microphone),
+                                     deviceName: options.liveVoiceProcessing ? String(localized: "\(mic.name) (rensad)") : mic.name))
+        }
+        // Röstbehandlingen tar ~0,7 s att starta (uppmätt): före strömmen, så att mikrofonen finns
+        // från början. Buffertar före tidslinjens nollpunkt kastas av klockan.
+        if options.liveVoiceProcessing, let mic = options.microphone {
+            let live = LiveVoiceProcessing(deviceUID: mic.id == "standard" ? nil : mic.id)
+            live.onBuffer = { [weak self] buffer, host in
+                guard let self else { return }
+                self.micMeter.process(buffer, host: host)
+                guard let t = self.clock.map(host) else { return }
+                self.writers[.microphone]?.append(buffer, at: t)
+            }
+            do { try live.start(); liveVoice = live } catch { notice = String(localized: "Eko- och brusreduceringen startade inte: \(error.localizedDescription)") }
         }
         if let cam = options.camera {
             do {
@@ -219,7 +234,7 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         c.sampleRate = 48_000
         c.channelCount = 2
         c.excludesCurrentProcessAudio = true
-        if let mic = options.microphone {
+        if let mic = options.microphone, options.microphoneFromStream {
             c.captureMicrophone = true
             c.microphoneCaptureDeviceID = mic.id
         }
@@ -233,7 +248,7 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         if options.systemAudioFromStream {
             try stream.addStreamOutput(self, type: .audio, sampleHandlerQueue: audioQueue)
         }
-        if options.microphone != nil {
+        if options.microphoneFromStream {
             try stream.addStreamOutput(self, type: .microphone, sampleHandlerQueue: micQueue)
         }
         return stream
@@ -327,6 +342,8 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         stream = nil
         camera?.stop()
         for tap in taps { tap.stop() }
+        liveVoice?.stop()
+        liveVoice = nil
         taps = []
 
         // Sista rutan vid sluttiden, och töm köerna innan filerna stängs.

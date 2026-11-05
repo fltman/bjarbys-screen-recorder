@@ -101,6 +101,8 @@ is included; to have the app follow your system language instead, run
   an `.srt` file next to the export.
 - Cut dead time, where nobody speaks and neither mouse nor keyboard moves, with one button — or
   play it at 4× so you still see what happened.
+- Clean the microphone while recording (Apple's voice processing, as in FaceTime): speaker echo
+  and noise are removed live — for recording with speakers instead of headphones.
 - Lower the computer audio while you speak, level the microphone to −16 LUFS (EBU R128), and
   remove background noise with Apple's voice isolation.
 

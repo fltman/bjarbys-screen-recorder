@@ -21,7 +21,8 @@ open Skarminspelare.xcodeproj
 - Signeras med *Developer ID Application: Brattoo AB (V783A2L763)*. Stabil signatur = TCC-
   behörigheterna (skärminspelning, mik, kamera) överlever ombyggen.
 - Provlägen i appbinären (`dist/Bjarbys skärminspelare.app/Contents/MacOS/Skarminspelare …`):
-  - `--prov-inspelning <s> [--mik] [--kamera] [--katalog <mapp>]` — spelar in huvudskärmen
+  - `--prov-inspelning <s> [--mik] [--rensa] [--kamera] [--katalog <mapp>]` — spelar in huvudskärmen
+    (`--rensa` = eko- och brusreducering under inspelningen)
   - `--prov-aterstall <mapp>` — räddar avbrutna paket
   - `--prov-rendera <paket> <t1,t2,…> <mapp>` — färdiga rutor som PNG (läs dem som bild!)
   - `--prov-exportera <paket> mp4-1080|mp4-4k|mp4-av1|mkv-1080|fcpxml|prores|gif|ljud-m4a|ljud-wav|ljud-spar <fil> [--utsnitt a,b] [--fps n] [--ljudniva -14] [--kvalitet small|normal|high]`

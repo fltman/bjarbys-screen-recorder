@@ -16,6 +16,7 @@ final class AppSettings: ObservableObject {
     /// Städad inspelning: skrivbordssymboler och notiser hålls utanför (skärm och område).
     @AppStorage("hideDesktopIcons") var hideDesktopIcons: Bool = false
     @AppStorage("hideNotifications") var hideNotifications: Bool = false
+    @AppStorage("liveVoiceProcessing") var liveVoiceProcessing: Bool = false
     static var hdrAvailable: Bool {
         NSScreen.screens.contains { $0.maximumPotentialExtendedDynamicRangeColorComponentValue > 1 }
     }
@@ -110,6 +111,7 @@ final class AppSettings: ObservableObject {
         o.hdr = hdr && Self.hdrAvailable
         o.hideDesktopIcons = hideDesktopIcons
         o.hideNotifications = hideNotifications
+        o.liveVoiceProcessing = liveVoiceProcessing
         return o
     }
 }
