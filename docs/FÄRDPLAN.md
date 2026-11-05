@@ -12,6 +12,7 @@ tagning, sedan redigerbar polish, sedan resten.
 | 4 | Maskning av känslig info: Vision-OCR, masker som följer texten, ogenomskinliga fyllningar | klar 2026-11-05 (egna masker justeras med reglage eller genom att dra i bilden) |
 | 5 | Flashback-buffert (egen, SDK saknar SCClipBufferingOutput), App Intents, URL-schema, CLI + MCP, steg-för-steg-guide, felrapport | klar 2026-11-05: MCP-server, URL-schema, Genvägar, steg-för-steg-guide, flashback-buffert, felrapport |
 | 6 | HDR, 120 fps med jämn takt, ProRes 4444 med alfa, ljud per app (CATapDescription), teleprompter, stillbild/rullande skärmbild, delning till egen S3/R2 | klar 2026-11-05: teleprompter, ProRes 4444 med alfa, polerade skärmdumpar, delning till S3/R2, 120 fps (inspelning 108 rutor/s uppmätt), ljud per app (Core Audio-tappar, ett spår per app, uppmätt), HDR (10 bit PQ in, HLG eller SDR ut, uppmätt) |
+| 7 | Det som återstod ur utredningarna: flera skärmar samtidigt, iPhone/iPad via kabel, bara kamera, FCPXML till Final Cut/Resolve, AV1 och MKV, Quick Look, uppladdning till YouTube/Dropbox, eko- och brusreducering i realtid, insticksgränssnitt | klar 2026-11-05. ⚠️ Inte provat live: flera skärmar (en skärm på datorn), iPhone via kabel, FCPXML i Final Cut/Resolve, riktiga YouTube/Dropbox-konton, ekoreduceringen med högtalare — se `docs/TESTLISTA.md` |
 
 ## Kvar från fas 1–2 att pröva eller göra
 
