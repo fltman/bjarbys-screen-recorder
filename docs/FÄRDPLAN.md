@@ -85,6 +85,9 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Logotyp (2026-11-05): Stil › Logotyp — en bild (kopieras till stödmappens `Logotyper/`, namn
+  efter innehållet) i valt hörn, storlek och synlighet, ovanför allt utom toningen; bredvid
+  kamerabubblan om de delar hörn. Följer med i standardutseendet. MCP `watermark_file` m.fl.
 - Alla skärmar (2026-11-05): Spela in alla skärmar (när det finns fler än en; MCP
   `all_displays`). Varje övrig skärm i en egen ström (bara bild) till `screen-<n>.mov` på samma
   klocka; `meta.displays` och `source` = det virtuella skrivbordet. I renderingen läggs skärmarna

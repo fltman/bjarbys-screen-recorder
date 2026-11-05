@@ -84,6 +84,8 @@ public final class RenderPlan: @unchecked Sendable {
     public let inkTrack: InkTrack
     /// Ansiktet i kamerabilden (när bubblan ska följa det).
     let faceTrack: FaceTrack?
+    /// Logotypen, förritad på sin plats i bildytan (nil utan).
+    let watermark: CIImage?
     /// Flera skärmar: varje skärms plats på det virtuella skrivbordet (skärmspårets pixlar, Core
     /// Image-koordinater). Tom för en skärm.
     public let displayRects: [CGRect]
@@ -194,6 +196,8 @@ public final class RenderPlan: @unchecked Sendable {
             ? CIImage(color: .black).cropped(to: CGRect(origin: .zero, size: canvas))
             : Self.makeBackground(project.background, canvas: canvas)
         ring = Self.makeRing()
+        watermark = Self.makeWatermark(project.watermark, canvas: canvas,
+                                       avoid: hasCamera && project.camera.visible ? (project.camera.corner, canvas.height * project.camera.size) : nil)
         halo = project.cursor.highlight ? Self.makeHalo(color: project.cursor.highlightColor) : nil
 
         var sprites: [String: Sprite] = [:]
@@ -561,6 +565,8 @@ public final class RenderPlan: @unchecked Sendable {
                                                                 y: y - e.minY))
             out = Self.withAlpha(placed, shown.opacity).composited(over: out)
         }
+        if let watermark { out = watermark.composited(over: out) }
+
         if project.fadeInOut {
             let fadeIn = 0.6, fadeOut = 0.8, end = timeMap.outputDuration
             let black = max(t < fadeIn ? 1 - t / fadeIn : 0, t > end - fadeOut ? (t - (end - fadeOut)) / fadeOut : 0)
@@ -946,6 +952,32 @@ public final class RenderPlan: @unchecked Sendable {
             out = placed.composited(over: out)
         }
         return out.cropped(to: canvas)
+    }
+
+    // MARK: - Logotyp
+
+    /// Logotypen i sitt hörn, med marginal, i vald storlek och opacitet. Delar den hörn med
+    /// kamerabubblan hamnar den bredvid bubblan (inåt längs kanten) i stället för under den.
+    static func makeWatermark(_ w: EditProject.Watermark, canvas: CGSize,
+                              avoid camera: (corner: EditProject.CameraStyle.Corner, size: CGFloat)?) -> CIImage? {
+        guard w.visible, !w.file.isEmpty, let source = CIImage(contentsOf: URL(fileURLWithPath: w.file)),
+              source.extent.width > 0, source.extent.height > 0 else { return nil }
+        let unit = min(canvas.width, canvas.height)
+        let h = (unit * w.size).rounded()
+        let k = h / source.extent.height
+        let width = (source.extent.width * k).rounded()
+        let margin = (unit * 0.035).rounded()
+        let left = w.corner == .topLeft || w.corner == .bottomLeft
+        let top = w.corner == .topLeft || w.corner == .topRight
+        var x = left ? margin : canvas.width - margin - width
+        let y = top ? canvas.height - margin - h : margin
+        if let camera, camera.corner == w.corner { x += left ? camera.size + margin * 0.6 : -(camera.size + margin * 0.6) }
+        let placed = source.transformed(by: CGAffineTransform(translationX: -source.extent.minX, y: -source.extent.minY))
+            .transformed(by: CGAffineTransform(scaleX: k, y: k))
+            .transformed(by: CGAffineTransform(translationX: x, y: y))
+        let faded = withAlpha(placed, min(1, max(0, w.opacity)))
+        let rect = CGRect(x: x, y: y, width: width, height: h).integral
+        return prerender(faded.cropped(to: rect), extent: rect)
     }
 
     // MARK: - Fönsterram

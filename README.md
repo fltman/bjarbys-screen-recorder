@@ -61,6 +61,7 @@ is included; to have the app follow your system language instead, run
   when it stands still.
 - Gradient, solid or blurred backgrounds, padding, rounded corners, shadow, and 16:9,
   9:16, 1:1 or 4:3 output.
+- Your logo in a corner of every frame, saved with the standard look so every new film has it.
 - A drawn window frame around the recording: a macOS title bar with the three dots and a title,
   or a browser with your address — light or dark, with the frame's corners and shadow.
 - One-click setups for YouTube (16:9), Reels/Shorts (9:16 with outlined captions in the middle)

@@ -49,6 +49,8 @@ public struct EditProject: Codable, Equatable, Sendable {
     public var inkHold: Double
     /// En ritad fönsterram runt skärmen: titelrad som i macOS, eller en webbläsare med adress.
     public var chrome: ChromeStyle
+    /// En logotyp i ett hörn av varje ruta (vattenmärke).
+    public var watermark: Watermark
 
     public init() {
         schemaVersion = RecorderKit.formatVersion
@@ -78,6 +80,7 @@ public struct EditProject: Codable, Equatable, Sendable {
         showsInk = true
         inkHold = InkTrack.standardHold
         chrome = ChromeStyle()
+        watermark = Watermark()
     }
 
     /// Ett nytt projekt för en inspelning: allt med, i normal hastighet.
@@ -106,6 +109,7 @@ public struct EditProject: Codable, Equatable, Sendable {
         showsInk = other.showsInk; inkHold = other.inkHold
         // Ramens sort och ton är utseende; titeln och adressen hör till filmen.
         chrome.kind = other.chrome.kind; chrome.dark = other.chrome.dark
+        watermark = other.watermark
     }
 
     /// Snabbval för var filmen ska visas: format, utfyllnad och undertexternas stil i ett svep.
@@ -168,6 +172,7 @@ public struct EditProject: Codable, Equatable, Sendable {
         showsInk = c.value(.showsInk, d.showsInk)
         inkHold = c.value(.inkHold, d.inkHold)
         chrome = c.value(.chrome, d.chrome)
+        watermark = c.value(.watermark, d.watermark)
     }
 
     // MARK: - Delar
@@ -380,6 +385,29 @@ public struct EditProject: Codable, Equatable, Sendable {
     }
 
     /// Kortkommandon som spelades in, visade som en bubbla i bilden.
+    /// Logotypen i hörnet. `file` är en absolut sökväg (bilden ligger i appens stödmapp, så att
+    /// standardutseendet kan bära den mellan projekt).
+    public struct Watermark: Codable, Equatable, Hashable, Sendable {
+        public var visible: Bool
+        public var file: String
+        public var corner: CameraStyle.Corner
+        /// Höjden som andel av bildytans kortaste sida.
+        public var size: Double
+        public var opacity: Double
+
+        public init(visible: Bool = false, file: String = "", corner: CameraStyle.Corner = .topRight,
+                    size: Double = 0.07, opacity: Double = 0.85) {
+            self.visible = visible; self.file = file; self.corner = corner; self.size = size; self.opacity = opacity
+        }
+
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            let d = Watermark()
+            visible = c.value(.visible, d.visible); file = c.value(.file, d.file); corner = c.value(.corner, d.corner)
+            size = c.value(.size, d.size); opacity = c.value(.opacity, d.opacity)
+        }
+    }
+
     /// Fönsterramen runt skärmen (ritas ovanför innehållet, med ramens rundade hörn och skugga).
     public struct ChromeStyle: Codable, Equatable, Hashable, Sendable {
         public enum Kind: String, Codable, Sendable, CaseIterable { case none, mac, browser }

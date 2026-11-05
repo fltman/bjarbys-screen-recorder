@@ -88,6 +88,7 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 | `aspect` | `source`, `wide`, `vertical`, `square`, `classic` |
 | `framing` | `fit` (hela inspelningen med bakgrund) eller `fill` (fyller bilden, följer markören) |
 | `cursor` | `visible`, `scale`, `smoothing`, `hideWhenIdle`, `clickEffect`, `clickSound`, `clickVolume`, `highlight` + `highlightColor` (mjuk halo under markören) |
+| `watermark` | logotypen: `visible`, `file` (absolut sökväg, i appens stödmapp `Logotyper/`), `corner`, `size` (andel av kortaste sidan), `opacity` |
 | `chrome` | fönsterram: `kind` (`none`, `mac`, `browser`), `dark`, `title` (macOS-fönstrets titel), `address` (webbläsarens adressfält) |
 | `showsInk`, `inkHold` | visa pennans streck, och hur länge ett färdigt streck ligger kvar (s, standard 3) innan det tonas bort på 0,4 s |
 | `shortcuts` | `visible`, `position` (`bottom`, `top`), `size` |

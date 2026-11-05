@@ -1106,6 +1106,23 @@
         }
       }
     },
+    "Byt bild …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change Image…"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Byt bild …"
+          }
+        }
+      }
+    },
     "Byt namn": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1799,6 +1816,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eko från högtalarna och brus tas bort direkt (Apples röstbehandling, som i FaceTime) — bra med högtalare i stället för hörlurar. Den orensade mikrofonen sparas då inte (macOS ger den inte samtidigt)."
+          }
+        }
+      }
+    },
+    "En PNG med genomskinlig bakgrund blir finast.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A PNG with a transparent background looks best."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En PNG med genomskinlig bakgrund blir finast."
           }
         }
       }
@@ -4519,6 +4553,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ljudnivå"
+          }
+        }
+      }
+    },
+    "Logotyp": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logo"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logotyp"
           }
         }
       }
@@ -7294,6 +7345,23 @@
         }
       }
     },
+    "Synlighet": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opacity"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synlighet"
+          }
+        }
+      }
+    },
     "Sänk datorljudet när du pratar": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -8348,6 +8416,23 @@
         }
       }
     },
+    "Visa logotypen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show logo"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visa logotypen"
+          }
+        }
+      }
+    },
     "Visa manuset under inspelningen": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -8446,6 +8531,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Volym"
+          }
+        }
+      }
+    },
+    "Välj bild …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Image…"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Välj bild …"
           }
         }
       }

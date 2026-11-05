@@ -197,6 +197,10 @@ enum MCPServer {
                 "window_title": ["type": "string", "description": "Title in the macOS window frame."],
                 "window_address": ["type": "string", "description": "Address in the browser frame's address field."],
                 "camera_follow_face": ["type": "boolean", "description": "Keep the face centred in the camera bubble (faces are found once with Vision and saved in the bundle)."],
+                "watermark_file": ["type": "string", "description": "A logo image (PNG with transparency is best) shown in a corner of every frame; copied to the app's support folder."],
+                "watermark": ["type": "boolean", "description": "Show or hide the logo."],
+                "watermark_corner": ["type": "string", "enum": ["topRight", "topLeft", "bottomRight", "bottomLeft"]],
+                "watermark_size": ["type": "number", "minimum": 0.03, "maximum": 0.2, "description": "Logo height as a fraction of the frame's short side (default 0.07)."],
                 "cursor_highlight": ["type": "boolean", "description": "A soft coloured halo under the cursor so it is easy to follow."],
                 "cursor_highlight_color": ["type": "string", "description": "Halo colour as #RRGGBB (default #FFD60A, yellow)."],
                 "ink": ["type": "boolean", "description": "Show what was drawn on screen with the pen during the recording (default true)."],
@@ -574,6 +578,12 @@ enum MCPServer {
             }
             p.camera.followFace = v && rec.bundle.readFaceTrack() != nil
         }
+        if let f = a["watermark_file"] as? String, let stored = Watermarks.store(URL(fileURLWithPath: NSString(string: f).expandingTildeInPath)) {
+            p.watermark.file = stored.path; p.watermark.visible = true
+        }
+        if let v = a["watermark"] as? Bool { p.watermark.visible = v && !p.watermark.file.isEmpty }
+        if let v = (a["watermark_corner"] as? String).flatMap(EditProject.CameraStyle.Corner.init(rawValue:)) { p.watermark.corner = v }
+        if let v = number(a["watermark_size"]) { p.watermark.size = min(0.2, max(0.03, v)) }
         if let v = a["cursor_highlight"] as? Bool { p.cursor.highlight = v }
         if let v = a["cursor_highlight_color"] as? String, v.hasPrefix("#"), v.count == 7 { p.cursor.highlightColor = v }
         if let v = a["ink"] as? Bool { p.showsInk = v }

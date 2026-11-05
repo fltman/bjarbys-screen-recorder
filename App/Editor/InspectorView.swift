@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 import AppKit
 import RecorderKit
 
@@ -53,6 +54,7 @@ struct InspectorView: View {
                         frameSection
                         transitionSection
                         if model.recording.hasCamera { cameraSection }
+                        watermarkSection
                         standardStyleSection
                     case .motion:
                         autoZoomSection
@@ -634,6 +636,40 @@ struct InspectorView: View {
     }
 
     /// Standardutseendet: det här projektets stil för nya inspelningar, eller standarden hit.
+    /// Logotypen i hörnet (följer med i standardutseendet).
+    private var watermarkSection: some View {
+        Section2("Logotyp", systemImage: "seal") {
+            HStack {
+                if let image = NSImage(contentsOfFile: model.project.watermark.file) {
+                    Image(nsImage: image).resizable().scaledToFit().frame(maxWidth: 80, maxHeight: 32)
+                }
+                Button(model.project.watermark.file.isEmpty ? "Välj bild …" : "Byt bild …") { chooseWatermark() }
+                    .controlSize(.small)
+                Spacer()
+            }
+            if !model.project.watermark.file.isEmpty {
+                Toggle("Visa logotypen", isOn: binding(\.watermark.visible))
+                Picker("Hörn", selection: binding(\.watermark.corner)) {
+                    Text("Uppe till höger").tag(EditProject.CameraStyle.Corner.topRight)
+                    Text("Uppe till vänster").tag(EditProject.CameraStyle.Corner.topLeft)
+                    Text("Nere till höger").tag(EditProject.CameraStyle.Corner.bottomRight)
+                    Text("Nere till vänster").tag(EditProject.CameraStyle.Corner.bottomLeft)
+                }
+                LabeledSlider("Storlek", value: binding(\.watermark.size), range: 0.03...0.2, format: "%.0f %%", scale: 100)
+                LabeledSlider("Synlighet", value: binding(\.watermark.opacity), range: 0.2...1, format: "%.0f %%", scale: 100)
+            }
+        }
+    }
+
+    /// Bilden kopieras till appens stödmapp, så att den finns kvar för standardutseendet.
+    private func chooseWatermark() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.png, .jpeg, .heic, .tiff]
+        panel.message = String(localized: "En PNG med genomskinlig bakgrund blir finast.")
+        guard panel.runModal() == .OK, let url = panel.url, let stored = Watermarks.store(url) else { return }
+        model.update { $0.watermark.file = stored.path; $0.watermark.visible = true }
+    }
+
     private var standardStyleSection: some View {
         Section2("Standardutseende", systemImage: "star") {
             let standard = EditProject.standardStyle
