@@ -20,6 +20,9 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
         case image
         /// Ett videoinslag ur `media/`: bild-i-bild eller helbild (`frame` [0,0,1,1]), med ljud.
         case video
+        /// En pil i innehållet (zoomar med det): från (`target.x`, `target.y`) till spetsen
+        /// (`target.x + width`, `target.y + height`); bredd och höjd kan vara negativa.
+        case arrow
     }
 
     public enum Corner: String, Codable, Sendable, CaseIterable { case topLeft, topRight, bottomLeft, bottomRight }
@@ -57,6 +60,8 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
     /// Hur lagret kommer in: tonas, glider upp, poppar fram, eller skrivs fram (text och rubrik).
     public var animation: Animation
     public enum Animation: String, Codable, Sendable, CaseIterable { case fade, slide, pop, typewriter }
+    /// Pilens färg (#RRGGBB).
+    public var color: String
 
     public init(id: UUID = UUID(), kind: Kind, at: Double, duration: Double = 4, title: String = "",
                 lines: [String] = [], url: String = "", target: Rect? = nil, corner: Corner = .topRight,
@@ -67,6 +72,7 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
         self.offset = 0; self.volume = 1
         self.crop = nil; self.softness = 0; self.speed = 1
         self.animation = .fade
+        self.color = "#FF3B30"
     }
 
     /// Täcker hela bildytan (helbild): ritas utan hörn och skugga, och fyller.
@@ -96,6 +102,13 @@ public struct Overlay: Codable, Equatable, Hashable, Sendable, Identifiable {
         softness = c.value(.softness, 0)
         speed = c.value(.speed, 1)
         animation = c.value(.animation, .fade)
+        color = c.value(.color, "#FF3B30")
+    }
+
+    /// Pilens start och spets (innehållets koordinater, 0–1).
+    public var arrowEnds: (start: CGPoint, tip: CGPoint)? {
+        guard kind == .arrow, let t = target else { return nil }
+        return (CGPoint(x: t.x, y: t.y), CGPoint(x: t.x + t.width, y: t.y + t.height))
     }
 }
 

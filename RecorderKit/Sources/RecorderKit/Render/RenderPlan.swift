@@ -400,6 +400,12 @@ public final class RenderPlan: @unchecked Sendable {
             }
         }
 
+        // Pilar: i innehållet, ritas fram från start till spets när de dyker upp.
+        for shown in overlayTrack.visible(at: t) where shown.overlay.kind == .arrow {
+            let image = arrowImage(shown.overlay, progress: Self.easeOut(shown.entrance), at: s)
+            layer = Self.withAlpha(image, shown.opacity).composited(over: layer)
+        }
+
         if let shadow { layer = layer.composited(over: shadow) }
 
         // Zoomen: punkten `center` i innehållet hamnar mitt i skärmytan, förstorad `zoom` gånger.
@@ -1048,6 +1054,69 @@ public final class RenderPlan: @unchecked Sendable {
         guard let cg = ctx.makeImage() else { return nil }
         let image = CIImage(cgImage: cg).transformed(by: CGAffineTransform(translationX: rect.minX, y: rect.minY))
         return prerender(image, extent: rect)
+    }
+
+    // MARK: - Pilar
+
+    /// En pil i bildytans koordinater (före zoomen), ritad till `progress` (0–1) av sin längd,
+    /// med en mjuk mörk skugga så att den syns mot både ljust och mörkt. Ritas i zoomens
+    /// upplösning; en färdig pil ritas en gång per upplösningssteg.
+    func arrowImage(_ o: Overlay, progress: Double, at s: Double) -> CIImage {
+        guard let ends = o.arrowEnds else { return .empty() }
+        let zoom = cameraPath.viewport(at: s).scale
+        let r = min(4, max(1, (zoom * 2).rounded(.up) / 2))
+        let make = { () -> CIImage in
+            let a = self.point(ends.start), full = self.point(ends.tip)
+            let p = min(1, max(0.02, progress))
+            let b = CGPoint(x: a.x + (full.x - a.x) * p, y: a.y + (full.y - a.y) * p)
+            let len = hypot(b.x - a.x, b.y - a.y)
+            guard len > 1 else { return CIImage.empty() }
+            let w = max(3, 0.009 * self.screenRect.height)
+            let head = min(w * 4.2, len * 0.6)
+            let ux = (b.x - a.x) / len, uy = (b.y - a.y) / len
+            let base = CGPoint(x: b.x - ux * head, y: b.y - uy * head)
+            let box = CGRect(x: min(a.x, b.x), y: min(a.y, b.y), width: abs(b.x - a.x), height: abs(b.y - a.y))
+                .insetBy(dx: -head * 1.5, dy: -head * 1.5).integral
+            let pw = Int(box.width * r), ph = Int(box.height * r)
+            guard pw > 0, ph > 0, pw * ph < 40_000_000,
+                  let ctx = CGContext(data: nil, width: pw, height: ph, bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return CIImage.empty() }
+            ctx.scaleBy(x: r, y: r)
+            ctx.translateBy(x: -box.minX, y: -box.minY)
+            ctx.setShadow(offset: CGSize(width: 0, height: -w * 0.25), blur: w * 1.4, color: CGColor(gray: 0, alpha: 0.55))
+            ctx.beginTransparencyLayer(auxiliaryInfo: nil)
+            let c = Self.color(hex: o.color)
+            let color = CGColor(srgbRed: c.red, green: c.green, blue: c.blue, alpha: 1)
+            // Skaftet till spetsens bas, och spetsen som en triangel.
+            ctx.setStrokeColor(color)
+            ctx.setLineWidth(w)
+            ctx.setLineCap(.round)
+            ctx.move(to: a)
+            ctx.addLine(to: CGPoint(x: base.x + ux * w * 0.5, y: base.y + uy * w * 0.5))
+            ctx.strokePath()
+            let side = head * 0.62
+            ctx.setFillColor(color)
+            ctx.setLineJoin(.round)
+            ctx.move(to: b)
+            ctx.addLine(to: CGPoint(x: base.x - uy * side, y: base.y + ux * side))
+            ctx.addLine(to: CGPoint(x: base.x + uy * side, y: base.y - ux * side))
+            ctx.closePath()
+            ctx.fillPath()
+            ctx.endTransparencyLayer()
+            guard let cg = ctx.makeImage() else { return CIImage.empty() }
+            return CIImage(cgImage: cg)
+                .transformed(by: CGAffineTransform(scaleX: 1 / r, y: 1 / r))
+                .transformed(by: CGAffineTransform(translationX: box.minX, y: box.minY))
+        }
+        guard progress >= 0.999, let t = o.target else { return make() }
+        return overlayImages.image(for: "arrow|\(o.id)|\(t.x)|\(t.y)|\(t.width)|\(t.height)|\(o.color)|\(r)") {
+            let image = make()
+            guard !image.extent.isEmpty else { return image }
+            let big = image.extent.applying(CGAffineTransform(scaleX: r, y: r)).integral
+            return Self.prerender(image.transformed(by: CGAffineTransform(scaleX: r, y: r)), extent: big)
+                .transformed(by: CGAffineTransform(scaleX: 1 / r, y: 1 / r))
+        }
     }
 
     // MARK: - Pennan

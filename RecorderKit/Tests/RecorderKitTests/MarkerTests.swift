@@ -39,3 +39,15 @@ import Foundation
         #expect(p.aspect == .wide && p.framing == .fit && p.captions.position == .bottom && p.captions.look == .box)
     }
 }
+
+@Suite struct ArrowTests {
+    @Test func endsComeFromTheTargetAndOldFilesGetRed() throws {
+        let o = Overlay(kind: .arrow, at: 0, target: Rect(x: 0.3, y: 0.7, width: 0.2, height: -0.25))
+        let e = try #require(o.arrowEnds)
+        #expect(e.start == CGPoint(x: 0.3, y: 0.7))
+        #expect(abs(e.tip.x - 0.5) < 1e-9 && abs(e.tip.y - 0.45) < 1e-9)
+        #expect(Overlay(kind: .callout, at: 0, target: Rect(x: 0, y: 0, width: 1, height: 1)).arrowEnds == nil)
+        let decoded = try BundleJSON.decoder.decode(Overlay.self, from: Data(#"{"kind":"arrow"}"#.utf8))
+        #expect(decoded.kind == .arrow && decoded.color == "#FF3B30")
+    }
+}

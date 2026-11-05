@@ -156,6 +156,11 @@ public enum Producer {
                 if o.frame == nil { error("\(name) has no frame.") }
             case .video:
                 if o.file.isEmpty || !mediaExists(o.file) { error("\(name): video \(o.file) is missing in media/.") }
+            case .arrow:
+                guard let e = o.arrowEnds else { error("\(name) has no start and tip."); break }
+                let inside = { (p: CGPoint) in p.x >= -0.01 && p.y >= -0.01 && p.x <= 1.01 && p.y <= 1.01 }
+                if !inside(e.start) || !inside(e.tip) { error("\(name): the arrow goes outside the screen.") }
+                if hypot(e.tip.x - e.start.x, e.tip.y - e.start.y) < 0.03 { warn("\(name): very short arrow.") }
             }
         }
         // Två rutor i samma hörn samtidigt.

@@ -103,6 +103,7 @@ struct LayersInspector: View {
         case .text: "textformat"
         case .image: "photo"
         case .video: "film"
+        case .arrow: "arrow.up.right"
         }
     }
 
@@ -115,6 +116,7 @@ struct LayersInspector: View {
         case .text: "Text"
         case .image: "Bild"
         case .video: "Video"
+        case .arrow: "Pil"
         }
     }
 
@@ -205,6 +207,16 @@ struct LayersInspector: View {
                 if o.kind == .qr {
                     TextField("Adress", text: Binding(get: { o.url }, set: { v in model.updateOverlay(o.id) { $0.url = v } }))
                         .textFieldStyle(.roundedBorder)
+                }
+                if o.kind == .arrow {
+                    Picker("Färg", selection: Binding(get: { o.color }, set: { v in model.updateOverlay(o.id) { $0.color = v } })) {
+                        Text("Röd").tag("#FF3B30")
+                        Text("Gul").tag("#FFD60A")
+                        Text("Blå").tag("#0A84FF")
+                        Text("Grön").tag("#30D158")
+                        Text("Vit").tag("#FFFFFF")
+                    }
+                    Text("Dra pilen i bilden, och spetsen eller starten med handtagen.").font(.caption).foregroundStyle(.secondary)
                 }
                 if o.kind == .text {
                     LabeledSlider("Textstorlek", value: Binding(get: { o.size }, set: { v in model.updateOverlay(o.id) { $0.size = v } }),

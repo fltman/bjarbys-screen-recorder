@@ -79,7 +79,7 @@ is included; to have the app follow your system language instead, run
   re-encoding. Clicks, cursors and transcripts follow; the originals stay as they are.
 - Mark an excerpt with I and O (X clears) and export only that, e.g. a short social clip, with
   its captions; or save the finished frame at the playhead as a 4K PNG (a thumbnail).
-- Layers: title cards, callouts around the button you clicked, fact boxes, QR codes, free
+- Layers: title cards, arrows that draw themselves in and zoom with the picture, callouts around the button you clicked, fact boxes, QR codes, free
   text anywhere, images (logos, product shots), video inserts (picture-in-picture or full
   frame, with their sound, cropped, with soft edges, at 0.25–4× speed), chapters with a banner, and extra audio
   (music ducked under speech, narration, effects). Layers can fade, slide up or pop in, and text

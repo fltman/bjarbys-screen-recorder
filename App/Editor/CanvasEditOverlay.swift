@@ -57,6 +57,16 @@ struct CanvasEditOverlay: View {
                             .gesture(moveGesture(o, scale: scale, video: video))
                             .onTapGesture { model.selectedOverlayID = o.id }
                             .help(Text(verbatim: o.title))
+                        if selected, let ends = arrowViewPoints(o, video: video, scale: scale) {
+                            ForEach([true, false], id: \.self) { isTip in
+                                Circle()
+                                    .fill(isTip ? Color.accentColor : Color.white)
+                                    .overlay(Circle().stroke(isTip ? Color.white : Color.accentColor, lineWidth: 1.5))
+                                    .frame(width: 12, height: 12)
+                                    .position(isTip ? ends.tip : ends.start)
+                                    .gesture(arrowEndGesture(o, tip: isTip, scale: scale))
+                            }
+                        }
                         if selected && resizable(o) {
                             Circle()
                                 .fill(Color.accentColor)
@@ -121,10 +131,43 @@ struct CanvasEditOverlay: View {
 
     private func resizable(_ o: Overlay) -> Bool { [.text, .image, .video, .callout].contains(o.kind) }
 
+    /// Pilens start och spets i vyns punkter.
+    private func arrowViewPoints(_ o: Overlay, video: CGRect, scale: CGFloat) -> (start: CGPoint, tip: CGPoint)? {
+        guard let ends = o.arrowEnds else { return nil }
+        let canvasH = model.plan.canvas.height
+        func view(_ p: CGPoint) -> CGPoint {
+            let c = model.plan.canvasRect(content: CGRect(origin: p, size: .zero), at: model.sourceTimeAtPlayhead).origin
+            return CGPoint(x: video.minX + c.x * scale, y: video.minY + (canvasH - c.y) * scale)
+        }
+        return (view(ends.start), view(ends.tip))
+    }
+
+    /// Flytta pilens start eller spets (i innehållets koordinater, med zoomen inräknad).
+    private func arrowEndGesture(_ o: Overlay, tip: Bool, scale: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 1)
+            .onChanged { v in
+                if dragStart?.id != o.id { dragStart = o; model.selectedOverlayID = o.id }
+                guard let t = dragStart?.target else { return }
+                let zoom = model.plan.cameraPath.viewport(at: model.sourceTimeAtPlayhead).scale
+                let sr = model.plan.screenRect
+                let dx = Double(v.translation.width / scale) / Double(sr.width * zoom)
+                let dy = Double(v.translation.height / scale) / Double(sr.height * zoom)
+                model.updateOverlay(o.id) {
+                    $0.target = tip ? Rect(x: t.x, y: t.y, width: t.width + dx, height: t.height + dy)
+                                    : Rect(x: t.x + dx, y: t.y + dy, width: t.width - dx, height: t.height - dy)
+                }
+            }
+            .onEnded { _ in dragStart = nil }
+    }
+
     /// Lagrets ram i vyns punkter (origo uppe till vänster).
     private func viewRect(_ o: Overlay, video: CGRect, scale: CGFloat) -> CGRect? {
         let canvasH = model.plan.canvas.height
         let f: CGRect
+        if let ends = arrowViewPoints(o, video: video, scale: scale) {
+            return CGRect(x: min(ends.start.x, ends.tip.x), y: min(ends.start.y, ends.tip.y),
+                          width: abs(ends.tip.x - ends.start.x), height: abs(ends.tip.y - ends.start.y)).insetBy(dx: -8, dy: -8)
+        }
         if o.kind == .callout, let target = o.target {
             f = model.plan.canvasRect(content: target.cgRect, at: model.sourceTimeAtPlayhead)
         } else if let frame = model.plan.frame(of: o) {
@@ -144,7 +187,7 @@ struct CanvasEditOverlay: View {
                 switch o.kind {
                 case .fact, .qr:
                     floatingOffset = v.translation
-                case .callout:
+                case .callout, .arrow:
                     guard let t = start.target else { return }
                     // Målet ligger i innehållet: räkna om med skärmytans storlek och zoomen.
                     let zoom = model.plan.cameraPath.viewport(at: model.sourceTimeAtPlayhead).scale

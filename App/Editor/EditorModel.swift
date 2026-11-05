@@ -541,6 +541,14 @@ final class EditorModel: ObservableObject {
         case .text: o.title = String(localized: "Text"); o.frame = Rect(x: 0.5, y: 0.2, width: 0.6, height: 0)
         case .image: o.frame = Rect(x: 0.62, y: 0.08, width: 0.3, height: 0.3)
         case .video: o.frame = Rect(x: 0.6, y: 0.08, width: 0.34, height: 0.34)
+        case .arrow:
+            // Spetsen vid det som klickades närmast (vänsterkanten), annars vid markören; pilen
+            // kommer snett nedifrån vänster.
+            var tip = plan.cursorPath.hasData ? plan.cursorPath.position(at: s) : CGPoint(x: 0.5, y: 0.5)
+            if let hit = Producer.clickTarget(recording, near: s) { tip = CGPoint(x: hit.rect.minX - 0.005, y: hit.rect.midY) }
+            let start = CGPoint(x: min(max(tip.x - 0.12, 0.02), 0.98), y: min(max(tip.y + 0.12, 0.02), 0.98))
+            o.target = Rect(x: start.x, y: start.y, width: tip.x - start.x, height: tip.y - start.y)
+            o.title = String(localized: "Pil")
         case .callout:
             if let hit = Producer.clickTarget(recording, near: s) {
                 o.target = Rect(hit.rect)

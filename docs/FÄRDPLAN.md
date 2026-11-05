@@ -85,6 +85,11 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Pilar (2026-11-05): lagersorten `arrow` — i innehållet (zoomar med det), ritas fram från start
+  till spets under intoningen, mjuk mörk skugga, fem färger; spetsen hamnar vid det som klickades
+  närmast spelhuvudet. Dras i förhandsvisningen, start och spets med egna handtag. MCP
+  `set_overlays` med `from`/`to` eller `target_click_at`; producentens kontroll ser att pilen
+  ligger i bild.
 - Logotyp (2026-11-05): Stil › Logotyp — en bild (kopieras till stödmappens `Logotyper/`, namn
   efter innehållet) i valt hörn, storlek och synlighet, ovanför allt utom toningen; bredvid
   kamerabubblan om de delar hörn. Följer med i standardutseendet. MCP `watermark_file` m.fl.

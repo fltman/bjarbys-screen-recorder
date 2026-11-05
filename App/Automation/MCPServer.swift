@@ -228,11 +228,14 @@ enum MCPServer {
              "description": "Everything a producer needs about a recording, in source time: current decisions, what is said, every click with the element's name and frame, shortcuts, dead time.",
              "inputSchema": schema(["recording": recordingArg], required: ["recording"])],
             ["name": "set_overlays",
-             "description": "Set the overlay layer (replaces all overlays unless append is true). Kinds: title (centered card; lines[0] = subtitle), callout (outline around a UI element with a label; give target [x,y,w,h] 0–1, or target_click_at = time of a click to use that element's frame), fact (box with title + up to 3 lines, in a corner), qr (QR code card with title, url, lines[0] = label, in a corner). at = SOURCE seconds, duration = seconds on screen.",
+             "description": "Set the overlay layer (replaces all overlays unless append is true). Kinds: title (centered card; lines[0] = subtitle), callout (outline around a UI element with a label; give target [x,y,w,h] 0–1, or target_click_at = time of a click to use that element's frame), fact (box with title + up to 3 lines, in a corner), qr (QR code card with title, url, lines[0] = label, in a corner), arrow (points at something in the picture and zooms with it: give from [x,y] and to [x,y], 0–1 of the screen, or target_click_at to point at a clicked element from below-left; color #RRGGBB, default red). at = SOURCE seconds, duration = seconds on screen.",
              "inputSchema": schema(["recording": recordingArg,
                                     "append": ["type": "boolean"],
                                     "overlays": ["type": "array", "items": ["type": "object", "properties": [
-                                        "kind": ["type": "string", "enum": ["title", "callout", "fact", "qr", "text", "image", "video"]],
+                                        "kind": ["type": "string", "enum": ["title", "callout", "fact", "qr", "text", "image", "video", "arrow"]],
+                                        "from": ["type": "array", "items": ["type": "number"], "minItems": 2, "maxItems": 2, "description": "arrow: start point [x, y] 0–1."],
+                                        "to": ["type": "array", "items": ["type": "number"], "minItems": 2, "maxItems": 2, "description": "arrow: tip [x, y] 0–1."],
+                                        "color": ["type": "string", "description": "arrow: #RRGGBB."],
                                         "offset": ["type": "number", "description": "video: where in the file to start (s)."],
                                         "volume": ["type": "number", "description": "video: its audio volume (0 = silent)."],
                                         "speed": ["type": "number", "description": "video: playback speed 0.25–4 (duration stays the time in the film)."],
@@ -746,6 +749,18 @@ enum MCPServer {
                 overlay.frame = Rect(x: f[0], y: f[1], width: f[2], height: f.count > 3 ? f[3] : 0)
             }
             if let size = number(o["size"]) { overlay.size = size }
+            if kind == .arrow {
+                if let c = o["color"] as? String, c.hasPrefix("#"), c.count == 7 { overlay.color = c }
+                if let f = (o["from"] as? [Any])?.compactMap(number), let t = (o["to"] as? [Any])?.compactMap(number), f.count == 2, t.count == 2 {
+                    overlay.target = Rect(x: f[0], y: f[1], width: t[0] - f[0], height: t[1] - f[1])
+                } else if let click = number(o["target_click_at"]), let hit = Producer.clickTarget(rec, near: click) {
+                    let tip = CGPoint(x: hit.rect.minX - 0.005, y: hit.rect.midY)
+                    let start = CGPoint(x: max(0.02, tip.x - 0.12), y: min(0.98, tip.y + 0.12))
+                    overlay.target = Rect(x: start.x, y: start.y, width: tip.x - start.x, height: tip.y - start.y)
+                } else {
+                    throw ToolError("arrow overlays need from and to, or target_click_at.")
+                }
+            }
             if let bg = o["background"] as? Bool { overlay.background = bg }
             if kind == .text && overlay.frame == nil { overlay.frame = Rect(x: 0.5, y: 0.2, width: 0.6, height: 0) }
             if kind == .video {

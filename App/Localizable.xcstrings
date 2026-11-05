@@ -1548,6 +1548,23 @@
         }
       }
     },
+    "Dra pilen i bilden, och spetsen eller starten med handtagen.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag the arrow in the picture, and the tip or the start with the handles."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dra pilen i bilden, och spetsen eller starten med handtagen."
+          }
+        }
+      }
+    },
     "Dra upp ett område (%@)": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -5709,6 +5726,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Personnummer"
+          }
+        }
+      }
+    },
+    "Pil": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrow"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pil"
           }
         }
       }
