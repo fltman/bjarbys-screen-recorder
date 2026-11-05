@@ -293,6 +293,13 @@ vänster kanal:
 - ⚠️ Första mätningen visade ingen övertoning: den kördes mot en appbinär byggd före ändringen
   (`test.sh` bygger bara paketet). Mät alltid efter xcodebuild.
 
+## Lupp (2026-11-05)
+
+Provinspelning med en påhittad musrörelse och ett lupp-block (2,5×): luppen följer markören och
+växer fram. ⚠️ Först förstorades den råa skärmbilden — en mask hade synts i luppen; nu förstoras
+den maskade (provat med ifylld och pixlad mask: ingen läsbar text i luppen). ⚠️ En svart ruta
+som bakgrund i `CIBlendWithMask` gav svarta hörn runt cirkeln; bakgrunden ska vara `.empty()`.
+
 ## Utsnitt (2026-11-05)
 
 `--prov-exportera … --utsnitt 1.5,3.0` på en film på 5 s med en 440 Hz-ton: MP4 och ProRes 1,500 s

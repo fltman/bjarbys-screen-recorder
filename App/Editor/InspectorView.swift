@@ -107,14 +107,22 @@ struct InspectorView: View {
 
     private func zoomSection(_ zoom: EditProject.ZoomSegment) -> some View {
         Section2("Markerad zoom", systemImage: "plus.magnifyingglass") {
+            Picker("Sort", selection: Binding(get: { zoom.style }, set: { v in model.updateZoom(zoom.id) { $0.style = v } })) {
+                Text("Kamera").tag(EditProject.ZoomSegment.Style.camera)
+                Text("Lupp").tag(EditProject.ZoomSegment.Style.lens)
+            }
+            .pickerStyle(.segmented)
+            .help("Kameran zoomar in, eller ett förstoringsglas följer markören medan bilden står still.")
             LabeledSlider("Förstoring", value: Binding(get: { zoom.scale }, set: { v in model.updateZoom(zoom.id) { $0.scale = v } }),
                           range: 1.1...5, format: "%.1f×")
-            Toggle("Följ markören", isOn: Binding(get: { zoom.followsCursor },
-                                                  set: { v in model.updateZoom(zoom.id) { $0.followsCursor = v } }))
-            LabeledSlider("Mitt, sidled", value: Binding(get: { zoom.centerX }, set: { v in model.updateZoom(zoom.id) { $0.centerX = v } }),
-                          range: 0...1, format: "%.2f")
-            LabeledSlider("Mitt, höjdled", value: Binding(get: { zoom.centerY }, set: { v in model.updateZoom(zoom.id) { $0.centerY = v } }),
-                          range: 0...1, format: "%.2f")
+            if zoom.style == .camera {
+                Toggle("Följ markören", isOn: Binding(get: { zoom.followsCursor },
+                                                      set: { v in model.updateZoom(zoom.id) { $0.followsCursor = v } }))
+                LabeledSlider("Mitt, sidled", value: Binding(get: { zoom.centerX }, set: { v in model.updateZoom(zoom.id) { $0.centerX = v } }),
+                              range: 0...1, format: "%.2f")
+                LabeledSlider("Mitt, höjdled", value: Binding(get: { zoom.centerY }, set: { v in model.updateZoom(zoom.id) { $0.centerY = v } }),
+                              range: 0...1, format: "%.2f")
+            }
             Text(zoom.isAuto ? "Föreslagen ur klicken. Ändrar du den blir den din och följer inte med när förslagen görs om."
                              : "Din egen zoom.")
                 .font(.caption).foregroundStyle(.secondary)
@@ -265,6 +273,8 @@ struct InspectorView: View {
             HStack {
                 Button("Gör om förslagen") { model.regenerateAutoZooms() }
                 Button("Ny zoom vid spelhuvudet") { model.addZoomAtPlayhead() }
+                Button("Ny lupp") { model.addLensAtPlayhead() }
+                    .help("Ett förstoringsglas som följer markören i 3 s från spelhuvudet.")
             }
             .controlSize(.small)
             Toggle("Rörelseoskärpa", isOn: binding(\.motionBlur))

@@ -249,13 +249,13 @@ struct TimelineView: View {
             guard let r = outputRange(of: zoom) else { continue }
             let rect = CGRect(x: x(r.lowerBound, pps), y: zoomY, width: max(6, CGFloat((r.upperBound - r.lowerBound) * pps)), height: zoomH)
             let shape = RoundedRectangle(cornerRadius: 6).path(in: rect)
-            let base: Color = zoom.isAuto ? .purple : .orange
+            let base: Color = zoom.style == .lens ? .teal : (zoom.isAuto ? .purple : .orange)
             let selected = zoom.id == model.selectedZoomID
             ctx.fill(shape, with: .color(base.opacity(selected ? 0.55 : 0.32)))
             ctx.stroke(shape, with: .color(base.opacity(selected ? 1 : 0.7)), lineWidth: selected ? 2 : 1)
             if rect.width > 44 {
-                ctx.draw(Text(AppLocale.format("%.1f×", zoom.scale)).font(.caption.weight(.semibold)),
-                         at: CGPoint(x: rect.midX, y: rect.midY))
+                let label = zoom.style == .lens ? AppLocale.format("◎ %.1f×", zoom.scale) : AppLocale.format("%.1f×", zoom.scale)
+                ctx.draw(Text(label).font(.caption.weight(.semibold)), at: CGPoint(x: rect.midX, y: rect.midY))
             }
             if selected {
                 for hx in [rect.minX + 3, rect.maxX - 3] {

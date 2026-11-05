@@ -38,6 +38,8 @@ is included; to have the app follow your system language instead, run
 - Zooms suggested from your clicks, with a spring-driven camera that keeps the cursor in
   a safe zone and looks ahead. Move them, resize them, delete them or add your own on the
   timeline.
+- A magnifier instead of a zoom: a round lens follows the cursor while the picture stays put
+  (privacy masks stay masked inside it).
 - Optional motion blur while the camera zooms and pans, like a real camera at 1/120 s.
 - Optional click sounds: a short soft click at every mouse click in the film.
 - The cursor is drawn back on a smoothed path, at any size, with click rings, and hides

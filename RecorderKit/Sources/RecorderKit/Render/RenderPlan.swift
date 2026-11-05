@@ -152,7 +152,8 @@ public final class RenderPlan: @unchecked Sendable {
         }
         screenRect = CGRect(x: ((canvas.width - w) / 2).rounded(), y: ((canvas.height - h) / 2).rounded(), width: w, height: h)
         let visible = CGSize(width: min(1, canvas.width / w), height: min(1, canvas.height / h))
-        self.cameraPath = cameraPath ?? CameraPath(zooms: project.zooms, cursor: cursorPath, duration: meta.duration,
+        // Luppar zoomar inte kameran; de ritas för sig (`lens`).
+        self.cameraPath = cameraPath ?? CameraPath(zooms: project.zooms.filter { $0.style == .camera }, cursor: cursorPath, duration: meta.duration,
                                                    visible: visible, followAtRest: fills)
 
         let radius = fills ? 0 : project.cornerRadius * min(w, h)
@@ -257,6 +258,8 @@ public final class RenderPlan: @unchecked Sendable {
         let s = timeMap.source(at: t)
         let canvasRect = CGRect(origin: .zero, size: canvas)
         var layer = CIImage.empty()
+        // Skärmen i skärmytan med maskerna (det luppen förstorar — aldrig den råa bilden).
+        var maskedScreen: CIImage?
 
         if let screen {
             let e = screen.extent
@@ -279,11 +282,15 @@ public final class RenderPlan: @unchecked Sendable {
                     kCIInputTargetImageKey: otherMasked, kCIInputTimeKey: max(0, min(1, share))])
                     .cropped(to: screenRect)
             }
+            maskedScreen = masked
             layer = masked.applyingFilter("CIBlendWithMask", parameters: [
                 kCIInputBackgroundImageKey: CIImage.empty(),
                 kCIInputMaskImageKey: mask,
             ])
         }
+
+        // Luppen: under markören, ovanpå skärmen.
+        if let maskedScreen, let lens = lens(at: s, placed: maskedScreen) { layer = lens.composited(over: layer) }
 
         // Markören och klicken ritas i skärmytan och zoomar med innehållet.
         let k = screenRect.width / sourceSize.width * pixelsPerPoint
@@ -813,6 +820,44 @@ public final class RenderPlan: @unchecked Sendable {
         }
         let image = overlayImage(o)
         return CGRect(origin: placement(of: o, size: image.extent.size), size: image.extent.size)
+    }
+
+    // MARK: - Lupp
+
+    /// Hur länge luppen växer fram och krymper bort i blockets ändar.
+    static let lensRamp = 0.25
+
+    /// Ett runt förstoringsglas vid markören under ett lupp-block: skärmen runt markören förstorad
+    /// `scale` gånger i en cirkel (18 % av skärmytans höjd), med vit kant och skugga. Växer fram
+    /// och krymper bort i ändarna.
+    func lens(at s: Double, placed: CIImage) -> CIImage? {
+        guard cursorPath.hasData,
+              let z = project.zooms.first(where: { $0.style == .lens && s >= $0.start - Self.lensRamp && s <= $0.end + Self.lensRamp })
+        else { return nil }
+        let grow = min(1, max(0, (s - (z.start - Self.lensRamp)) / Self.lensRamp), max(0, ((z.end + Self.lensRamp) - s) / Self.lensRamp))
+        let k = Self.easeOut(grow)
+        guard k > 0.01 else { return nil }
+        let radius = screenRect.height * 0.18 * k
+        let magnification = 1 + (max(1.1, z.scale) - 1) * k
+        let c = point(cursorPath.position(at: s))
+        // Skärmen som den ligger i skärmytan (med maskerna), förstorad kring markören; bara det lilla
+        // området som syns i luppen beskärs ut först.
+        let r0 = radius / magnification + 2
+        let source = placed.clampedToExtent().cropped(to: CGRect(x: c.x - r0, y: c.y - r0, width: r0 * 2, height: r0 * 2))
+        let zoomed = source.transformed(by: CGAffineTransform(translationX: -c.x, y: -c.y)
+            .concatenating(CGAffineTransform(scaleX: magnification, y: magnification))
+            .concatenating(CGAffineTransform(translationX: c.x, y: c.y)))
+        let disk = CGRect(x: c.x - radius, y: c.y - radius, width: radius * 2, height: radius * 2)
+        let glass = zoomed.applyingFilter("CIBlendWithMask", parameters: [
+            kCIInputBackgroundImageKey: CIImage.empty(),
+            kCIInputMaskImageKey: Self.roundedRect(disk, radius: radius, color: .white),
+        ]).cropped(to: disk)
+        let border = max(2, radius * 0.035)
+        let rim = Self.roundedRect(disk.insetBy(dx: -border, dy: -border), radius: radius + border, color: .white)
+        let shadow = Self.roundedRect(disk.offsetBy(dx: 0, dy: -radius * 0.06), radius: radius,
+                                      color: CIColor(red: 0, green: 0, blue: 0, alpha: 0.45))
+            .applyingGaussianBlur(sigma: radius * 0.12).cropped(to: disk.insetBy(dx: -radius * 0.5, dy: -radius * 0.5))
+        return glass.composited(over: rim).composited(over: shadow)
     }
 
     // MARK: - Kameralayout per del

@@ -181,12 +181,15 @@ public struct EditProject: Codable, Equatable, Sendable {
         /// Skapad automatiskt. Ändrar användaren den blir den manuell och överlever när de
         /// automatiska skapas om.
         public var isAuto: Bool
+        /// Kameran zoomar, eller en lupp följer markören medan kameran står still.
+        public var style: Style
+        public enum Style: String, Codable, Sendable, CaseIterable { case camera, lens }
 
         public init(id: UUID = UUID(), start: Double, end: Double, scale: Double,
-                    centerX: Double, centerY: Double, followsCursor: Bool = true, isAuto: Bool = false) {
+                    centerX: Double, centerY: Double, followsCursor: Bool = true, isAuto: Bool = false, style: Style = .camera) {
             self.id = id; self.start = start; self.end = end; self.scale = scale
             self.centerX = centerX; self.centerY = centerY
-            self.followsCursor = followsCursor; self.isAuto = isAuto
+            self.followsCursor = followsCursor; self.isAuto = isAuto; self.style = style
         }
 
         public init(from decoder: Decoder) throws {
@@ -197,6 +200,7 @@ public struct EditProject: Codable, Equatable, Sendable {
             centerX = c.value(.centerX, 0.5); centerY = c.value(.centerY, 0.5)
             followsCursor = c.value(.followsCursor, true)
             isAuto = c.value(.isAuto, false)
+            style = c.value(.style, .camera)
         }
     }
 

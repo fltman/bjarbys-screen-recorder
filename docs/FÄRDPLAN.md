@@ -69,6 +69,9 @@ tagning, sedan redigerbar polish, sedan resten.
 
 - Kortkommandon i filmen (2026-11-05): bubbla nere eller uppe i mitten, räknar upp
   upprepningar ("⌘Z ×3"), visas i utdatatid så att 4×-delar inte blinkar förbi.
+- Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
+  förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
+  syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
 - Utsnitt och stillbild (2026-11-05): I och O sätter in- och utpunkt, X tar bort (tonat i
   tidslinjen); exporten kan ta bara utsnittet (alla förval, ljudet tonas 20 ms i kanterna, .srt
   räknad från utsnittets början; MCP `range`). Exportfönstrets Mer › Spara bild vid spelhuvudet

@@ -148,3 +148,23 @@ import AVFoundation
         #expect(on.clickSound && on.clickVolume == 0.3)
     }
 }
+
+@Suite struct LensTests {
+    /// Ett lupp-block zoomar inte kameran (luppen ritas för sig); ett vanligt block gör det.
+    @Test func lensDoesNotZoomTheCamera() throws {
+        var meta = RecordingMeta(source: .init(kind: .display, title: "", displayID: 0, windowID: nil,
+                                               contentRect: Rect(x: 0, y: 0, width: 960, height: 540), pixelScale: 2,
+                                               pixelWidth: 1920, pixelHeight: 1080), fps: 60, appVersion: "t")
+        meta.duration = 8
+        var project = try BundleJSON.decoder.decode(EditProject.self, from: Data("{}".utf8))
+        project.segments = [.init(start: 0, end: 8)]
+        project.zooms = [.init(start: 1, end: 3, scale: 2.5, centerX: 0.5, centerY: 0.5, style: .lens),
+                         .init(start: 5, end: 7, scale: 2, centerX: 0.5, centerY: 0.5, followsCursor: false)]
+        let p = RenderPlan(canvas: CGSize(width: 1920, height: 1080), project: project, meta: meta, events: [],
+                           cursors: CursorCatalog(), cursorsDir: FileManager.default.temporaryDirectory, hasCamera: false)
+        #expect(abs(p.cameraPath.viewport(at: 2).scale - 1) < 0.001)
+        #expect(p.cameraPath.viewport(at: 6).scale > 1.9)
+        let decoded = try BundleJSON.decoder.decode(EditProject.ZoomSegment.self, from: Data("{}".utf8))
+        #expect(decoded.style == .camera)
+    }
+}

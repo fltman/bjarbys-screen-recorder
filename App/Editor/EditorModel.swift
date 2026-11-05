@@ -372,6 +372,15 @@ final class EditorModel: ObservableObject {
         }
     }
 
+    /// En lupp (förstoringsglas vid markören) i 3 s från spelhuvudet.
+    func addLensAtPlayhead() {
+        let s = sourceTimeAtPlayhead
+        let zoom = EditProject.ZoomSegment(start: s, end: min(s + 3, recording.meta.duration), scale: 2,
+                                           centerX: 0.5, centerY: 0.5, followsCursor: true, style: .lens)
+        update { $0.zooms.append(zoom) }
+        selectedZoomID = zoom.id
+    }
+
     func addZoomAtPlayhead() {
         let s = sourceTimeAtPlayhead
         let c = plan.cursorPath.hasData ? plan.cursorPath.position(at: s) : CGPoint(x: 0.5, y: 0.5)

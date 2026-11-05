@@ -1412,6 +1412,23 @@
         }
       }
     },
+    "Ett förstoringsglas som följer markören i 3 s från spelhuvudet.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A magnifier that follows the cursor for 3 s from the playhead."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ett förstoringsglas som följer markören i 3 s från spelhuvudet."
+          }
+        }
+      }
+    },
     "Ett kort, mjukt klick vid varje musklick i filmen.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2891,6 +2908,23 @@
         }
       }
     },
+    "Kameran zoomar in, eller ett förstoringsglas följer markören medan bilden står still.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The camera zooms in, or a magnifier follows the cursor while the picture stays put."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kameran zoomar in, eller ett förstoringsglas följer markören medan bilden står still."
+          }
+        }
+      }
+    },
     "Kapitel": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3261,6 +3295,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ljudeffekt …"
+          }
+        }
+      }
+    },
+    "Lupp": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Magnifier"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lupp"
           }
         }
       }
@@ -3805,6 +3856,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nere till vänster"
+          }
+        }
+      }
+    },
+    "Ny lupp": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New magnifier"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ny lupp"
           }
         }
       }
@@ -4672,6 +4740,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Som standard"
+          }
+        }
+      }
+    },
+    "Sort": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kind"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort"
           }
         }
       }
