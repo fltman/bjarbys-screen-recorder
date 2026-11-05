@@ -348,6 +348,10 @@ som bakgrund i `CIBlendWithMask` gav svarta hörn runt cirkeln; bakgrunden ska v
   tonerna låg där de skulle (438/658/878 Hz uppmätt vid 1,0/3,0/5,5 s). Ett appspår som bara fanns
   i mittentagningen fick `start_time` 2,5 i filen (tom redigering före), samma konvention som
   kamerans senare start — kompositionen läser det i inspelningens tid utan omräkning.
+- Kameror med olika storlek i tagningarna (1280×720 + 640×480): passthrough lägger båda
+  formatbeskrivningarna i samma spår. AVFoundation läser det rätt (bubblan visar 16:9- respektive
+  4:3-bilden), men ffmpeg ger avkodningsfel i andra halvan. Paketet läses bara av appen, så det
+  får vara så; exporterna går genom AVFoundation.
 - Luckor läggs in uttryckligen (`insertEmptyTimeRange`), så att varje tagning hamnar på sin
   plats även när ett spår saknas i en tagning (oprövat utan: vi förlitar oss inte på hur
   `insertTimeRange` bortom spårets slut beter sig).
