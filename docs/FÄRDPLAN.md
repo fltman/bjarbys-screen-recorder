@@ -19,7 +19,6 @@ tagning, sedan redigerbar polish, sedan resten.
   skärmen, rutorna och exporten är provade, men ingen har suttit och klickat i den än.
 - Kameraspåret är inte provat med en riktig kamera (koden finns, provet kördes utan).
 - Fönsterinspelning där fönstret flyttas under inspelningen (`frame`-händelser) är inte provad.
-- gifski om ImageIO-GIF:en bandar.
 
 ## Byggt efter fas 2
 
@@ -72,6 +71,9 @@ tagning, sedan redigerbar polish, sedan resten.
 
 - Kortkommandon i filmen (2026-11-05): bubbla nere eller uppe i mitten, räknar upp
   upprepningar ("⌘Z ×3"), visas i utdatatid så att 4×-delar inte blinkar förbi.
+- GIF utan band (2026-11-05): ImageIOs palett per ruta bandade (uppmätt), så GIF:en får en
+  egen gemensam palett (median cut ur stickprov från hela filmen) och ordnat gitter (Bayer 8×8)
+  — inget gifski-beroende. `RecorderKit/Export/GIFPalette.swift`.
 - Rörelseoskärpa (2026-11-05): valfri under Rörelse › Zoom (`motionBlur`). Kamerans rörelse
   under 1/60 s ger riktad oskärpa vid panorering och radiell vid zoom, slutare halva rutan,
   högst 18 px vid 1080p; ingenting i snitt eller när kameran står still.

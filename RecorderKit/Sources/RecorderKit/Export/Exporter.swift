@@ -299,19 +299,55 @@ public final class Exporter: @unchecked Sendable {
 
     // MARK: - GIF
 
+    /// GIF i två varv: först stickprov ur hela filmen till en gemensam palett (median cut),
+    /// sedan varje ruta med ordnat gitter mot den (`GIFPalette`). ImageIOs palett per ruta bandade.
     private func exportGIF(_ built: CompositionBuilder.Result, canvas: CGSize, to url: URL,
                            progress: @escaping @Sendable (Double) -> Void) async throws {
-        let reader = try AVAssetReader(asset: built.composition)
-        let videoTracks = try await built.composition.loadTracks(withMediaType: .video)
-        let out = AVAssetReaderVideoCompositionOutput(videoTracks: videoTracks, videoSettings: [
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-        ])
-        out.videoComposition = built.videoComposition
-        reader.add(out)
-        self.reader = reader
-        guard reader.startReading() else { throw ExportError.failed(reader.error?.localizedDescription ?? "Läsningen startade inte") }
-
         let total = max(built.duration.seconds, 0.001)
+        let videoTracks = try await built.composition.loadTracks(withMediaType: .video)
+        func makeReader() throws -> (AVAssetReader, AVAssetReaderVideoCompositionOutput) {
+            let reader = try AVAssetReader(asset: built.composition)
+            let out = AVAssetReaderVideoCompositionOutput(videoTracks: videoTracks, videoSettings: [
+                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+            ])
+            out.videoComposition = built.videoComposition
+            reader.add(out)
+            self.reader = reader
+            guard reader.startReading() else { throw ExportError.failed(reader.error?.localizedDescription ?? "Läsningen startade inte") }
+            return (reader, out)
+        }
+        func withPixels<T>(_ buffer: CMSampleBuffer, _ body: (UnsafePointer<UInt8>, Int, Int, Int) -> T) -> T? {
+            guard let px = CMSampleBufferGetImageBuffer(buffer) else { return nil }
+            CVPixelBufferLockBaseAddress(px, .readOnly)
+            defer { CVPixelBufferUnlockBaseAddress(px, .readOnly) }
+            guard let base = CVPixelBufferGetBaseAddress(px) else { return nil }
+            return body(base.assumingMemoryBound(to: UInt8.self), CVPixelBufferGetWidth(px), CVPixelBufferGetHeight(px),
+                        CVPixelBufferGetBytesPerRow(px))
+        }
+
+        // Varv 1: stickprov ur var tredje ruta.
+        var samples: [UInt32] = []
+        do {
+            let (reader, out) = try makeReader()
+            var n = 0
+            while let buffer = out.copyNextSampleBuffer() {
+                if isCancelled { reader.cancelReading(); throw ExportError.cancelled }
+                if n % 3 == 0, let s = withPixels(buffer, { GIFPalette.samples(bgra: $0, width: $1, height: $2, bytesPerRow: $3) }) {
+                    samples += s
+                }
+                n += 1
+                progress(min(0.3, CMSampleBufferGetPresentationTimeStamp(buffer).seconds / total * 0.3))
+            }
+            if reader.status == .failed { throw ExportError.failed(reader.error?.localizedDescription ?? "Läsningen misslyckades") }
+        }
+        if samples.count > 400_000 {
+            let k = samples.count / 400_000 + 1
+            samples = stride(from: 0, to: samples.count, by: k).map { samples[$0] }
+        }
+        let mapper = GIFPalette.Mapper(GIFPalette.build(samples: samples))
+
+        // Varv 2: gittra och skriv.
+        let (reader, out) = try makeReader()
         let frameCount = Int(total * Double(preset.fps)) + 1
         guard let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.gif.identifier as CFString, frameCount, nil) else {
             throw ExportError.failed("GIF-filen gick inte att skapa")
@@ -326,16 +362,14 @@ public final class Exporter: @unchecked Sendable {
         }
         while let buffer = out.copyNextSampleBuffer() {
             if isCancelled { reader.cancelReading(); throw ExportError.cancelled }
-            guard let pixels = CMSampleBufferGetImageBuffer(buffer) else { continue }
-            let image = CIImage(cvPixelBuffer: pixels)
-            if let cg = RenderContext.shared.createCGImage(image, from: image.extent) {
+            if let cg = withPixels(buffer, { mapper.orderedImage(bgra: $0, width: $1, height: $2, bytesPerRow: $3) }) ?? nil {
                 let d = delay(frameIndex)
                 let props = [kCGImagePropertyGIFDictionary: [kCGImagePropertyGIFDelayTime: d,
                                                              kCGImagePropertyGIFUnclampedDelayTime: d]] as CFDictionary
                 CGImageDestinationAddImage(dest, cg, props)
                 frameIndex += 1
             }
-            progress(min(1, CMSampleBufferGetPresentationTimeStamp(buffer).seconds / total))
+            progress(min(1, 0.3 + CMSampleBufferGetPresentationTimeStamp(buffer).seconds / total * 0.7))
         }
         if reader.status == .failed { throw ExportError.failed(reader.error?.localizedDescription ?? "Läsningen misslyckades") }
         guard CGImageDestinationFinalize(dest) else { throw ExportError.failed("GIF-filen gick inte att skriva klart") }

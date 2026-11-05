@@ -104,7 +104,8 @@ Backblaze B2) and get the public link on the clipboard. No service in between; t
 lives in the keychain.
 
 **Export:** MP4 (H.264, 1080p), MP4 (HEVC, 4K), MP4 4K HDR (HEVC 10-bit, HLG; for HDR recordings), ProRes 422, ProRes 4444 with a transparent
-background (to put the polished screen on top of something else in your editor) and GIF.
+background (to put the polished screen on top of something else in your editor) and GIF (one
+palette for the whole clip with ordered dithering, so gradients don't band).
 
 ## Measured, not assumed
 

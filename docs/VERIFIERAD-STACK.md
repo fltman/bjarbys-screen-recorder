@@ -279,6 +279,18 @@ vänster kanal:
 - ⚠️ Första mätningen visade ingen övertoning: den kördes mot en appbinär byggd före ändringen
   (`test.sh` bygger bara paketet). Mät alltid efter xcodebuild.
 
+## GIF (2026-11-05)
+
+Provinspelning med bakgrundsgradient, 800×450, 15 bilder/s, 2 s; kolumnen x = 6 i bakgrunden:
+- ImageIO (palett per ruta, inget gitter): 205 kB, 11 färger, band upp till **110 px**.
+- `CIDither` före ImageIO: står still mellan rutor men tar inte bort banden (49 px vid 0,04).
+- Egen palett + Floyd–Steinberg: jämn, men **1,3 MB** (bruset komprimeras dåligt) och enstaka
+  avvikande prickar där felet samlas.
+- Egen palett + Bayer 8×8, spridning 10 (vald): 248 kB (+21 %), längsta band 22 px, bakgrunden
+  identisk mellan rutorna. Spridning 6 räckte inte (58 px). Median cut måste vikta lådorna med
+  antalet pixlar — bara omfånget lade färgerna på avvikare (8 färger i gradienten).
+- Exporten tar två varv (palett, sedan gitter): 0,71 s för 2 s film mot 0,31 s.
+
 ## Rörelseoskärpa (2026-11-05)
 
 - Core Images filter är inte i pixlar: `CIMotionBlur` med radie r ger ett streck på ~4,7 r

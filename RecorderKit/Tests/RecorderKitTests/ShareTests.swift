@@ -63,3 +63,33 @@ import Foundation
         #expect(c.region == "auto" && !c.isComplete)
     }
 }
+
+@Suite struct GIFPaletteTests {
+    /// En jämn gradient mot en liten palett (12 färger): med gittret ligger medelvärdet per block nära
+    /// källan (inga band), utan blir det trappsteg. Samma indata ger samma utdata (inget flimmer).
+    @Test func orderedDitherRemovesBands() {
+        let w = 256, h = 8
+        var bgra = [UInt8](repeating: 255, count: w * h * 4)
+        for y in 0..<h { for x in 0..<w { for c in 0..<3 { bgra[(y * w + x) * 4 + c] = UInt8(60 + x / 2) } } }
+        let samples = bgra.withUnsafeBufferPointer { GIFPalette.samples(bgra: $0.baseAddress!, width: w, height: h, bytesPerRow: w * 4, step: 1) }
+        let palette = GIFPalette.build(samples: samples, maxColors: 12)
+        let mapper = GIFPalette.Mapper(palette)
+        func blockError(spread: Int) -> Double {
+            let idx = bgra.withUnsafeBufferPointer { mapper.orderedIndices(bgra: $0.baseAddress!, width: w, height: h, bytesPerRow: w * 4, spread: spread) }
+            // Medelfelet per block, utom längst ut där paletten inte når (lådornas medel drar in kanterna).
+            var sum = 0.0, n = 0.0
+            for bx in stride(from: 16, to: w - 16, by: 8) {
+                var got = 0.0, want = 0.0
+                for y in 0..<8 { for x in bx..<(bx + 8) { got += Double(palette.colors[Int(idx[y * w + x])].g); want += Double(60 + x / 2) } }
+                sum += abs(got - want) / 64; n += 1
+            }
+            return sum / n
+        }
+        // Paletten ligger ~12 nivåer isär här; gittret behöver vara lika brett.
+        #expect(blockError(spread: 12) < blockError(spread: 0) * 0.6)
+        #expect(blockError(spread: 12) < 1.5)
+        let a = bgra.withUnsafeBufferPointer { mapper.orderedIndices(bgra: $0.baseAddress!, width: w, height: h, bytesPerRow: w * 4) }
+        let b = bgra.withUnsafeBufferPointer { mapper.orderedIndices(bgra: $0.baseAddress!, width: w, height: h, bytesPerRow: w * 4) }
+        #expect(a == b)
+    }
+}
