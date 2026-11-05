@@ -141,7 +141,9 @@ is included; to have the app follow your system language instead, run
 - A URL scheme (`skarminspelare://spela-in`, `…/stoppa`, `…/paus`, `…/oppna?sokvag=…`) and
   Shortcuts actions for the app itself.
 
-**Sharing:** upload an export to your own S3-compatible bucket (Cloudflare R2, AWS S3, MinIO,
+**Sharing:** upload to YouTube (always as a private video, with the chapters in the description) or
+Dropbox (a shared link) with your own app registration — sign-in with OAuth and PKCE, no server in
+between, tokens in the keychain. Or upload an export to your own S3-compatible bucket (Cloudflare R2, AWS S3, MinIO,
 Backblaze B2) and get the public link on the clipboard. No service in between; the secret key
 lives in the keychain.
 

@@ -211,6 +211,16 @@ struct ExportSheet: View {
                     } else if SharingStore.isReady && !preset.fileExtension.isEmpty && finishedAll.count <= 1 {
                         Button("Ladda upp och kopiera länk") { upload(finishedURL) }
                     }
+                    if sharedURL == nil && uploading == nil && finishedAll.count <= 1 && !preset.fileExtension.isEmpty {
+                        if CloudStore.isConnected(.youtube) && !preset.isAudioOnly && preset.codec != .gif {
+                            Button("YouTube") { uploadCloud(.youtube, finishedURL) }
+                                .help("Laddar upp som privat film (ändra synligheten i YouTube Studio) och kopierar länken.")
+                        }
+                        if CloudStore.isConnected(.dropbox) {
+                            Button("Dropbox") { uploadCloud(.dropbox, finishedURL) }
+                                .help("Laddar upp till \(CloudStore.dropboxFolder) och kopierar en delningslänk.")
+                        }
+                    }
                     ShareLink(items: finishedAll.isEmpty ? [finishedURL] : finishedAll) { Label("Dela …", systemImage: "square.and.arrow.up") }
                         .help("AirDrop, Mail, Meddelanden … (systemets Dela-meny)")
                     if let chapters = finishedChapters {
@@ -296,6 +306,25 @@ struct ExportSheet: View {
         var n = 2
         while FileManager.default.fileExists(atPath: url.path) { url = make("\(base) (\(n))"); n += 1 }
         return url
+    }
+
+    /// YouTube (privat, med kapitlen i beskrivningen) eller Dropbox; länken hamnar i urklipp.
+    private func uploadCloud(_ service: CloudStore.Service, _ file: URL) {
+        uploading = 0
+        error = nil
+        let title = model.recording.meta.name.isEmpty ? model.recording.bundle.name : model.recording.meta.name
+        let description = finishedChapters ?? ""
+        Task {
+            do {
+                let report: @Sendable (Double) -> Void = { p in Task { @MainActor in uploading = p } }
+                sharedURL = service == .youtube
+                    ? try await CloudStore.uploadYouTube(file, title: title, description: description, progress: report)
+                    : try await CloudStore.uploadDropbox(file, progress: report)
+            } catch {
+                self.error = error.localizedDescription
+            }
+            uploading = nil
+        }
     }
 
     private func upload(_ file: URL) {

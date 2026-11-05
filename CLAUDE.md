@@ -52,6 +52,8 @@ open Skarminspelare.xcodeproj
     spåren, händelserna och orden
   - `--prov-uppladdning <fil> <http://127.0.0.1:port>` — uppladdningen mot en lokal provserver
     med påhittade provnycklar (aldrig riktiga)
+  - `--prov-moln <fil> <http://127.0.0.1:port>` — OAuth (PKCE, lokal mottagare) och uppladdning
+    till YouTube och Dropbox mot en lokal provserver med påhittade nycklar (aldrig riktiga konton)
   Startad från terminalen lånar binären terminalens skärminspelningsbehörighet.
 - `./scripts/sync-check.sh` mäter A/V-synk mot en blixt+pip-referens i QuickTime.
 - `swift scripts/make-icon.swift <png>` ritar appikonen (skalas in i `App/Assets.xcassets`).

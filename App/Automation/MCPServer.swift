@@ -295,6 +295,7 @@ enum MCPServer {
                                     "subtitles": ["type": "boolean", "description": "Also write an .srt next to the video (default true if transcribed)."],
                                     "fps": ["type": "integer", "description": "Frame rate of the file (default: the preset's, 60; use 120 for a 120 fps recording)."],
                                     "quality": ["type": "string", "enum": ["small", "normal", "high"], "description": "Bitrate for MP4: small = half (mail, chat), high = 1.8× (fast motion, lots of text). Default normal."],
+                                    "upload_to": ["type": "string", "enum": ["youtube", "dropbox"], "description": "Upload to YouTube (always as a private video, chapters in the description) or Dropbox (shared link), connected under Sharing in the app."],
                                     "upload": ["type": "boolean", "description": "Upload to the S3/R2 bucket set up under Sharing in the app and return the public link."],
                                     "loudness": ["type": "number", "description": "Even out the whole film's audio to this loudness in LUFS (e.g. -14 for YouTube, -16 for podcasts), peaks kept under -1 dBFS."],
                                     "range": ["type": "array", "items": ["type": "number"], "minItems": 2, "maxItems": 2,
@@ -911,6 +912,20 @@ enum MCPServer {
             let captions = Captions(words: words, timeMap: TimeMap(segments: project.segments))
             try (range.map { captions.srt(in: $0) } ?? captions.srt).write(to: srt, atomically: true, encoding: .utf8)
             text += "\nSubtitles: \(srt.path)"
+        }
+        if let target = a["upload_to"] as? String, target == "youtube" || target == "dropbox" {
+            guard !preset.fileExtension.isEmpty else { throw ToolError(text + "\nNot uploaded: a folder can't be uploaded; export a single file.") }
+            let service: CloudStore.Service = target == "youtube" ? .youtube : .dropbox
+            guard CloudStore.isConnected(service) else {
+                throw ToolError(text + "\nNot uploaded: \(target) is not connected (Sharing … in the app's menu).")
+            }
+            let title = rec.meta.name.isEmpty ? rec.bundle.name : rec.meta.name
+            let chapters = project.chapters.isEmpty ? "" : OverlayTrack(overlays: [], chapters: project.chapters, timeMap: TimeMap(segments: project.segments))
+                .youtubeChapters(in: range ?? 0...TimeMap(segments: project.segments).outputDuration)
+            let link = service == .youtube
+                ? try await CloudStore.uploadYouTube(url, title: title, description: chapters) { _ in }
+                : try await CloudStore.uploadDropbox(url) { _ in }
+            text += "\n\(service == .youtube ? "YouTube (private)" : "Dropbox") link (copied to the clipboard): \(link.absoluteString)"
         }
         if a["upload"] as? Bool == true {
             guard !preset.fileExtension.isEmpty else { throw ToolError(text + "\nNot uploaded: a folder can't be uploaded; export a single file.") }

@@ -579,6 +579,57 @@
         }
       }
     },
+    "Anslut igen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect Again"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anslut igen"
+          }
+        }
+      }
+    },
+    "Anslut …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect…"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anslut …"
+          }
+        }
+      }
+    },
+    "Ansluten": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ansluten"
+          }
+        }
+      }
+    },
     "Använd här": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -609,6 +660,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Apples röstisolering: brus, fläktar och tangentbord tas bort, rösten blir kvar."
+          }
+        }
+      }
+    },
+    "Appnyckel": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App key"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appnyckel"
           }
         }
       }
@@ -1514,6 +1582,23 @@
         }
       }
     },
+    "Dropbox": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dropbox"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dropbox"
+          }
+        }
+      }
+    },
     "Dubbelklicka här.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1663,6 +1748,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "E-post"
+          }
+        }
+      }
+    },
+    "Egen lagring (S3, R2)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your own storage (S3, R2)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egen lagring (S3, R2)"
           }
         }
       }
@@ -3588,6 +3690,23 @@
         }
       }
     },
+    "Inte ansluten": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not connected"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inte ansluten"
+          }
+        }
+      }
+    },
     "Jämna ut till %lld LUFS": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3707,6 +3826,23 @@
         }
       }
     },
+    "Klar": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klar"
+          }
+        }
+      }
+    },
     "Klart": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3788,6 +3924,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Klickljudets volym"
+          }
+        }
+      }
+    },
+    "Klient-id": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client ID"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klient-id"
+          }
+        }
+      }
+    },
+    "Klienthemlighet": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Client secret"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klienthemlighet"
           }
         }
       }
@@ -3877,6 +4047,23 @@
         }
       }
     },
+    "Koden från Dropbox": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The code from Dropbox"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koden från Dropbox"
+          }
+        }
+      }
+    },
     "Kontur": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3907,6 +4094,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kopiera kapitel"
+          }
+        }
+      }
+    },
+    "Koppla från": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koppla från"
           }
         }
       }
@@ -4077,6 +4281,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ladda upp och kopiera länk"
+          }
+        }
+      }
+    },
+    "Laddar upp som privat film (ändra synligheten i YouTube Studio) och kopierar länken.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uploads as a private video (change the visibility in YouTube Studio) and copies the link."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laddar upp som privat film (ändra synligheten i YouTube Studio) och kopierar länken."
+          }
+        }
+      }
+    },
+    "Laddar upp till %@ och kopierar en delningslänk.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uploads to %@ and copies a shared link."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laddar upp till %@ och kopierar en delningslänk."
           }
         }
       }
@@ -4332,6 +4570,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Manus …"
+          }
+        }
+      }
+    },
+    "Mapp": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mapp"
           }
         }
       }
@@ -5726,6 +5981,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sidled"
+          }
+        }
+      }
+    },
+    "Skapa en app i Dropbox App Console (rättigheterna files.content.write och sharing.write) och klistra in appnyckeln.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create an app in the Dropbox App Console (permissions files.content.write and sharing.write) and paste the app key."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skapa en app i Dropbox App Console (rättigheterna files.content.write och sharing.write) och klistra in appnyckeln."
+          }
+        }
+      }
+    },
+    "Skapa ett OAuth-klient-id av typen Skrivbordsapp i Google Cloud Console (YouTube Data API v3 påslaget) och klistra in det här. Filmer laddas upp som privata.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create an OAuth client ID of type Desktop app in Google Cloud Console (with YouTube Data API v3 enabled) and paste it here. Videos are uploaded as private."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skapa ett OAuth-klient-id av typen Skrivbordsapp i Google Cloud Console (YouTube Data API v3 påslaget) och klistra in det här. Filmer laddas upp som privata."
           }
         }
       }
@@ -8106,6 +8395,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "bortklippt"
+          }
+        }
+      }
+    },
+    "inte ansluten — anslut under Delning …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not connected — connect under Sharing…"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "inte ansluten — anslut under Delning …"
           }
         }
       }

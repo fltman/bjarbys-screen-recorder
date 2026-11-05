@@ -84,6 +84,13 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- YouTube och Dropbox (2026-11-05): Delning … har YouTube (eget OAuth-klient-id av typen
+  Skrivbordsapp; inloggningen landar på en tillfällig mottagare på 127.0.0.1) och Dropbox (egen
+  appnyckel; koden klistras in, eftersom Dropbox kräver exakt registrerade adresser) — båda med
+  PKCE, nycklarna i nyckelringen och förnyas själv. Efter exporten: YouTube (alltid privat,
+  kapitlen i beskrivningen, "resumable upload") och Dropbox (hel fil eller i bitar à 64 MB,
+  delningslänk). MCP `export` med `upload_to`. Provat mot en lokal provserver (PKCE kontrollerat,
+  filen bitidentisk) — ⚠️ inte mot riktiga konton.
 - Rensa mikrofonen under inspelningen (2026-11-05): Inspelning › Rensa mikrofonen under
   inspelningen (MCP `clean_microphone`). AVAudioEngine med röstbehandling (eko mot det som spelas,
   brus; nivåreglering av, andra appar tonas inte ned) blir mikrofonspåret, startad före

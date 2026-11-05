@@ -59,6 +59,7 @@ struct SharingSettingsView: View {
 
     var body: some View {
         Form {
+            Section("Egen lagring (S3, R2)") {
             Text("Ladda upp exporterade filmer till din egen S3-kompatibla lagring (Cloudflare R2, AWS S3, MinIO, Backblaze B2) och få en länk i urklipp.")
                 .font(.callout).foregroundStyle(.secondary)
             TextField("Adress", text: $config.endpoint, prompt: Text(verbatim: "https://<konto>.r2.cloudflarestorage.com"))
@@ -80,9 +81,11 @@ struct SharingSettingsView: View {
             }
             Text("Den hemliga nyckeln sparas i nyckelringen. Ge nyckeln rätt att skriva i hinken och inget annat.")
                 .font(.caption).foregroundStyle(.secondary)
+            }
+            CloudSettingsSection()
         }
         .formStyle(.grouped)
-        .frame(width: 520)
+        .frame(width: 520, height: 700)
         .onChange(of: config) { saved = false }
     }
 }

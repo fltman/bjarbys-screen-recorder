@@ -128,6 +128,41 @@ enum TestMode {
                 } catch { print(error.localizedDescription); code = 1 }
             } else if let i = args.firstIndex(of: "--prov-penna"), args.count > i + 1 {
                 code = await inkTest(out: URL(fileURLWithPath: args[i + 1]))
+            } else if let i = args.firstIndex(of: "--prov-moln"), args.count > i + 2 {
+                // OAuth och uppladdning till YouTube och Dropbox mot en lokal provserver (påhittade nycklar).
+                let file = URL(fileURLWithPath: args[i + 1])
+                guard let base = URL(string: args[i + 2]) else { code = 64; return }
+                do {
+                    // Google: webbläsaren simuleras genom att hämta adressen (servern skickar vidare
+                    // till den lokala mottagaren, som en webbläsare hade gjort).
+                    let google = OAuthProvider.youtube(clientID: "prov-klient", clientSecret: "prov-hemlighet", base: base)
+                    let tokens = try await OAuth.authorizeWithLoopback(google) { url in
+                        Task { _ = try? await URLSession.shared.data(from: url) }
+                    }
+                    print("google: åtkomst \(tokens.accessToken), förnyelse \(tokens.refreshToken ?? "–")")
+                    let renewed = try await OAuth.refresh(google, refreshToken: tokens.refreshToken ?? "")
+                    print("google: förnyad \(renewed.accessToken), förnyelsenyckeln kvar: \(renewed.refreshToken == tokens.refreshToken)")
+                    let yt = try await YouTubeUploader.upload(file, title: "Prov å ä ö", description: "0:00 Start\n0:05 Mitten",
+                                                              accessToken: renewed.accessToken, base: base)
+                    print("youtube: \(yt.absoluteString)")
+                    // Dropbox: koden visas på sidan och klistras in.
+                    let dropbox = OAuthProvider.dropbox(appKey: "prov-nyckel", base: base)
+                    let (verifier, challenge) = OAuth.pkce()
+                    let (codeData, _) = try await URLSession.shared.data(from: OAuth.authorizeURL(dropbox, challenge: challenge, state: "s", redirect: nil))
+                    let db = try await OAuth.exchange(dropbox, code: String(decoding: codeData, as: UTF8.self), verifier: verifier, redirect: nil)
+                    print("dropbox: åtkomst \(db.accessToken)")
+                    let whole = try await DropboxUploader.upload(file, folder: "Bjarbys skärminspelare", accessToken: db.accessToken,
+                                                                  contentBase: base, apiBase: base)
+                    print("dropbox hel: \(whole.absoluteString)")
+                    let again = try await DropboxUploader.upload(file, folder: "Bjarbys skärminspelare", accessToken: db.accessToken,
+                                                                  contentBase: base, apiBase: base)
+                    print("dropbox igen (länken finns): \(again.absoluteString)")
+                    DropboxUploader.chunkSize = 1024 * 1024
+                    let parts = try await DropboxUploader.upload(file, folder: "/Bitar", accessToken: db.accessToken,
+                                                                  contentBase: base, apiBase: base) { _ in }
+                    print("dropbox i bitar: \(parts.absoluteString)")
+                    code = 0
+                } catch { print("fel: \(error.localizedDescription)"); code = 1 }
             } else if let i = args.firstIndex(of: "--prov-enhet"), args.count > i + 2 {
                 // Enheterna, och en kort inspelning från den första kameran (eller --enhet <namn>).
                 // Bara måtten skrivs ut; paketet raderas (kameran fångar den som sitter där).
@@ -489,7 +524,7 @@ enum TestMode {
             try await shot("behorigheter", NSSize(width: 600, height: 560), PermissionsView())
             try await shot("hud", NSSize(width: 360, height: 140), HUDView(controller: app.recorder).padding(10), dark: true)
             try await shot("manus", NSSize(width: 560, height: 460), ScriptEditorView(settings: app.settings))
-            try await shot("delning", NSSize(width: 520, height: 520), SharingSettingsView())
+            try await shot("delning", NSSize(width: 520, height: 700), SharingSettingsView())
             try await shot("kortkommandon", NSSize(width: 520, height: 300), HotKeySettingsView())
             try await shot("sla-ihop", NSSize(width: 560, height: 470),
                            MergeSheet(library: app.library, selected: Set(app.library.items.prefix(2).map(\.bundle.url))) { _ in })
