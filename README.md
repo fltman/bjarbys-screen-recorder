@@ -46,6 +46,7 @@ is included; to have the app follow your system language instead, run
 - Dragged zooms and layers snap to the playhead, the I/O marks and the cuts (⌘ to drag freely).
 - Optional motion blur while the camera zooms and pans, like a real camera at 1/120 s.
 - Optional click sounds: a short soft click at every mouse click in the film.
+- An optional halo under the cursor (yellow, red, blue, green or white) so it is easy to follow.
 - The cursor is drawn back on a smoothed path, at any size, with click rings, and hides
   when it stands still.
 - Gradient, solid or blurred backgrounds, padding, rounded corners, shadow, and 16:9,

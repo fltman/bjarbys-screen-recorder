@@ -40,6 +40,8 @@ public final class RenderPlan: @unchecked Sendable {
     let mask: CIImage
     let shadow: CIImage?
     let ring: CIImage
+    /// Markörens halo (mjuk cirkel i vald färg), förritad; nil när den är av.
+    let halo: CIImage?
     let sprites: [String: Sprite]
     let fallbackSprite: Sprite
     let cameraMask: CIImage?
@@ -184,6 +186,7 @@ public final class RenderPlan: @unchecked Sendable {
             ? CIImage(color: .black).cropped(to: CGRect(origin: .zero, size: canvas))
             : Self.makeBackground(project.background, canvas: canvas)
         ring = Self.makeRing()
+        halo = project.cursor.highlight ? Self.makeHalo(color: project.cursor.highlightColor) : nil
 
         var sprites: [String: Sprite] = [:]
         for entry in cursors.entries {
@@ -333,6 +336,14 @@ public final class RenderPlan: @unchecked Sendable {
             if opacity > 0.01 {
                 let sprite = cursorPath.cursorID(at: s).flatMap { sprites[$0] } ?? fallbackSprite
                 let p = point(cursorPath.position(at: s))
+                // Halon: under markören, centrerad på dess spets, lika stor oavsett markörbild.
+                if let halo {
+                    let r = 22 * k * project.cursor.scale / 1.6
+                    let placed = halo
+                        .transformed(by: CGAffineTransform(scaleX: r * 2 / halo.extent.width, y: r * 2 / halo.extent.height))
+                        .transformed(by: CGAffineTransform(translationX: p.x - r, y: p.y - r))
+                    layer = Self.withAlpha(placed, opacity).composited(over: layer)
+                }
                 let size = CGSize(width: sprite.size.width * k * project.cursor.scale,
                                   height: sprite.size.height * k * project.cursor.scale)
                 let sx = size.width / sprite.image.extent.width
@@ -705,6 +716,20 @@ public final class RenderPlan: @unchecked Sendable {
 
     /// Klickringen: blå ring med genomskinlig fyllning och vit kant, så att den syns både
     /// mot ljusa och mörka gränssnitt. Ritad en gång i hög upplösning.
+    /// En mjuk cirkel (radiell gradient) i färgen: full i mitten, genomskinlig i kanten.
+    static func makeHalo(color hex: String) -> CIImage {
+        let c = color(hex: hex)
+        let size: CGFloat = 256
+        let f = CIFilter.radialGradient()
+        f.center = CGPoint(x: size / 2, y: size / 2)
+        f.radius0 = Float(size * 0.28)
+        f.radius1 = Float(size * 0.5)
+        f.color0 = CIColor(red: c.red, green: c.green, blue: c.blue, alpha: 0.45)
+        f.color1 = CIColor(red: c.red, green: c.green, blue: c.blue, alpha: 0)
+        let rect = CGRect(x: 0, y: 0, width: size, height: size)
+        return prerender(f.outputImage?.cropped(to: rect) ?? .empty(), extent: rect)
+    }
+
     static func makeRing() -> CIImage {
         let size = 256
         guard let ctx = CGContext(data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: 0,

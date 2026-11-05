@@ -84,6 +84,9 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Markörhalo (2026-11-05): Rörelse › Markör › Markera markören — en mjuk cirkel (radiell gradient,
+  45 % i mitten) i vald färg under markörens spets, zoomar med innehållet, döljs med markören.
+  MCP: `cursor_highlight`, `cursor_highlight_color`.
 - Zoom där man skriver (2026-11-05): med Kortkommandon och skrivande på loggas vanligt skrivande
   som `typing` (högst 4/s, aldrig vilken tangent) med skrivmarkörens ram via Accessibility
   (`AXBoundsForRange` på markeringen, annars fältets ram). Skurar (glapp ≤ 1,5 s, minst tre

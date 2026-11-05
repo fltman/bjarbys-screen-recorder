@@ -311,6 +311,17 @@ struct InspectorView: View {
             LabeledSlider("Utjämning", value: binding(\.cursor.smoothing), range: 0...1, format: "%.0f %%", scale: 100)
             Toggle("Dölj när den står still", isOn: binding(\.cursor.hideWhenIdle))
             Toggle("Visa klick", isOn: binding(\.cursor.clickEffect))
+            Toggle("Markera markören", isOn: binding(\.cursor.highlight))
+                .help("En mjuk färgad cirkel under markören, så att den syns även i en liten bild.")
+            if model.project.cursor.highlight {
+                Picker("Färg", selection: binding(\.cursor.highlightColor)) {
+                    Text("Gul").tag("#FFD60A")
+                    Text("Röd").tag("#FF453A")
+                    Text("Blå").tag("#0A84FF")
+                    Text("Grön").tag("#30D158")
+                    Text("Vit").tag("#FFFFFF")
+                }
+            }
             Toggle("Klickljud", isOn: binding(\.cursor.clickSound))
                 .help("Ett kort, mjukt klick vid varje musklick i filmen.")
             if model.project.cursor.clickSound {

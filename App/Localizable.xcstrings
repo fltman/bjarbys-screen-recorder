@@ -834,6 +834,23 @@
         }
       }
     },
+    "Blå": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blue"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blå"
+          }
+        }
+      }
+    },
     "Borttagen": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1510,6 +1527,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "En bild per klick och kortkommando, med det du sa som text. Markdown och HTML."
+          }
+        }
+      }
+    },
+    "En mjuk färgad cirkel under markören, så att den syns även i en liten bild.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A soft coloured circle under the cursor, so it stays visible even in a small picture."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En mjuk färgad cirkel under markören, så att den syns även i en liten bild."
           }
         }
       }
@@ -2258,6 +2292,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gradient"
+          }
+        }
+      }
+    },
+    "Grön": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Green"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grön"
+          }
+        }
+      }
+    },
+    "Gul": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yellow"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gul"
           }
         }
       }
@@ -3928,6 +3996,23 @@
         }
       }
     },
+    "Markera markören": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlight cursor"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markera markören"
+          }
+        }
+      }
+    },
     "Markera ordet som sägs": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4995,6 +5080,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rundad ruta"
+          }
+        }
+      }
+    },
+    "Röd": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Red"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Röd"
           }
         }
       }
@@ -7205,6 +7307,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Visa texten"
+          }
+        }
+      }
+    },
+    "Vit": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "White"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vit"
           }
         }
       }

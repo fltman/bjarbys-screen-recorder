@@ -297,12 +297,17 @@ public struct EditProject: Codable, Equatable, Sendable {
         /// Ett kort klickljud vid varje musklick i filmen, och dess volym.
         public var clickSound: Bool
         public var clickVolume: Double
+        /// En mjuk färgad cirkel under markören, så att den syns (som i Camtasia), och dess färg.
+        public var highlight: Bool
+        public var highlightColor: String
 
         public init(visible: Bool = true, scale: Double = 1.6, smoothing: Double = 0.6,
-                    hideWhenIdle: Bool = true, clickEffect: Bool = true, clickSound: Bool = false, clickVolume: Double = 0.5) {
+                    hideWhenIdle: Bool = true, clickEffect: Bool = true, clickSound: Bool = false, clickVolume: Double = 0.5,
+                    highlight: Bool = false, highlightColor: String = "#FFD60A") {
             self.visible = visible; self.scale = scale; self.smoothing = smoothing
             self.hideWhenIdle = hideWhenIdle; self.clickEffect = clickEffect
             self.clickSound = clickSound; self.clickVolume = clickVolume
+            self.highlight = highlight; self.highlightColor = highlightColor
         }
 
         public init(from decoder: Decoder) throws {
@@ -315,6 +320,8 @@ public struct EditProject: Codable, Equatable, Sendable {
             clickEffect = c.value(.clickEffect, d.clickEffect)
             clickSound = c.value(.clickSound, d.clickSound)
             clickVolume = c.value(.clickVolume, d.clickVolume)
+            highlight = c.value(.highlight, d.highlight)
+            highlightColor = c.value(.highlightColor, d.highlightColor)
         }
     }
 

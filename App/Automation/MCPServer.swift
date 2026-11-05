@@ -182,6 +182,8 @@ enum MCPServer {
                 "window_frame_dark": ["type": "boolean", "description": "Dark title bar."],
                 "window_title": ["type": "string", "description": "Title in the macOS window frame."],
                 "window_address": ["type": "string", "description": "Address in the browser frame's address field."],
+                "cursor_highlight": ["type": "boolean", "description": "A soft coloured halo under the cursor so it is easy to follow."],
+                "cursor_highlight_color": ["type": "string", "description": "Halo colour as #RRGGBB (default #FFD60A, yellow)."],
                 "ink": ["type": "boolean", "description": "Show what was drawn on screen with the pen during the recording (default true)."],
                 "ink_hold": ["type": "number", "minimum": 0.5, "maximum": 15, "description": "Seconds a finished pen stroke stays before it fades (default 3)."],
                 "click_sound": ["type": "boolean", "description": "A short soft click sound at every mouse click."],
@@ -515,6 +517,8 @@ enum MCPServer {
         if let v = a["window_frame_dark"] as? Bool { p.chrome.dark = v }
         if let v = a["window_title"] as? String { p.chrome.title = v }
         if let v = a["window_address"] as? String { p.chrome.address = v }
+        if let v = a["cursor_highlight"] as? Bool { p.cursor.highlight = v }
+        if let v = a["cursor_highlight_color"] as? String, v.hasPrefix("#"), v.count == 7 { p.cursor.highlightColor = v }
         if let v = a["ink"] as? Bool { p.showsInk = v }
         if let v = number(a["ink_hold"]) { p.inkHold = min(15, max(0.5, v)) }
         if let v = a["click_sound"] as? Bool { p.cursor.clickSound = v }
