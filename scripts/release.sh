@@ -9,8 +9,10 @@
 # 3. När Apple är klar hämtar xcodebuild -exportNotarizedApp appen med biljetten häftad.
 # 4. Zip: en notariserad, häftad app i en zip behöver ingen egen notarisering och öppnas även utan
 #    nät. (En DMG skulle behöva notariseras för sig, vilket kräver notarytool och lösenord.)
+# `--hamta`: arkivet är redan uppladdat — vänta bara in Apple, hämta, kontrollera och packa.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+HAMTA=0; [ "${1:-}" = "--hamta" ] && HAMTA=1
 
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 TEAM="${SKARMINSPELARE_TEAM:-V783A2L763}"
@@ -18,6 +20,7 @@ NAMN="Bjarbys skärminspelare"
 RELEASE=build/release
 ARKIV="$RELEASE/Skarminspelare.xcarchive"
 
+if [ "$HAMTA" = 0 ]; then
 [ -x build/whisper-static/bin/whisper-cli ] || ./scripts/build-whisper.sh
 rm -rf "$RELEASE"; mkdir -p "$RELEASE" dist
 
@@ -26,10 +29,13 @@ xcodebuild -project Skarminspelare.xcodeproj -scheme Skarminspelare -configurati
     -destination 'generic/platform=macOS' -archivePath "$ARKIV" \
     CODE_SIGN_IDENTITY="Developer ID Application" DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Manual \
     -quiet archive
+fi
 I_ARKIV="$ARKIV/Products/Applications/Skarminspelare.app"
 [ -x "$I_ARKIV/Contents/Helpers/whisper-cli" ] || { echo "✗ whisper-verktygen saknas i arkivet"; exit 1; }
 VERSION=$(plutil -extract CFBundleShortVersionString raw "$I_ARKIV/Contents/Info.plist")
 BYGGE=$(plutil -extract CFBundleVersion raw "$I_ARKIV/Contents/Info.plist")
+
+if [ "$HAMTA" = 0 ]; then
 
 cat > "$RELEASE/ExportOptions.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -46,6 +52,7 @@ PLIST
 echo "→ skickar $VERSION ($BYGGE) till Apples notarisering med Xcodes konto"
 xcodebuild -exportArchive -archivePath "$ARKIV" -exportOptionsPlist "$RELEASE/ExportOptions.plist" \
     -exportPath "$RELEASE/uppladdad" -allowProvisioningUpdates
+fi
 
 echo "→ väntar på Apple (brukar ta några minuter)"
 for i in $(seq 1 60); do

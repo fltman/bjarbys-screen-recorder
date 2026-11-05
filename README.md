@@ -183,12 +183,21 @@ a small file for mail and chat, normal, or high for fast motion and lots of text
 The numbers and how they were taken are in
 [`docs/VERIFIERAD-STACK.md`](docs/VERIFIERAD-STACK.md) (in Swedish).
 
+## Download
+
+A signed and notarized app: **[bjarby.com/screen-recorder](https://bjarby.com/screen-recorder/)**
+(macOS 26 or later, Apple silicon). Open the disk image and drag the app to Applications. Speech
+needs no setup: whisper.cpp comes with the app, and the first time you transcribe it downloads a
+speech model (KB-Whisper for Swedish, or a multilingual Whisper that also translates to English),
+checked against a SHA-256 checksum.
+
 ## Building
 
 Requires macOS 26 or later on Apple Silicon, and Xcode 26.1 or later. No dependencies
-outside Apple's frameworks.
+outside Apple's frameworks; the speech tools are built from whisper.cpp with cmake.
 
 ```bash
+./scripts/build-whisper.sh ~/whisper.cpp   # static whisper-cli + VAD tool to bundle (optional)
 ./scripts/build.sh          # → dist/Bjarbys skärminspelare.app
 ./scripts/test.sh           # unit tests for RecorderKit
 open Skarminspelare.xcodeproj
@@ -208,7 +217,8 @@ button you clicked rather than a box around the pointer) and **Input Monitoring*
 records keyboard shortcuts so they can be shown in the video: only keys pressed with ⌘, ⌃
 or ⌥, never text.
 
-For speech, build [whisper.cpp](https://github.com/ggml-org/whisper.cpp) (its
+For speech, either bundle the tools with `scripts/build-whisper.sh` (the app then downloads the
+models itself, under *Speech Models …*), or build [whisper.cpp](https://github.com/ggml-org/whisper.cpp) (its
 `build/bin/whisper-cli` and `build/bin/vad-speech-segments`) and put the models in its
 `models/` folder: the Silero VAD model `ggml-silero-v5.1.2.bin`, plus
 [KB-Whisper](https://huggingface.co/KBLab) for Swedish or any multilingual Whisper model. The
