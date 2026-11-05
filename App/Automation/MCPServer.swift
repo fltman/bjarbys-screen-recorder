@@ -275,7 +275,7 @@ enum MCPServer {
                                     "directory": ["type": "string", "description": "Output folder (default: ~/Movies/<name> – guide)."]],
                                    required: ["recording"])],
             ["name": "export",
-             "description": "Export the edited recording. Returns the file path.",
+             "description": "Export the edited recording. Returns the file path. Audio only: ljud-m4a, ljud-wav (the mix), ljud-spar (a folder with one WAV per source — microphone, computer audio, each app, narration, music, effects — the same length as the film; they sum to the mix).",
              "inputSchema": schema(["recording": recordingArg,
                                     "preset": ["type": "string", "enum": ExportPreset.all.map(\.id)],
                                     "path": ["type": "string", "description": "Output file (default: ~/Movies/<name>.<ext>)."],
@@ -842,7 +842,8 @@ enum MCPServer {
         let project = rec.bundle.loadProject(duration: rec.meta.duration)
         let movies = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first!
         let url = (a["path"] as? String).map { URL(fileURLWithPath: NSString(string: $0).expandingTildeInPath) }
-            ?? movies.appendingPathComponent(rec.bundle.name).appendingPathExtension(preset.fileExtension)
+            ?? (preset.codec == .audioStems ? movies.appendingPathComponent("\(rec.bundle.name) – ljudspår", isDirectory: true)
+                : movies.appendingPathComponent(rec.bundle.name).appendingPathExtension(preset.fileExtension))
         let started = Date()
         let bounds = (a["range"] as? [Any])?.compactMap(number)
         let range = bounds.flatMap { $0.count == 2 && $0[1] > $0[0] ? $0[0]...$0[1] : nil }
@@ -850,6 +851,10 @@ enum MCPServer {
                                 loudnessTarget: number(a["loudness"]))
         try await exporter.run(to: url) { _ in }
         var text = String(format: "Exported %@ in %.1f s: %@", preset.name, Date().timeIntervalSince(started), url.path)
+        if preset.codec == .audioStems {
+            let files = (try? FileManager.default.contentsOfDirectory(atPath: url.path))?.sorted() ?? []
+            text += "\n" + files.map { "- \($0)" }.joined(separator: "\n")
+        }
         if let l = exporter.loudnessReport {
             text += String(format: "\nLoudness: measured %.1f LUFS, gain %+.1f dB%@.", l.measured, l.gainDB,
                            l.limitedByPeaks ? " (limited by peaks, under the target)" : "")
@@ -861,6 +866,7 @@ enum MCPServer {
             text += "\nSubtitles: \(srt.path)"
         }
         if a["upload"] as? Bool == true {
+            guard preset.codec != .audioStems else { throw ToolError(text + "\nNot uploaded: a folder of stems can't be uploaded; export ljud-m4a or ljud-wav.") }
             guard SharingStore.isReady else {
                 throw ToolError(text + "\nNot uploaded: sharing is not set up (Sharing … in the app's menu).")
             }

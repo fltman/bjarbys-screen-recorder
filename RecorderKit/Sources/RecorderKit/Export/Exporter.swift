@@ -7,7 +7,7 @@ import VideoToolbox
 
 /// Förvalen i exportdialogen.
 public struct ExportPreset: Identifiable, Hashable, Sendable {
-    public enum Codec: String, Sendable { case h264, hevc, hevcHDR, prores, proresAlpha, gif }
+    public enum Codec: String, Sendable { case h264, hevc, hevcHDR, prores, proresAlpha, gif, audioAAC, audioWAV, audioStems }
 
     public let id: String
     public let name: String
@@ -27,6 +27,11 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
               detail: "Genomskinlig bakgrund — lägg skärmen ovanpå något eget i Final Cut, Resolve, Premiere",
               codec: .proresAlpha, shortSide: 1080, fps: 60),
         .init(id: "gif", name: "GIF", detail: "För Slack och GitHub, högst 800 px", codec: .gif, shortSide: 450, fps: 15),
+        .init(id: "ljud-m4a", name: "Ljud M4A", detail: "AAC 256 kbit/s — bara ljudet, för en podd", codec: .audioAAC, shortSide: 0, fps: 30),
+        .init(id: "ljud-wav", name: "Ljud WAV", detail: "24 bit, 48 kHz, okomprimerat", codec: .audioWAV, shortSide: 0, fps: 30),
+        .init(id: "ljud-spar", name: "Ljudspår var för sig",
+              detail: "En WAV per källa (mikrofon, datorljud, appar, inslag) i en mapp — för Logic, Resolve; summerar till mixen",
+              codec: .audioStems, shortSide: 0, fps: 30),
     ]
 
     public var fileExtension: String {
@@ -34,8 +39,14 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
         case .h264, .hevc, .hevcHDR: "mp4"
         case .prores, .proresAlpha: "mov"
         case .gif: "gif"
+        case .audioAAC: "m4a"
+        case .audioWAV: "wav"
+        case .audioStems: ""
         }
     }
+
+    /// Bara ljudet (ingen bild renderas).
+    public var isAudioOnly: Bool { codec == .audioAAC || codec == .audioWAV || codec == .audioStems }
 
     /// Bakgrunden lämnas genomskinlig (bara skärmen, skuggan, markören, bubblan och texterna ritas).
     public var transparentBackground: Bool { codec == .proresAlpha }
@@ -57,12 +68,14 @@ public struct ExportPreset: Identifiable, Hashable, Sendable {
         case .prores: return Int(pixels * Double(fps) * 1.6) // bara för uppskattningen
         case .proresAlpha: return Int(pixels * Double(fps) * 3.6)
         case .gif: return Int(pixels * Double(fps) * 0.25)
+        case .audioAAC: return 256_000
+        case .audioWAV, .audioStems: return 48_000 * 2 * 24
         }
     }
 
     /// Ungefärlig filstorlek i byte.
     public func estimatedBytes(canvas: CGSize, duration: Double) -> Int64 {
-        Int64(Double(bitrate(for: canvas)) / 8 * duration) + (codec == .gif ? 0 : Int64(24_000 * duration))
+        Int64(Double(bitrate(for: canvas)) / 8 * duration) + (codec == .gif || isAudioOnly ? 0 : Int64(24_000 * duration))
     }
 
     /// Bildytan för exporten. GIF begränsas till 800 px på längsta sidan.
@@ -126,12 +139,16 @@ public final class Exporter: @unchecked Sendable {
 
     /// Kör exporten. `progress` anropas med 0–1 från en bakgrundskö.
     public func run(to url: URL, progress: @escaping @Sendable (Double) -> Void) async throws {
-        let canvas = preset.canvas(aspect: project.aspect, source: recording.sourceSize)
+        // Bara ljud: bilden renderas aldrig, så en liten bildyta räcker för planen.
+        let canvas = preset.isAudioOnly ? CGSize(width: 640, height: 360)
+            : preset.canvas(aspect: project.aspect, source: recording.sourceSize)
         let plan = recording.makePlan(project: project, canvas: canvas, transparentBackground: preset.transparentBackground,
                                       hdr: preset.isHDR)
         let built = try await CompositionBuilder.build(recording, plan: plan, fps: fps)
         try? FileManager.default.removeItem(at: url)
-        if preset.codec == .gif {
+        if preset.isAudioOnly {
+            try await exportAudio(built, to: url, progress: progress)
+        } else if preset.codec == .gif {
             try await exportGIF(built, canvas: canvas, to: url, progress: progress)
         } else {
             try await exportMovie(built, canvas: canvas, to: url, progress: progress)
@@ -327,6 +344,126 @@ public final class Exporter: @unchecked Sendable {
                     }
                 }
             }
+        }
+    }
+
+    // MARK: - Bara ljud
+
+    /// Mixen som M4A eller WAV, eller ett spår per källa (`audioStems`): en WAV per grupp i en mapp,
+    /// alla lika långa som filmen och med mixens volymer och förstärkning, så att de summerar till
+    /// mixen när de läggs på noll i ett ljudprogram.
+    private func exportAudio(_ built: CompositionBuilder.Result, to url: URL,
+                             progress: @escaping @Sendable (Double) -> Void) async throws {
+        let span = clampedRange(built)
+        let audioTracks = try await built.composition.loadTracks(withMediaType: .audio)
+        guard !audioTracks.isEmpty else { throw ExportError.failed(String(localized: "Inspelningen har inget ljud.")) }
+        let mix = range == nil ? built.audioMix
+            : CompositionBuilder.audioMix(for: built.composition, plan: built.plan, appIDs: recording.apps.map(\.id), edges: span.seconds)
+        var gain: Float = 1
+        if let target = loudnessTarget, let m = try await Loudness.measureMix(built.composition, audioMix: mix, range: span.time) {
+            let g = Loudness.mixGain(for: m, target: target)
+            gain = Float(pow(10, g.db / 20))
+            loudnessReport = (m.integrated, g.db, g.limitedByPeaks)
+        }
+        guard preset.codec == .audioStems else {
+            try await writeAudio(built.composition, tracks: audioTracks, mix: mix, gain: gain, span: span.time, to: url,
+                                 wav: preset.codec == .audioWAV) { t in progress(min(1, max(0, t - span.seconds.lowerBound) / max(0.001, span.time.duration.seconds))) }
+            progress(1)
+            return
+        }
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        let groups = stemGroups(audioTracks)
+        for (i, g) in groups.enumerated() {
+            let file = url.appendingPathComponent(String(format: "%02d ", i + 1) + g.name.replacingOccurrences(of: "/", with: "-") + ".wav")
+            try await writeAudio(built.composition, tracks: g.tracks, mix: mix, gain: gain, span: span.time, to: file, wav: true) { t in
+                let part = min(1, max(0, t - span.seconds.lowerBound) / max(0.001, span.time.duration.seconds))
+                progress((Double(i) + part) / Double(groups.count))
+            }
+        }
+        progress(1)
+    }
+
+    /// Kompositionens ljudspår i grupper: ett spår och dess B-spår (övertoningar) hör ihop.
+    func stemGroups(_ tracks: [AVAssetTrack]) -> [(name: String, tracks: [AVAssetTrack])] {
+        typealias B = CompositionBuilder
+        var groups: [(key: String, name: String, tracks: [AVAssetTrack])] = []
+        func add(_ key: String, _ name: String, _ t: AVAssetTrack) {
+            if let i = groups.firstIndex(where: { $0.key == key }) { groups[i].tracks.append(t) }
+            else { groups.append((key, name, [t])) }
+        }
+        let clips = project.audioClips
+        for t in tracks.sorted(by: { $0.trackID < $1.trackID }) {
+            let id = t.trackID
+            switch id {
+            case B.microphoneTrackID, B.alternateMicTrackID: add("mic", String(localized: "Mikrofon"), t)
+            case B.systemTrackID, B.alternateSystemTrackID: add("system", String(localized: "Datorljud"), t)
+            case B.clickTrackID: add("click", String(localized: "Klickljud"), t)
+            case B.audioClipTrackBase..<B.videoOverlayTrackBase:
+                let i = Int(id - B.audioClipTrackBase)
+                let role = i < clips.count ? clips[i].role : .effect
+                switch role {
+                case .narration: add("narration", String(localized: "Berättarröst"), t)
+                case .music: add("music", String(localized: "Musik"), t)
+                default: add("effect", String(localized: "Ljudeffekter"), t)
+                }
+            case B.videoAudioTrackBase..<B.appTrackBase: add("video", String(localized: "Videoinslag"), t)
+            case B.appTrackBase..<(B.alternateAppTrackBase + 100):
+                let i = Int((id - B.appTrackBase) % 100)
+                let app = i < recording.apps.count ? recording.apps[i].name : String(localized: "App \(i + 1)")
+                add("app\(i)", app, t)
+            default: add("other", String(localized: "Övrigt"), t)
+            }
+        }
+        return groups.map { ($0.name, $0.tracks) }
+    }
+
+    private func writeAudio(_ composition: AVComposition, tracks: [AVAssetTrack], mix: AVAudioMix, gain: Float, span: CMTimeRange,
+                            to url: URL, wav: Bool, progress: @escaping @Sendable (Double) -> Void) async throws {
+        try? FileManager.default.removeItem(at: url)
+        let reader = try AVAssetReader(asset: composition)
+        reader.timeRange = span
+        let out = AVAssetReaderAudioMixOutput(audioTracks: tracks, audioSettings: [
+            AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: 48_000, AVNumberOfChannelsKey: 2,
+            AVLinearPCMBitDepthKey: 32, AVLinearPCMIsFloatKey: true, AVLinearPCMIsNonInterleaved: false,
+        ])
+        // Bara de här spårens volymer (mixens parametrar för andra spår hör inte hit).
+        let ids = Set(tracks.map(\.trackID))
+        let subset = AVMutableAudioMix()
+        subset.inputParameters = mix.inputParameters.filter { ids.contains($0.trackID) }
+        out.audioMix = subset
+        out.audioTimePitchAlgorithm = .spectral
+        reader.add(out)
+
+        var layout = AudioChannelLayout()
+        layout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo
+        let layoutData = Data(bytes: &layout, count: MemoryLayout<AudioChannelLayout>.size)
+        let writer = try AVAssetWriter(outputURL: url, fileType: wav ? .wav : .m4a)
+        let input = AVAssetWriterInput(mediaType: .audio, outputSettings: wav
+            ? [AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: 48_000, AVNumberOfChannelsKey: 2,
+               AVLinearPCMBitDepthKey: 24, AVLinearPCMIsFloatKey: false, AVLinearPCMIsBigEndianKey: false,
+               AVLinearPCMIsNonInterleaved: false, AVChannelLayoutKey: layoutData]
+            : [AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: 48_000, AVNumberOfChannelsKey: 2,
+               AVEncoderBitRateKey: 256_000, AVChannelLayoutKey: layoutData])
+        input.expectsMediaDataInRealTime = false
+        writer.add(input)
+        self.reader = reader
+        self.writer = writer
+        guard reader.startReading() else { throw ExportError.failed(reader.error?.localizedDescription ?? "Läsningen startade inte") }
+        guard writer.startWriting() else { throw ExportError.failed(writer.error?.localizedDescription ?? "Skrivningen startade inte") }
+        writer.startSession(atSourceTime: span.start)
+        await Self.pump(out, into: input, queue: "skarminspelare.export.ljud", gain: gain, progress: progress)
+        if isCancelled || reader.status == .cancelled {
+            writer.cancelWriting()
+            try? FileManager.default.removeItem(at: url)
+            throw ExportError.cancelled
+        }
+        if reader.status == .failed {
+            writer.cancelWriting()
+            throw ExportError.failed(reader.error?.localizedDescription ?? "Läsningen misslyckades")
+        }
+        await writer.finishWriting()
+        if writer.status != .completed {
+            throw ExportError.failed(writer.error?.localizedDescription ?? "Skrivningen misslyckades")
         }
     }
 

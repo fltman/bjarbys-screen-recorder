@@ -69,6 +69,23 @@
         }
       }
     },
+    "%@ – ljudspår": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ – audio tracks"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ – ljudspår"
+          }
+        }
+      }
+    },
     "%lld": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -558,6 +575,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bara det markerade, %@–%@ (%@ s)"
+          }
+        }
+      }
+    },
+    "Bara ljudet": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio only"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bara ljudet"
           }
         }
       }
@@ -7086,6 +7120,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "−16 LUFS (podd, Apple)"
+          }
+        }
+      }
+    },
+    "≈ %@": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "≈ %@"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "≈ %@"
+          }
+        }
+      }
+    },
+    "≈ %@ per spår": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "≈ %@ per track"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "≈ %@ per spår"
           }
         }
       }

@@ -33,7 +33,7 @@ struct ExportSheet: View {
             Text("Exportera").font(.title2.weight(.semibold))
 
             VStack(alignment: .leading, spacing: 8) {
-                ForEach(ExportPreset.available(hdr: model.recording.isHDR)) { p in
+                ForEach(ExportPreset.available(hdr: model.recording.isHDR).filter { !$0.isAudioOnly }) { p in
                     let canvas = p.canvas(aspect: model.project.aspect, source: model.recording.sourceSize)
                     let selected = p.id == presetID
                     HStack(alignment: .center, spacing: 12) {
@@ -67,7 +67,43 @@ struct ExportSheet: View {
                 }
             }
 
-            if model.recording.meta.fps > 60 && presetID != "gif" {
+            // Bara ljudet: tre små kort på en rad.
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Bara ljudet").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    ForEach(ExportPreset.all.filter(\.isAudioOnly)) { p in
+                        let selected = p.id == presetID
+                        HStack(spacing: 8) {
+                            Image(systemName: Self.icon(p))
+                                .foregroundStyle(selected ? Color.accentColor : .secondary)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(p.name).font(.callout.weight(.medium)).lineLimit(1)
+                                let size = ByteCountFormatter.string(fromByteCount: p.estimatedBytes(canvas: .zero, duration: exportedDuration),
+                                                                     countStyle: .file)
+                                Text(p.codec == .audioStems ? "≈ \(size) per spår" : "≈ \(size)")
+                                    .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .frame(maxWidth: .infinity)
+                        .background(RoundedRectangle(cornerRadius: 9)
+                            .fill(selected ? Color.accentColor.opacity(0.1) : Color.primary.opacity(0.03)))
+                        .overlay(RoundedRectangle(cornerRadius: 9)
+                            .stroke(selected ? Color.accentColor : Color.primary.opacity(0.08), lineWidth: selected ? 1.5 : 1))
+                        .contentShape(Rectangle())
+                        .help(p.detail)
+                        .onTapGesture(count: 2) { if progress == nil { presetID = p.id; chooseAndExport() } }
+                        .onTapGesture { if progress == nil { presetID = p.id } }
+                    }
+                }
+                if preset.isAudioOnly {
+                    Text(preset.detail).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+
+            if model.recording.meta.fps > 60 && presetID != "gif" && !preset.isAudioOnly {
                 Toggle("\(model.recording.meta.fps) bilder/s, som inspelningen", isOn: $fullFrameRate)
                     .disabled(progress != nil)
             }
@@ -120,7 +156,7 @@ struct ExportSheet: View {
                         Text(sharedURL.absoluteString).font(.caption).textSelection(.enabled).lineLimit(1)
                     } else if let uploading {
                         ProgressView(value: uploading).frame(width: 120)
-                    } else if SharingStore.isReady {
+                    } else if SharingStore.isReady && preset.codec != .audioStems {
                         Button("Ladda upp och kopiera länk") { upload(finishedURL) }
                     }
                     Button("Visa i Finder") { NSWorkspace.shared.activateFileViewerSelecting([finishedURL]) }
@@ -165,9 +201,12 @@ struct ExportSheet: View {
 
     private func chooseAndExport() {
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = model.recording.bundle.name + "." + preset.fileExtension
+        // Ljudspåren var för sig hamnar i en mapp.
+        panel.nameFieldStringValue = preset.codec == .audioStems
+            ? String(localized: "\(model.recording.bundle.name) – ljudspår")
+            : model.recording.bundle.name + "." + preset.fileExtension
         panel.directoryURL = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first
-        if let type = UTType(filenameExtension: preset.fileExtension) { panel.allowedContentTypes = [type] }
+        if !preset.fileExtension.isEmpty, let type = UTType(filenameExtension: preset.fileExtension) { panel.allowedContentTypes = [type] }
         guard panel.runModal() == .OK, let url = panel.url else { return }
         start(url)
     }
@@ -192,6 +231,9 @@ struct ExportSheet: View {
         case .prores: "film.stack"
         case .proresAlpha: "square.on.square.dashed"
         case .gif: "photo.on.rectangle.angled"
+        case .audioAAC: "waveform"
+        case .audioWAV: "waveform.badge.plus"
+        case .audioStems: "slider.vertical.3"
         }
     }
 

@@ -306,6 +306,14 @@ växer fram. ⚠️ Först förstorades den råa skärmbilden — en mask hade s
 den maskade (provat med ifylld och pixlad mask: ingen läsbar text i luppen). ⚠️ En svart ruta
 som bakgrund i `CIBlendWithMask` gav svarta hörn runt cirkeln; bakgrunden ska vara `.empty()`.
 
+## Bara ljudet (2026-11-05)
+
+- Syntetisk tagning, 3 s (mikrofon 440 Hz mono, app 880 Hz stereo): WAV 24 bit 48 kHz exakt
+  3,000 s; mixen minus summan av de två delspåren (avkodade till flyttal) mätte **0** — en
+  `AVAssetReaderAudioMixOutput` per grupp med bara gruppens parametrar ur mixen summerar till
+  mixen. M4A med −16 LUFS: ffmpeg `ebur128` 16,0. AAC-filen blir 3,05 s (kodarens för- och
+  efterrulle, som vanligt för AAC).
+
 ## Slå ihop inspelningar (2026-11-05)
 
 - `AVMutableComposition` + `AVAssetExportPresetPassthrough` till .mov: tre syntetiska tagningar

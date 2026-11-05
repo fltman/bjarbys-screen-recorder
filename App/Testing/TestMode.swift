@@ -468,7 +468,7 @@ enum TestMode {
             }
             UserDefaults.standard.set(InspectorView.Tab.style.rawValue, forKey: "inspectorTab")
             model.markIn = min(1, model.duration * 0.25); model.markOut = min(3, model.duration * 0.75)
-            try await shot("export", NSSize(width: 560, height: 600), ExportSheet(model: model))
+            try await shot("export", NSSize(width: 560, height: 720), ExportSheet(model: model))
             try await shot("redigerare-markerat", NSSize(width: 1400, height: 860), EditorView(model: model))
             print(#"{"mapp":"\#(out.path)"}"#)
             return 0

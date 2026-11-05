@@ -84,6 +84,11 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Bara ljudet (2026-11-05): exportens förval Ljud M4A (AAC 256 kbit/s), Ljud WAV (24 bit, 48 kHz)
+  och Ljudspår var för sig — en mapp med en WAV per källa (mikrofon och datorljud med sina
+  B-spår, varje app, berättarröst, musik, ljudeffekter, videoinslag, klick), lika långa som
+  filmen och med mixens volymer, duckning, snitt-toningar och ljudnivå, så att de summerar till
+  mixen. Ingen bild renderas. MCP: `export` med `ljud-m4a`, `ljud-wav`, `ljud-spar`.
 - Slå ihop inspelningar (2026-11-05): Biblioteket › högerklick › Slå ihop med andra … lägger de
   valda efter varandra i tidsordning i ett nytt paket. Spåren kopieras rakt över (passthrough,
   ingen omkodning; ett spår som saknas i en tagning blir en lucka), händelserna flyttas i tid och
