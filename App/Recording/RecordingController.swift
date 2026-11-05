@@ -30,7 +30,7 @@ final class RecordingController: ObservableObject {
     var onFinished: ((RecordingBundle) -> Void)?
     var onNeedsPermissions: (() -> Void)?
 
-    private(set) var session: CaptureSession?
+    private(set) var session: (any Recorder)?
     private let picker = ContentPicker()
     private var hud: HUDPanel?
     private var countdownPanel: CountdownPanel?
@@ -134,8 +134,27 @@ final class RecordingController: ObservableObject {
 
     // MARK: - Starta
 
+    /// En kamera eller en iPhone/iPad via kabel: bilden blir inspelningen.
+    func recordDevice(_ device: DeviceSession.Device) {
+        guard phase == .idle else { return }
+        let mic = settings.micID.isEmpty ? nil : settings.micID
+        let display = CGMainDisplayID()
+        Task {
+            await begin(title: device.name, displayID: display) { [library, settings] in
+                try DeviceSession(deviceID: device.id, microphoneID: mic, fps: settings.captureOptions.fps, directory: library.directory)
+            }
+        }
+    }
+
     private func begin(_ target: CaptureTarget) async {
-        sourceTitle = target.title
+        await begin(title: target.title, displayID: target.displayID) { [settings, library] in
+            try CaptureSession(target: target, options: settings.captureOptions, directory: library.directory)
+        }
+    }
+
+    private func begin(title: String, displayID: CGDirectDisplayID, make: () throws -> any Recorder) async {
+        sourceTitle = title
+        let target = (displayID: displayID, title: title)
         if settings.countdown {
             let panel = CountdownPanel(on: target.displayID)
             countdownPanel = panel
@@ -149,8 +168,7 @@ final class RecordingController: ObservableObject {
             countdownPanel = nil
         }
         do {
-            let session = try CaptureSession(target: target, options: settings.captureOptions,
-                                             directory: library.directory)
+            let session = try make()
             session.onStatus = { [weak self] s in
                 self?.status = s
                 self?.updateIgnoredRegions()
@@ -164,8 +182,10 @@ final class RecordingController: ObservableObject {
             phase = .recording
             showHUD(on: target.displayID)
             showTeleprompter(on: target.displayID)
-            if let camera = session.camera {
-                let panel = CameraPreviewPanel(session: camera.session, on: target.displayID)
+            // Kameran (eller enhetens bild) i ett litet fönster; appens fönster syns aldrig i bild.
+            let preview = (session as? CaptureSession)?.camera?.session ?? (session as? DeviceSession)?.session
+            if let preview {
+                let panel = CameraPreviewPanel(session: preview, on: target.displayID)
                 panel.orderFrontRegardless()
                 cameraPanel = panel
             }

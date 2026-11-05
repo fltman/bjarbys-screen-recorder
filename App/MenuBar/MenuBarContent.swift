@@ -31,6 +31,8 @@ struct MenuBarContent: View {
             Button("Spela in område …") { recorder.recordArea() }
                 .keyboardShortcut(hotKeys.binding(.area).keyboardShortcut)
                 .disabled(recorder.isBusy)
+            Menu("Spela in kamera eller iPhone") { DeviceMenuItems(recorder: recorder) }
+                .disabled(recorder.isBusy)
             Divider()
             Picker("Mikrofon", selection: $settings.micID) {
                 Text("Ingen").tag("")
@@ -128,5 +130,27 @@ struct MenuBarContent: View {
             }))
             if let e = flashback.lastError { Text(e) }
         }
+    }
+}
+
+/// Kamerorna och anslutna iPhone/iPad (listan läses när menyn öppnas).
+struct DeviceMenuItems: View {
+    let recorder: RecordingController
+
+    var body: some View {
+        let devices = DeviceSession.devices()
+        let screens = devices.filter(\.isScreen), cameras = devices.filter { !$0.isScreen }
+        if devices.isEmpty {
+            Text("Ingen kamera eller iPhone hittades")
+        }
+        ForEach(screens) { d in
+            Button { recorder.recordDevice(d) } label: { Label(d.name, systemImage: "iphone") }
+        }
+        if !screens.isEmpty && !cameras.isEmpty { Divider() }
+        ForEach(cameras) { d in
+            Button { recorder.recordDevice(d) } label: { Label(d.name, systemImage: "video") }
+        }
+        Divider()
+        Text("En iPhone eller iPad syns här när den är ansluten med kabel, upplåst och litar på datorn.")
     }
 }

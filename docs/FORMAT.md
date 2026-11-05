@@ -37,7 +37,7 @@ de att spela upp till sista fragmentet; `meta.json` har då `finished: false` ti
 
 | Fält | Betydelse |
 |---|---|
-| `source.kind` | `display`, `window`, `area` eller `application` |
+| `source.kind` | `display`, `window`, `area`, `application` eller `device` (kamera eller iPhone/iPad via kabel: bilden är skärmspåret, enhetens ljud är `system`, inga musdata) |
 | `source.contentRect` | `[x, y, b, h]` i globala punkter, origo uppe till vänster på huvudskärmen |
 | `source.pixelScale`, `pixelWidth`, `pixelHeight` | skärmspårets pixlar |
 | `tracks[]` | `kind` (`screen`, `microphone`, `system`, `camera`, `app`), `file`, `deviceName` (för appar: appens namn), `failed`, `appID` (appens bundle-id), `start` (s på tidslinjen där spårets första buffert ligger; kameran kommer igång en stund efter skärmen) |

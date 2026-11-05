@@ -128,6 +128,38 @@ enum TestMode {
                 } catch { print(error.localizedDescription); code = 1 }
             } else if let i = args.firstIndex(of: "--prov-penna"), args.count > i + 1 {
                 code = await inkTest(out: URL(fileURLWithPath: args[i + 1]))
+            } else if let i = args.firstIndex(of: "--prov-enhet"), args.count > i + 2 {
+                // Enheterna, och en kort inspelning från den första kameran (eller --enhet <namn>).
+                // Bara måtten skrivs ut; paketet raderas (kameran fångar den som sitter där).
+                DeviceSession.allowScreenDevices()
+                try? await Task.sleep(for: .seconds(1))
+                let devices = DeviceSession.devices()
+                for d in devices { print("enhet: \(d.name)\(d.isScreen ? " (iPhone/iPad)" : "") — \(d.id)") }
+                let wanted = value(after: "--enhet", in: args)
+                guard let device = devices.first(where: { wanted == nil ? !$0.isScreen : $0.name.localizedCaseInsensitiveContains(wanted!) }) else {
+                    print("ingen enhet att spela in från"); code = 2; return
+                }
+                do {
+                    let session = try DeviceSession(deviceID: device.id, microphoneID: args.contains("--mik") ? "standard" : nil,
+                                                    fps: 30, directory: URL(fileURLWithPath: args[i + 1]))
+                    defer { if ProcessInfo.processInfo.environment["SKARM_BEHALL"] == nil { try? FileManager.default.removeItem(at: session.bundle.url) } }
+                    try await session.start()
+                    try await Task.sleep(for: .seconds(Double(args[i + 2]) ?? 3))
+                    let meta = await session.stop()
+                    print("källa: \(meta.source.kind.rawValue) «\(meta.source.title)» \(meta.source.pixelWidth)×\(meta.source.pixelHeight), längd \(String(format: "%.2f", meta.duration)) s")
+                    for t in meta.tracks {
+                        let asset = AVURLAsset(url: session.bundle.url(for: t))
+                        let d = (try? await asset.load(.duration))?.seconds ?? 0
+                        var extra = ""
+                        if let v = try? await asset.loadTracks(withMediaType: .video).first {
+                            let n = (try? await v.load(.nominalFrameRate)) ?? 0
+                            extra = String(format: ", %.1f bilder/s", n)
+                        }
+                        print(String(format: "  %@: %@, start %.3f, längd %.2f s%@", t.kind.rawValue, t.failed ? "MISSLYCKADES" : "ok", t.start, d, extra))
+                    }
+                    print("Quick Look: \(FileManager.default.fileExists(atPath: session.bundle.quickLookDir.appendingPathComponent("Thumbnail.png").path))")
+                    code = 0
+                } catch { print(error.localizedDescription); code = 1 }
             } else if let i = args.firstIndex(of: "--prov-ansikten"), args.count > i + 1 {
                 // Ansiktena i kameraspåret (Vision), utan att spara något i paketet.
                 do {

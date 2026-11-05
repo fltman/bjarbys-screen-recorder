@@ -33,6 +33,8 @@ private struct RecordBar: View {
                 Button { recorder.recordApplication() } label: { Label("Program", systemImage: "app.dashed") }
                 Button { recorder.recordArea() } label: { Label("Område", systemImage: "rectangle.dashed") }
                     .help("Dra upp ett område (\(HotKeys.shared.binding(.area).display))")
+                Menu { DeviceMenuItems(recorder: recorder) } label: { Label("Enhet", systemImage: "iphone") }
+                    .help("En kamera, eller en iPhone/iPad via kabel")
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)

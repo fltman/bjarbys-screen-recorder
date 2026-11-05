@@ -5,6 +5,8 @@ import Foundation
 public struct RecordingMeta: Codable, Equatable, Sendable {
     public enum SourceKind: String, Codable, Sendable {
         case display, window, area, application
+        /// En kamera eller en iPhone/iPad via kabel (ingen markör, inga musdata).
+        case device
     }
 
     /// Vad som spelades in och var det låg på skärmen.

@@ -17,6 +17,8 @@ is included; to have the app follow your system language instead, run
 
 **Recording**
 - A whole display, a window or an app through the system picker, or an area you drag out.
+- A camera or an iPhone/iPad (by cable, like QuickTime) instead of the screen: the picture gets
+  the same backgrounds, captions and export as a screen recording.
 - A 3-2-1 countdown, then a floating panel with time, level meters, pause, stop and
   discard. It warns about a silent microphone, a disk running full and tracks that stop.
 - Global shortcuts: ⌃⌥⌘R start/stop, ⌃⌥⌘P pause, ⌃⌥⌘A record an area, ⌃⌥⌘S save the

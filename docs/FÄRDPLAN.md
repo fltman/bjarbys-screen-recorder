@@ -84,6 +84,13 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Bara kamera och iPhone/iPad (2026-11-05): Spela in kamera eller iPhone (menyraden, "Enhet" i
+  biblioteket). `DeviceSession` spelar in en AVCaptureDevice som skärmspår (`source.kind` =
+  `device`), enhetens eget ljud som datorljud och mikrofonen i en egen session; tiderna räknas om
+  till värdklockan. iPhone/iPad syns när CoreMediaIO tillåter skärmenheter (slås på vid start,
+  som QuickTime). HUD, paus, markeringar och stopp via protokollet `Recorder`, som båda
+  sessionerna följer. Uppmätt: MacBook-kameran 1920×1080, 28,6 bilder/s, mikrofonen 0,08 s in.
+  ⚠️ iPhone via kabel inte provad (ingen ansluten).
 - Final Cut / Resolve (2026-11-05): förvalet ger en mapp med den färdiga bilden (ProRes 422,
   utan ljud), en WAV per ljudkälla och en FCPXML 1.10-tidslinje: bilden i huvudspåret, ljuden
   som anslutna klipp under (rollerna dialog, musik, effekter), kapitelmarkörer och inspelningens

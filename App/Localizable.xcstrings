@@ -1701,6 +1701,40 @@
         }
       }
     },
+    "En iPhone eller iPad syns här när den är ansluten med kabel, upplåst och litar på datorn.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An iPhone or iPad shows up here when it is connected by cable, unlocked and trusts this Mac."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En iPhone eller iPad syns här när den är ansluten med kabel, upplåst och litar på datorn."
+          }
+        }
+      }
+    },
+    "En kamera, eller en iPhone/iPad via kabel": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A camera, or an iPhone/iPad by cable"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En kamera, eller en iPhone/iPad via kabel"
+          }
+        }
+      }
+    },
     "En mjuk färgad cirkel under markören, så att den syns även i en liten bild.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1765,6 +1799,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Enfärgad"
+          }
+        }
+      }
+    },
+    "Enhet": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enhet"
           }
         }
       }
@@ -3142,6 +3193,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ingen kamera"
+          }
+        }
+      }
+    },
+    "Ingen kamera eller iPhone hittades": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No camera or iPhone found"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen kamera eller iPhone hittades"
           }
         }
       }
@@ -6270,6 +6338,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Spela in i bakgrunden"
+          }
+        }
+      }
+    },
+    "Spela in kamera eller iPhone": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record Camera or iPhone"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spela in kamera eller iPhone"
           }
         }
       }
