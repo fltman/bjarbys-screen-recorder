@@ -16,6 +16,7 @@ enum HDRTest {
     static func run(out: URL) async -> Int32 {
         guard CGPreflightScreenCaptureAccess() else { print(#"{"fel":"Behörighet för skärminspelning saknas."}"#); return 2 }
         guard AppSettings.hdrAvailable else { print(#"{"fel":"Ingen HDR-skärm."}"#); return 3 }
+        guard !ScreenLock.isLocked else { print(#"{"fel":"Skärmen är låst — provfönstret syns inte."}"#); return 4 }
         try? FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
         var report: [String: Any] = [:]
         guard let screen = NSScreen.main else { return 3 }

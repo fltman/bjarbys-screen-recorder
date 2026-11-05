@@ -34,6 +34,7 @@ open Skarminspelare.xcodeproj
   - `--prov-teleprompter <png>` — teleprompterrutan efter 6 s rullning, utanför skärmen
   - `--prov-vyer <mapp> <paket>` — alla fönster och paneler (ljust och mörkt, inspektörens flikar)
     som PNG; material och videolager ritas inte utanför skärmen
+  - `--prov-bildfrekvens <mapp> [bilder/s]` — verklig bildtakt: eget fönster rör sig varje bildruta
   - `--prov-fonsterflytt <mapp>` — fönsterinspelning där fönstret flyttas mitt i
   - `--prov-hdr <mapp>` — ett eget EDR-fönster spelas in i HDR; fälten mäts i inspelning och export
   - `--prov-hdr-syntetisk <mapp>` — samma mätning på ett påhittat HDR-paket, utan skärm
@@ -135,4 +136,7 @@ för taldetektering). Roten letas upp i `~/Projekt/whisper.cpp` m.fl., eller vä
   har bara tappen (inga högtalare). Utan appar tas datorljudet som förr från ScreenCaptureKit.
 - Musdata: ett glapp > 0,1 s mellan händelser betyder att musen stod still. Interpolera aldrig
   över det (`CursorPath.stillGap`).
+- Prov som spelar in skärmens innehåll (HDR-fältet, bildtakten) måste köras med **upplåst**
+  skärm: med låsskärmen ritas inga fönster och strömmen ger långa svep av `idle`-rutor som ser ut
+  som tappade bilder. Provlägena vägrar då (`ScreenLock.isLocked`).
 - ⚠️ Disken är nästan full (≈12 GB ledigt nov 2026). Provinspelningar hålls korta och raderas.

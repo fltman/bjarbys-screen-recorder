@@ -16,6 +16,7 @@ import SwiftUI
 ///     Skarminspelare --prov-rostisolering <ljudfil> <ut.caf>
 ///     Skarminspelare --prov-maskera <paket> <t1,t2,…> <mapp>   (söker känslig text, renderar)
 ///     Skarminspelare --prov-appljud <mapp>   (ljud per app: separation och synk, med egna toner)
+///     Skarminspelare --prov-bildfrekvens <mapp> [bilder/s]   (verklig bildtakt i inspelningen)
 ///     Skarminspelare --prov-fonsterflytt <mapp>   (fönsterinspelning där fönstret flyttas)
 ///     Skarminspelare --prov-hdr <mapp>   (HDR: ett eget EDR-fält mätt i inspelning och export)
 ///
@@ -102,6 +103,9 @@ enum TestMode {
                 print(m.map { String(format: #"{"lufs":%.2f,"topp_dbfs":%.2f,"forstarkning_db":%.2f}"#, $0.integrated,
                                      20 * log10($0.peak), 20 * log10(Loudness.gain(for: $0).gain)) } ?? #"{"fel":"tyst eller oläsbar"}"#)
                 code = m == nil ? 1 : 0
+            } else if let i = args.firstIndex(of: "--prov-bildfrekvens"), args.count > i + 1 {
+                let fps = args.count > i + 2 ? Int(args[i + 2]) ?? 120 : 120
+                code = await FrameRateTest.run(out: URL(fileURLWithPath: args[i + 1]), fps: fps)
             } else if let i = args.firstIndex(of: "--prov-fonsterflytt"), args.count > i + 1 {
                 code = await WindowMoveTest.run(out: URL(fileURLWithPath: args[i + 1]))
             } else if let i = args.firstIndex(of: "--prov-hdr-syntetisk"), args.count > i + 1 {
