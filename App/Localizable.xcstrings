@@ -579,6 +579,23 @@
         }
       }
     },
+    "Andra språk än engelska: be producenten i Claude Code att översätta undertexterna.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For languages other than English, ask the producer in Claude Code to translate the captions."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andra språk än engelska: be producenten i Claude Code att översätta undertexterna."
+          }
+        }
+      }
+    },
     "Anslut igen": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2806,6 +2823,23 @@
         }
       }
     },
+    "Görs på datorn med whisper och en flerspråkig modell. Andra språk: be producenten i Claude Code.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done on this Mac with whisper and a multilingual model. Other languages: ask the producer in Claude Code."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görs på datorn med whisper och en flerspråkig modell. Andra språk: be producenten i Claude Code."
+          }
+        }
+      }
+    },
     "HDR (10 bit)": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2972,6 +3006,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hink"
+          }
+        }
+      }
+    },
+    "Hittade inget tal att översätta.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found no speech to translate."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hittade inget tal att översätta."
           }
         }
       }
@@ -3448,6 +3499,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ingen mikrofon"
+          }
+        }
+      }
+    },
+    "Ingen modell som kan översätta. Lägg ggml-medium.bin i whisper.cpp/models.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No model that can translate. Put ggml-medium.bin in whisper.cpp/models."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen modell som kan översätta. Lägg ggml-medium.bin i whisper.cpp/models."
           }
         }
       }
@@ -9041,6 +9109,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Övergångarna syns där du klippt; filmen har inga snitt än."
+          }
+        }
+      }
+    },
+    "Översätt till engelska": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate to English"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Översätt till engelska"
+          }
+        }
+      }
+    },
+    "Översätt till engelska igen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translate to English again"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Översätt till engelska igen"
+          }
+        }
+      }
+    },
+    "Översätter till engelska …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translating to English …"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Översätter till engelska …"
           }
         }
       }

@@ -152,6 +152,11 @@ enum MCPServer {
                                     "texts": ["type": "array", "items": ["type": "string"]],
                                     "show": ["type": "boolean"]],
                                    required: ["recording", "language", "texts"])],
+            ["name": "translate_captions_locally",
+             "description": "Translate the speech to ENGLISH captions on this Mac with whisper (a multilingual model such as ggml-medium.bin; KB-Whisper and turbo cannot translate). Lines follow whisper's sentences, timed to the original words. For other languages, or to match the original lines exactly, use get_caption_cues + set_caption_translation instead. show = burn English into the film (default true).",
+             "inputSchema": schema(["recording": recordingArg, "show": ["type": "boolean"],
+                                    "model": ["type": "string", "description": "Model file in whisper.cpp/models (default: the best multilingual one)."]],
+                                   required: ["recording"])],
             ["name": "list_plugins", "description": "Plugins installed in ~/Library/Application Support/Bjarbys skärminspelare/Plugins: name, whether the user has enabled them, hooks and actions.",
              "inputSchema": schema([:])],
             ["name": "run_plugin_action",
@@ -411,6 +416,7 @@ enum MCPServer {
             let merged = try await RecordingMerger.merge(bundles, into: RecordingLibrary.defaultDirectory)
             return describe(merged, meta: try merged.readMeta())
         case "transcribe": return try await transcribe(a)
+        case "translate_captions_locally": return try await translateLocally(a)
         case "edit_recording": return try await edit(a)
         case "render_frames": return try await renderFrames(a)
         case "export": return try await export(a)
@@ -546,6 +552,31 @@ enum MCPServer {
     }
 
     // MARK: - Tal
+
+    private static func translateLocally(_ a: [String: Any]) async throws -> String {
+        let rec = try resolve(a)
+        let configured = UserDefaults.standard.string(forKey: "whisperRoot") ?? ""
+        guard let root = configured.isEmpty ? WhisperSetup.findRoot() : URL(fileURLWithPath: configured) else {
+            throw ToolError("whisper.cpp not found. Build it in ~/Projekt/whisper.cpp or ~/whisper.cpp, or choose its folder in the app.")
+        }
+        let language = rec.transcript?.language ?? UserDefaults.standard.string(forKey: "speechLanguage") ?? "sv"
+        var setup = WhisperSetup(root: root, model: a["model"] as? String ?? "", language: language.isEmpty ? "sv" : language)
+        if setup.model.isEmpty { setup.model = WhisperSetup.translationModel(among: setup.availableModels) ?? "" }
+        guard !setup.model.isEmpty else {
+            throw ToolError("No model that can translate in \(setup.modelsDir.path) — it needs a multilingual one such as ggml-medium.bin (ask the user before downloading ~1.5 GB). Or translate with get_caption_cues + set_caption_translation.")
+        }
+        let t = try await Transcriber.translate(rec, setup: setup)
+        guard !t.cues.isEmpty else { return "No speech found to translate (model \(setup.model))." }
+        try rec.bundle.saveTranslation(t)
+        let show = a["show"] as? Bool ?? true
+        if show {
+            var p = rec.bundle.loadProject(duration: rec.meta.duration)
+            p.captions.language = t.language
+            try rec.bundle.saveProject(p)
+        }
+        return "Translated with \(setup.model): \(t.cues.count) English lines (SOURCE seconds)\(show ? ", now shown in the film" : ""). Read them and fix wording with set_caption_translation only if needed — its lines follow get_caption_cues, not these.\n"
+            + t.cues.map { "\(Producer.fmt($0.start))–\(Producer.fmt($0.end))\t\($0.text)" }.joined(separator: "\n")
+    }
 
     private static func transcribe(_ a: [String: Any]) async throws -> String {
         let rec = try resolve(a)

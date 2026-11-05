@@ -58,6 +58,9 @@ final class EditorModel: ObservableObject {
     @Published var wordSelection: ClosedRange<Int>?
     @Published var transcriptShown = true
     private var transcriptionTask: Task<Void, Never>?
+    @Published private(set) var translating: Double?
+    @Published private(set) var translationError: String?
+    private var translationTask: Task<Void, Never>?
 
     private var built: CompositionBuilder.Result?
     private var builtSegments: [EditProject.ClipSegment] = []
@@ -441,6 +444,49 @@ final class EditorModel: ObservableObject {
                 if !Task.isCancelled { transcriptionError = error.localizedDescription }
             }
         }
+    }
+
+    /// Modellen som kan översätta till engelska på datorn, om en sådan finns i whisper.cpp/models.
+    var localTranslationModel: String? {
+        AppModel.shared.settings.whisperSetup.flatMap { WhisperSetup.translationModel(among: $0.availableModels) }
+    }
+
+    /// Översätter talet till engelska med whisper på datorn och visar översättningen i filmen.
+    func translateLocally() {
+        guard translating == nil else { return }
+        translationError = nil
+        guard var setup = AppModel.shared.settings.whisperSetup, let model = localTranslationModel else {
+            translationError = String(localized: "Ingen modell som kan översätta. Lägg ggml-medium.bin i whisper.cpp/models.")
+            return
+        }
+        setup.model = model
+        if let language = recording.transcript?.language, !language.isEmpty { setup.language = language }
+        translating = 0
+        let rec = recording
+        translationTask = Task {
+            do {
+                let translation = try await Transcriber.translate(rec, setup: setup) { p in
+                    Task { @MainActor [weak self] in if self?.translating != nil { self?.translating = p } }
+                }
+                translating = nil
+                guard !translation.cues.isEmpty else {
+                    translationError = String(localized: "Hittade inget tal att översätta.")
+                    return
+                }
+                try rec.bundle.saveTranslation(translation)
+                if project.captions.language == translation.language { await rebuild(full: false) }
+                else { update { $0.captions.language = translation.language } }
+            } catch {
+                translating = nil
+                if !Task.isCancelled { translationError = error.localizedDescription }
+            }
+        }
+    }
+
+    func cancelTranslation() {
+        translationTask?.cancel()
+        translationTask = nil
+        translating = nil
     }
 
     func cancelTranscription() {

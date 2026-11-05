@@ -1,9 +1,10 @@
 import Foundation
 
-/// Undertexterna på ett annat språk: samma rader som originalet, med översatt text. Tiderna är
-/// källtid, så att översättningen överlever klipp. Översättningen görs av producenten (Claude Code
-/// via MCP: `get_caption_cues` → `set_caption_translation`) — Apples översättning på datorn har
-/// ingen svenska, och KB-Whisper/turbo-modellen översätter inte (uppmätt).
+/// Undertexterna på ett annat språk, med tiderna i källtid så att översättningen överlever klipp.
+/// Två vägar: producenten (Claude Code via MCP: `get_caption_cues` → `set_caption_translation`,
+/// samma rader som originalet, vilket språk som helst) eller whisper på datorn
+/// (`Transcriber.translate`, bara till engelska, med en flerspråkig modell som ggml-medium).
+/// Apples översättning på datorn har ingen svenska (uppmätt).
 public struct CaptionTranslation: Codable, Equatable, Sendable {
     public struct Cue: Codable, Equatable, Sendable {
         public var start: Double
@@ -24,6 +25,68 @@ public struct CaptionTranslation: Codable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         language = c.value(.language, ""); cues = c.value(.cues, [])
+    }
+
+    /// Slutar texten en mening?
+    static func endsSentence(_ text: String) -> Bool {
+        guard let last = text.trimmingCharacters(in: CharacterSet(charactersIn: " \"'”’)»")).last else { return true }
+        return ".!?…".contains(last)
+    }
+
+    /// Texten delad efter varje mening (skiljetecknet följer med).
+    static func sentences(_ text: String) -> [String] {
+        var out: [String] = []
+        var current: [String] = []
+        for w in text.split(whereSeparator: { $0 == " " || $0 == "\n" }).map(String.init) {
+            current.append(w)
+            if endsSentence(w) { out.append(current.joined(separator: " ")); current = [] }
+        }
+        if !current.isEmpty { out.append(current.joined(separator: " ")) }
+        return out
+    }
+
+    /// Närmaste värde i `values` inom `within` sekunder, annars `t`.
+    static func snap(_ t: Double, to values: [Double], within: Double) -> Double {
+        guard let best = values.min(by: { abs($0 - t) < abs($1 - t) }), abs(best - t) <= within else { return t }
+        return best
+    }
+
+    /// En översatt mening som en eller flera rader: lång text delas vid ordgränser (helst efter
+    /// ett skiljetecken) så att varje rad ryms på två textrader, och tiden fördelas efter
+    /// textens längd — med gränserna fästa vid där ett ord börjar i originalet.
+    static func pieces(_ text: String, start: Double, end: Double, words: [Transcript.Word]) -> [Cue] {
+        let tokens = text.split(whereSeparator: { $0 == " " || $0 == "\n" }).map(String.init)
+        let limit = Captions.lineLength * 2
+        let total = tokens.joined(separator: " ").count
+        guard total > limit, tokens.count > 1 else { return [Cue(start: start, end: end, text: tokens.joined(separator: " "))] }
+        let n = Int((Double(total) / Double(limit)).rounded(.up))
+        let target = Double(total) / Double(n)
+        var groups: [[String]] = [[]]
+        for w in tokens {
+            let current = groups[groups.count - 1]
+            let length = current.joined(separator: " ").count
+            let after = length + 1 + w.count
+            let sentenceEnd = current.last.map { ",.;:!?".contains($0.last ?? " ") } ?? false
+            if !current.isEmpty && (after > limit || (groups.count < n && (Double(after) > target * 1.15
+                                                                            || (sentenceEnd && Double(length) > target * 0.6)))) {
+                groups.append([w])
+            } else {
+                groups[groups.count - 1].append(w)
+            }
+        }
+        let starts = words.map(\.start).filter { $0 > start + 0.3 && $0 < end - 0.3 }
+        var cues: [Cue] = []
+        var done = 0
+        var at = start
+        for (i, g) in groups.enumerated() {
+            let line = g.joined(separator: " ")
+            done += line.count + 1
+            var stop = i == groups.count - 1 ? end : start + (end - start) * Double(done) / Double(total + 1)
+            if i < groups.count - 1 { stop = max(at + 0.3, snap(stop, to: starts, within: 0.6)) }
+            cues.append(Cue(start: at, end: stop, text: line))
+            at = stop
+        }
+        return cues
     }
 
     /// Originalets rader i källtid (det som ska översättas).

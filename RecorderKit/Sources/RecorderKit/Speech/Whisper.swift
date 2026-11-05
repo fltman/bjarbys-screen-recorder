@@ -71,6 +71,21 @@ public struct WhisperSetup: Sendable, Equatable {
             .first { FileManager.default.isExecutableFile(atPath: $0.appendingPathComponent("build/bin/whisper-cli").path) }
     }
 
+    /// Kan modellen översätta talet till engelska (`-tr`)? Bara OpenAI:s flerspråkiga modeller.
+    /// Uppmätt med svenskt tal: KB-Whisper (tiny, small, medium) och large-v3-turbo skrev
+    /// svenska även med `-tr` och med `-l en`; `.en`-modellerna förstår bara engelska.
+    public static func canTranslate(_ model: String) -> Bool {
+        let m = model.lowercased()
+        return m.hasPrefix("ggml-") && m.hasSuffix(".bin") && !m.contains("turbo") && !m.contains(".en")
+            && !m.contains("silero") && !m.hasPrefix("for-tests")
+    }
+
+    /// Modellen att översätta med bland dem som finns (ggml-medium är den uppmätta).
+    public static func translationModel(among models: [String]) -> String? {
+        let order = ["ggml-large-v3.bin", "ggml-large-v2.bin", "ggml-medium.bin", "ggml-small.bin", "ggml-base.bin"]
+        return order.first(where: models.contains) ?? models.first(where: canTranslate)
+    }
+
     /// Bästa modellen för språket bland dem som finns: KB-Whisper för svenska, annars den
     /// största flerspråkiga.
     public static func preferredModel(among models: [String], language: String) -> String? {
@@ -85,9 +100,12 @@ public enum WhisperError: LocalizedError {
     case missing([String])
     case failed(String)
     case noAudio
+    case cannotTranslate(String)
 
     public var errorDescription: String? {
         switch self {
+        case .cannotTranslate(let m):
+            return String(localized: "Modellen \(m) kan inte översätta. Lägg en flerspråkig modell (till exempel ggml-medium.bin) i whisper.cpp/models.")
         case .missing(let p): return p.joined(separator: "\n")
         case .failed(let s): return String(localized: "whisper.cpp misslyckades: \(s)")
         case .noAudio: return String(localized: "Inspelningen har inget ljudspår att transkribera.")
@@ -102,17 +120,70 @@ public enum Transcriber {
     /// eget spår om bara sådana finns). `progress` får 0–1.
     public static func run(_ rec: LoadedRecording, setup: WhisperSetup,
                            progress: @escaping @Sendable (Double) -> Void = { _ in }) async throws -> Transcript {
-        let problems = setup.problems
-        guard problems.isEmpty else { throw WhisperError.missing(problems) }
-        let kind: RecordingMeta.TrackKind = rec.hasMicrophone ? .microphone : (rec.hasSystemAudio ? .system : .app)
-        // Den röstisolerade mikrofonen om den finns (samma tidslinje, utan brus).
-        let isolated = kind == .microphone ? rec.isolatedMicrophone : nil
-        guard let asset = isolated ?? (kind == .app ? rec.apps.first?.asset : rec.asset(kind)) else { throw WhisperError.noAudio }
+        let work = try workDirectory()
+        defer { try? FileManager.default.removeItem(at: work) }
+        let speech = try await prepare(rec, setup: setup, in: work, progress: progress)
+        guard let speech else {
+            return Transcript(model: setup.model, language: setup.language, track: speechTrack(rec), words: [])
+        }
+        var args = ["-m", setup.modelURL.path, "-l", setup.language]
+        if let dtw = setup.dtwPreset { args += ["-dtw", dtw] }
+        let data = try await whisper(setup, speech, args, in: work, progress: progress)
+        let words = try parse(data, chunks: speech.chunks, offset: speech.offset)
+        progress(1)
+        return Transcript(model: setup.model, language: setup.language, track: speech.kind, words: words)
+    }
 
+    /// Undertexterna på engelska, översatta av whisper ur talet (`-tr`) — helt på datorn.
+    /// `setup.language` = talets språk, `setup.model` en modell som `canTranslate`. Raderna
+    /// får whispers meningar, med tiderna tillbakaräknade till inspelningen och fästa vid
+    /// originalets ordgränser när transkriptet finns (whispers egna tider är grova:
+    /// uppmätt 4,84 s för en mening som började efter en paus vid 5,6 s).
+    public static func translate(_ rec: LoadedRecording, setup: WhisperSetup,
+                                 progress: @escaping @Sendable (Double) -> Void = { _ in }) async throws -> CaptionTranslation {
+        guard WhisperSetup.canTranslate(setup.model) else { throw WhisperError.cannotTranslate(setup.model) }
+        let work = try workDirectory()
+        defer { try? FileManager.default.removeItem(at: work) }
+        guard let speech = try await prepare(rec, setup: setup, in: work, progress: progress) else {
+            return CaptionTranslation(language: "en", cues: [])
+        }
+        let data = try await whisper(setup, speech, ["-m", setup.modelURL.path, "-l", setup.language, "-tr"],
+                                     in: work, progress: progress)
+        let cues = try translatedCues(data, chunks: speech.chunks, offset: speech.offset, words: rec.transcript?.words ?? [])
+        progress(1)
+        return CaptionTranslation(language: "en", cues: cues)
+    }
+
+    /// Spåret som transkriberas: mikrofonen, annars datorljudet, annars första appen.
+    static func speechTrack(_ rec: LoadedRecording) -> RecordingMeta.TrackKind {
+        rec.hasMicrophone ? .microphone : (rec.hasSystemAudio ? .system : .app)
+    }
+
+    /// Talet hopfogat i `tal.wav`, och vägen tillbaka till inspelningens tid.
+    struct PreparedSpeech {
+        let kind: RecordingMeta.TrackKind
+        let joined: URL
+        let chunks: SpeechChunks
+        /// Tiden för spårets första sampel på inspelningens tidslinje.
+        let offset: Double
+    }
+
+    static func workDirectory() throws -> URL {
         let work = FileManager.default.temporaryDirectory
             .appendingPathComponent("skarminspelare-whisper-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: work, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: work) }
+        return work
+    }
+
+    /// Läser spåret, hittar talet och fogar ihop det (förlopp 0–0,15). nil = inget tal.
+    static func prepare(_ rec: LoadedRecording, setup: WhisperSetup, in work: URL,
+                        progress: @escaping @Sendable (Double) -> Void) async throws -> PreparedSpeech? {
+        let problems = setup.problems
+        guard problems.isEmpty else { throw WhisperError.missing(problems) }
+        let kind = speechTrack(rec)
+        // Den röstisolerade mikrofonen om den finns (samma tidslinje, utan brus).
+        let isolated = kind == .microphone ? rec.isolatedMicrophone : nil
+        guard let asset = isolated ?? (kind == .app ? rec.apps.first?.asset : rec.asset(kind)) else { throw WhisperError.noAudio }
 
         progress(0.02)
         let (samples, offset) = try await readMono16k(asset)
@@ -122,30 +193,28 @@ public enum Transcriber {
         progress(0.08)
 
         let speech = try await detectSpeech(full, setup: setup)
-        guard !speech.isEmpty else {
-            return Transcript(model: setup.model, language: setup.language, track: kind, words: [])
-        }
+        guard !speech.isEmpty else { return nil }
         let chunks = SpeechChunks(speech: speech, sampleRate: sampleRate, total: samples.count)
         let joined = work.appendingPathComponent("tal.wav")
         try writeWAV(chunks.joined(from: samples), to: joined)
         progress(0.15)
+        return PreparedSpeech(kind: kind, joined: joined, chunks: chunks, offset: offset)
+    }
 
+    /// Kör whisper-cli på det hopfogade talet med `args` (modell, språk …) och ger JSON-utdatan.
+    static func whisper(_ setup: WhisperSetup, _ speech: PreparedSpeech, _ args: [String], in work: URL,
+                        progress: @escaping @Sendable (Double) -> Void) async throws -> Data {
         let base = work.appendingPathComponent("ut")
         let threads = max(4, ProcessInfo.processInfo.activeProcessorCount - 2)
-        var args = ["-m", setup.modelURL.path, "-l", setup.language, "-f", joined.path,
-                    "-ojf", "-of", base.path, "-np", "-pp", "-t", String(threads), "-sns"]
-        if let dtw = setup.dtwPreset { args += ["-dtw", dtw] }
-        try await execute(setup.cli, args) { line in
+        try await execute(setup.cli, args + ["-f", speech.joined.path, "-ojf", "-of", base.path,
+                                             "-np", "-pp", "-t", String(threads), "-sns"]) { line in
             // "whisper_print_progress_callback: progress =  45%"
             if let r = line.range(of: "progress =") {
                 let n = line[r.upperBound...].trimmingCharacters(in: CharacterSet(charactersIn: " %\n"))
                 if let p = Double(n) { progress(0.15 + 0.83 * p / 100) }
             }
         }
-        let data = try Data(contentsOf: base.appendingPathExtension("json"))
-        let words = try parse(data, chunks: chunks, offset: offset)
-        progress(1)
-        return Transcript(model: setup.model, language: setup.language, track: kind, words: words)
+        return try Data(contentsOf: base.appendingPathExtension("json"))
     }
 
     // MARK: - Ljud
@@ -230,8 +299,55 @@ public enum Transcriber {
             }
             let text: String
             let tokens: [Token]
+            /// Segmentets början och slut i millisekunder.
+            let offsets: Token.Offsets?
         }
         let transcription: [Segment]
+    }
+
+    /// Raderna ur en översättning (`-tr`), i inspelningens källtid. whispers segment går gärna
+    /// tvärs över meningar och pauser (uppmätt: «… with a» | «chapter. First we open …» över en
+    /// paus på 2,5 s), så texten delas i meningar, en mening som fortsätter i nästa segment slås
+    /// ihop, och tiden fördelas efter textlängd i den *hopfogade* filen — där pauserna bara är
+    /// 0,4 s, så fördelningen följer talet. Gränser nära en paus fästs vid pausen, sedan vid
+    /// originalets ord. Långa meningar delas så att de ryms på två rader.
+    static func translatedCues(_ data: Data, chunks: SpeechChunks, offset: Double,
+                               words: [Transcript.Word]) throws -> [CaptionTranslation.Cue] {
+        let out = try JSONDecoder().decode(Output.self, from: data)
+        struct Sentence { var text: String; var from: Double; var to: Double }
+        var sentences: [Sentence] = []
+        for segment in out.transcription where !Hallucination.isNoise(segment.text) {
+            let text = segment.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty, let o = segment.offsets else { continue }
+            let from = Double(o.from) / 1000, to = max(Double(o.to) / 1000, Double(o.from) / 1000)
+            let parts = CaptionTranslation.sentences(text)
+            let total = Double(parts.reduce(0) { $0 + $1.count + 1 })
+            var done = 0
+            for part in parts {
+                let a = from + (to - from) * Double(done) / total
+                done += part.count + 1
+                let b = from + (to - from) * Double(done) / total
+                if let last = sentences.last, !CaptionTranslation.endsSentence(last.text) || part.first?.isLowercase == true {
+                    sentences[sentences.count - 1].text += " " + part
+                    sentences[sentences.count - 1].to = b
+                } else {
+                    sentences.append(Sentence(text: part, from: a, to: b))
+                }
+            }
+        }
+        var cues: [CaptionTranslation.Cue] = []
+        for sentence in sentences {
+            var start = chunks.startTime(sentence.from) + offset
+            var end = chunks.endTime(sentence.to) + offset
+            if !words.isEmpty {
+                start = CaptionTranslation.snap(start, to: words.map(\.start), within: 0.8)
+                end = CaptionTranslation.snap(end, to: words.map(\.end), within: 0.8)
+            }
+            if let last = cues.last { start = max(start, last.end) }
+            guard end > start + 0.2 else { continue }
+            cues += CaptionTranslation.pieces(sentence.text, start: start, end: end, words: words)
+        }
+        return cues
     }
 
     /// Orden ur whisper-cli:s `-ojf`, med tiderna tillbakaräknade till inspelningen.
@@ -377,6 +493,29 @@ public struct SpeechChunks: Sendable {
         guard !chunks.isEmpty else { return nil }
         for c in chunks where t < c.joined + c.length { return c }
         return chunks.last
+    }
+
+    /// Delen en *sluttid* hör till: en tid i tystnaden efter en del hör till den delen.
+    public func locateEnd(_ t: Double) -> Chunk? {
+        chunks.last(where: { $0.joined <= t }) ?? chunks.first
+    }
+
+    /// Var en rad som börjar vid `t` (hopfogad tid) börjar i inspelningen: nära en paus fästs
+    /// den vid där talet tar vid efter pausen.
+    public func startTime(_ t: Double, snap: Double = 0.5) -> Double {
+        guard let c = locate(t), let i = chunks.firstIndex(of: c) else { return t }
+        if t - c.joined < snap { return c.original }
+        if c.joined + c.length - t < snap, i + 1 < chunks.count { return chunks[i + 1].original }
+        return original(t, in: c)
+    }
+
+    /// Var en rad som slutar vid `t` slutar i inspelningen: nära en paus fästs den vid där
+    /// talet slutar före pausen.
+    public func endTime(_ t: Double, snap: Double = 0.5) -> Double {
+        guard let c = locateEnd(t), let i = chunks.firstIndex(of: c) else { return t }
+        if t - c.joined < snap, i > 0 { return chunks[i - 1].original + chunks[i - 1].length }
+        if c.joined + c.length - t < snap { return c.original + c.length }
+        return original(t, in: c)
     }
 
     /// En tid i den hopfogade filen → inspelningens, inom delen `chunk`.

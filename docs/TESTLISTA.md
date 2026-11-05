@@ -52,8 +52,10 @@ Bygg först: `./scripts/build.sh`, öppna `dist/Bjarbys skärminspelare.app`.
   och storlek; Spara som standard och öppna en ny inspelning: logotypen ska finnas där.
 - [ ] **Pilar** — Lager › Lägg till › Pil: dra pilen och dess ändar i bilden, byt färg; den ska
   ritas fram och följa zoomen.
-- [ ] **Undertexter på engelska** — be producenten i Claude Code «översätt undertexterna till
-  engelska», välj sedan Tal › Språk i bild › Engelska och exportera (ett `.srt` per språk).
+- [ ] **Undertexter på engelska** — i en transkriberad inspelning: Tal › Översätt till engelska
+  (görs på datorn med ggml-medium). Engelskan ska synas direkt och följa talet, även över pauser.
+  Exportera: ett `.srt` per språk. Prova också producenten («översätt undertexterna till tyska»).
+  ⚠️ Bara provat med talsyntes (Alva), inte med en riktig röst med brus och tvekljud.
 
 ## Biblioteket
 

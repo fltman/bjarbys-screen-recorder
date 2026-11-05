@@ -494,8 +494,23 @@ struct InspectorView: View {
                         }
                     }
                     .disabled(!model.project.captions.visible)
-                } else {
-                    Text("Undertexter på fler språk: be producenten i Claude Code att översätta dem (till exempel «översätt undertexterna till engelska»).")
+                }
+                if let p = model.translating {
+                    HStack {
+                        ProgressView(value: p) { Text("Översätter till engelska …") }
+                        Button("Avbryt") { model.cancelTranslation() }.controlSize(.small)
+                    }
+                } else if model.recording.transcript?.language != "en", model.localTranslationModel != nil {
+                    Button(languages.contains("en") ? "Översätt till engelska igen" : "Översätt till engelska") { model.translateLocally() }
+                        .help("Görs på datorn med whisper och en flerspråkig modell. Andra språk: be producenten i Claude Code.")
+                }
+                if let e = model.translationError {
+                    Text(e).font(.caption).foregroundStyle(.red)
+                }
+                if languages.isEmpty && model.translating == nil {
+                    Text(model.localTranslationModel != nil
+                         ? "Andra språk än engelska: be producenten i Claude Code att översätta undertexterna."
+                         : "Undertexter på fler språk: be producenten i Claude Code att översätta dem (till exempel «översätt undertexterna till engelska»).")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Toggle("Markera ordet som sägs", isOn: binding(\.captions.highlightWord))

@@ -49,6 +49,10 @@ enum TestMode {
                 code = await transcribeTest(bundle: URL(fileURLWithPath: args[i + 1]),
                                             model: value(after: "--modell", in: args),
                                             language: value(after: "--sprak", in: args) ?? "sv")
+            } else if let i = args.firstIndex(of: "--prov-oversatt"), args.count > i + 1 {
+                code = await translateTest(bundle: URL(fileURLWithPath: args[i + 1]),
+                                           model: value(after: "--modell", in: args),
+                                           language: value(after: "--sprak", in: args) ?? "sv")
             } else if let i = args.firstIndex(of: "--prov-maskera"), args.count > i + 3 {
                 code = await renderTest(bundle: URL(fileURLWithPath: args[i + 1]),
                                         times: args[i + 2].split(separator: ",").compactMap { Double($0) },
@@ -431,6 +435,37 @@ enum TestMode {
             let data = try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys])
             print(String(data: data, encoding: .utf8) ?? "")
             return transcript.words.isEmpty ? 1 : 0
+        } catch {
+            print("{\"fel\":\"\(error.localizedDescription)\"}")
+            return 1
+        }
+    }
+
+    /// `--prov-oversatt <paket> [--modell <fil>] [--sprak sv]`: översätter talet till engelska med
+    /// whisper på datorn, sparar captions-en.json och skriver raderna (källtid) bredvid originalets.
+    static func translateTest(bundle url: URL, model: String?, language: String) async -> Int32 {
+        do {
+            let rec = try LoadedRecording.load(RecordingBundle(url: url))
+            guard let root = WhisperSetup.findRoot() else {
+                print(#"{"fel":"hittar inte whisper.cpp"}"#); return 1
+            }
+            var setup = WhisperSetup(root: root, model: "", language: rec.transcript?.language ?? language)
+            setup.model = model ?? WhisperSetup.translationModel(among: setup.availableModels) ?? ""
+            let started = Date()
+            let translation = try await Transcriber.translate(rec, setup: setup)
+            try rec.bundle.saveTranslation(translation)
+            var report: [String: Any] = [
+                "modell": setup.model,
+                "sekunder": (Date().timeIntervalSince(started) * 10).rounded() / 10,
+                "rader": translation.cues.map { String(format: "%.2f–%.2f ", $0.start, $0.end) + $0.text },
+            ]
+            if let words = rec.transcript?.words, !words.isEmpty {
+                report["original"] = CaptionTranslation.sourceCues(words, duration: rec.meta.duration)
+                    .map { String(format: "%.2f–%.2f ", $0.start, $0.end) + $0.text }
+            }
+            let data = try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys])
+            print(String(data: data, encoding: .utf8) ?? "")
+            return translation.cues.isEmpty ? 1 : 0
         } catch {
             print("{\"fel\":\"\(error.localizedDescription)\"}")
             return 1

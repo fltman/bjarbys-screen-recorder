@@ -319,7 +319,15 @@ som bakgrund i `CIBlendWithMask` gav svarta hörn runt cirkeln; bakgrunden ska v
   översättning på datorn har ingen svenska.
 - whisper.cpp `-l sv -tr` på svenskt tal (macOS `say -v Alva`): `ggml-large-v3-turbo` och
   `kb_whisper_ggml_medium` gav båda svensk text, ingen översättning (turbo är tränad utan
-  översättningsdata; KB-Whisper är finjusterad för svensk transkribering).
+  översättningsdata; KB-Whisper är finjusterad för svensk transkribering). Även
+  `kb_whisper_ggml_small` och KB medium med `-l en` (utan `-tr`) skrev svenska.
+- `ggml-medium.bin` (OpenAI flerspråkig, SHA1 fd9727b6…, 1,5 GB) översätter: «Hello and welcome,
+  now we are going to look at how to export a movie chapter.» — 16 s tal på 2,4 s (M5).
+- whispers segmenttider i översättningsläget är grova och följer inte meningarna: ett segment
+  «… with a» | «chapter. First we open …» gick tvärs över en paus på 2,5 s (raden 7,05–12,42
+  syntes under pausen). Efter uppdelning i meningar, ihopslagning av fortsättningar och
+  tidsfördelning i den hopfogade talfilen (pauser 0,4 s): «… with a chapter.» 2,34–6,71 och
+  «First we open …» 9,56–13,33 — samma början som originalets «Först» (9,56). 24 s tal på 2,7 s.
 
 ## Flera skärmar (2026-11-05)
 

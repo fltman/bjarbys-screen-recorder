@@ -89,8 +89,12 @@ tagning, sedan redigerbar polish, sedan resten.
   exporten skriver ett `.srt` per språk. Översättningen görs av producenten: MCP
   `get_caption_cues` → `set_caption_translation` (antalet rader kontrolleras). Uppmätt: Apples
   översättning på datorn har ingen svenska (`unsupported`), och varken KB-Whisper medium eller
-  large-v3-turbo översätter med `-tr` (båda skrev svenska) — en flerspråkig whisper-modell
-  (medium/large-v3) skulle kunna, men finns inte på datorn.
+  large-v3-turbo översätter med `-tr` (båda skrev svenska).
+- Översättning på datorn (2026-11-05): med en flerspråkig whisper-modell (`ggml-medium.bin`,
+  nedladdad) översätter Tal › Översätt till engelska talet direkt (`Transcriber.translate`,
+  `-tr`), MCP `translate_captions_locally`. Bara till engelska; andra språk via producenten.
+  whispers segment delas i meningar och tiden fördelas i den hopfogade talfilen, så att raderna
+  följer pauserna.
 - Pilar (2026-11-05): lagersorten `arrow` — i innehållet (zoomar med det), ritas fram från start
   till spets under intoningen, mjuk mörk skugga, fem färger; spetsen hamnar vid det som klickades
   närmast spelhuvudet. Dras i förhandsvisningen, start och spets med egna handtag. MCP

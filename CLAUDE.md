@@ -28,6 +28,8 @@ open Skarminspelare.xcodeproj
   - `--prov-exportera <paket> mp4-1080|mp4-4k|mp4-av1|mkv-1080|fcpxml|prores|gif|ljud-m4a|ljud-wav|ljud-spar <fil> [--utsnitt a,b] [--fps n] [--ljudniva -14] [--kvalitet small|normal|high]`
   - `--prov-redigerare <paket> <png> [--markera-zoom]` — redigerarens layout utanför skärmen
   - `--prov-transkribera <paket> [--modell <fil>] [--sprak sv]` — whisper.cpp, skriver orden
+  - `--prov-oversatt <paket> [--modell <fil>]` — talet till engelska med whisper (`-tr`, kräver en
+    flerspråkig modell som `ggml-medium.bin`), sparar `captions-en.json`, skriver raderna
   - `--prov-maskera <paket> <t1,…> <mapp>` — söker känslig text och renderar rutor (sparar inte)
   - `--prov-ljudstyrka <ljudfil>` — LUFS enligt BS.1770 och förstärkningen till −16
   - `--prov-rostisolering <ljudfil> <ut.caf>` — Apples röstisolering offline
