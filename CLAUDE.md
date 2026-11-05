@@ -8,7 +8,9 @@ efterhand och går att ändra. Underlaget finns i `docs/utredningar/`.
 ## Bygga och prova
 
 ```bash
-./scripts/build.sh          # signerad app → dist/Bjarbys skärminspelare.app
+./scripts/build.sh          # signerad app → dist/Bjarbys skärminspelare.app (med whisper-verktygen)
+./scripts/build-whisper.sh  # whisper-cli + vad-speech-segments statiskt → build/whisper-static (följer med appen)
+./scripts/release.sh        # notariserad DMG → dist/ + site/download/ (kräver notarytool-profilen «skarminspelare»)
 ./scripts/test.sh           # enhetsprov i RecorderKit (swift test via Xcodes verktygskedja)
 open Skarminspelare.xcodeproj
 ```
@@ -37,9 +39,9 @@ open Skarminspelare.xcodeproj
   - `--prov-rostisolering <ljudfil> <ut.caf>` — Apples röstisolering offline
   - `--prov-flashback <del-s> <buffert-s> <kör-s> <spara-s> <mapp>` — bufferten i drift, mäter skarvarna
   - `--prov-teleprompter <png>` — teleprompterrutan efter 6 s rullning, utanför skärmen
-  - `--prov-vyer <mapp> <paket> [--tid <s>]` — alla fönster och paneler (ljust och mörkt,
-    inspektörens flikar) som PNG; förhandsvisningen visar den renderade rutan vid `--tid` (videolager
-    och material ritas annars inte utanför skärmen)
+  - `--prov-vyer <mapp> <paket> [--tid <s>] [--mork]` — alla fönster och paneler (ljust och mörkt,
+    inspektörens flikar) som PNG; `--mork` = allt i mörkt läge; förhandsvisningen visar den
+    renderade rutan vid `--tid` (videolager och material ritas annars inte utanför skärmen)
   - `--prov-bildfrekvens <mapp> [bilder/s]` — verklig bildtakt: eget fönster rör sig varje bildruta
   - `--prov-trim <paket>` — trimningens gränser (grannar, inspelningens ändar, minsta längd)
   - `--prov-fonsterflytt <mapp>` — fönsterinspelning där fönstret flyttas mitt i
@@ -113,6 +115,13 @@ görs med elevenlabs-dialogue-skillen (kostar pengar, fråga om röst och språk
   (`URLCommands.swift`), och App Intents för Genvägar i samma fil.
 
 ## Tal (whisper.cpp)
+
+Den nedladdade appen har verktygen i `Contents/Helpers` (statiskt byggda, Metal-shadern inbäddad,
+signerade med hardened runtime) och laddar ned modellerna själv till Application Support
+(`Speech/SpeechModels.swift`: storlek och SHA-256 uppmätta på whisper.cpp-mappens filer; fel
+kontrollsumma kastas). `WhisperSetup.resolve` väljer: vald mapp → appens verktyg om modeller
+laddats ned → whisper.cpp-mapp → appens verktyg utan modell (`needsModel`, appen erbjuder
+nedladdning). Provläge: `--prov-talmodell ggml-silero-v5.1.2.bin [--katalog <mapp>]` (885 kB).
 
 Transkriberingen kör whisper.cpp som extern process: `whisper-cli` och `vad-speech-segments`
 i `<rot>/build/bin`, modeller i `<rot>/models` (KB-Whisper för svenska, `ggml-silero-v5.1.2.bin`

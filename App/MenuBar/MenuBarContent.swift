@@ -107,6 +107,7 @@ struct MenuBarContent: View {
         Menu("Inställningar") {
             Button("Delning …") { app.showSharingSettings() }
             Button("Insticksprogram …") { app.showPluginSettings() }
+            Button("Talmodeller …") { app.showSpeechModels() }
             Button("Kortkommandon …") { app.showHotKeySettings() }
             Button("Behörigheter …") { app.showPermissions() }
         }

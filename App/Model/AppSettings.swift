@@ -70,13 +70,7 @@ final class AppSettings: ObservableObject {
 
     /// Inställningarna för transkribering, eller nil om whisper.cpp inte går att hitta.
     var whisperSetup: WhisperSetup? {
-        let root = whisperRoot.isEmpty ? WhisperSetup.findRoot() : URL(fileURLWithPath: whisperRoot)
-        guard let root else { return nil }
-        var setup = WhisperSetup(root: root, model: whisperModel, language: speechLanguage)
-        if whisperModel.isEmpty || !setup.availableModels.contains(whisperModel) {
-            setup.model = WhisperSetup.preferredModel(among: setup.availableModels, language: speechLanguage) ?? ""
-        }
-        return setup
+        WhisperSetup.resolve(configuredRoot: whisperRoot, model: whisperModel, language: speechLanguage)
     }
 
     @Published private(set) var microphones: [Devices.Device] = []

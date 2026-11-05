@@ -53,6 +53,8 @@ enum TestMode {
                 code = await translateTest(bundle: URL(fileURLWithPath: args[i + 1]),
                                            model: value(after: "--modell", in: args),
                                            language: value(after: "--sprak", in: args) ?? "sv")
+            } else if let i = args.firstIndex(of: "--prov-talmodell"), args.count > i + 1 {
+                code = await speechModelTest(file: args[i + 1], into: value(after: "--katalog", in: args).map { URL(fileURLWithPath: $0) })
             } else if let i = args.firstIndex(of: "--prov-dubba"), args.count > i + 3 {
                 code = await dubTest(bundle: URL(fileURLWithPath: args[i + 1]), language: args[i + 2],
                                      files: args[i + 3].split(separator: ",", omittingEmptySubsequences: false).map(String.init))
@@ -105,7 +107,8 @@ enum TestMode {
                 }
             } else if let i = args.firstIndex(of: "--prov-vyer"), args.count > i + 2 {
                 code = await viewSnapshots(out: URL(fileURLWithPath: args[i + 1]), bundle: URL(fileURLWithPath: args[i + 2]),
-                                           time: value(after: "--tid", in: args).flatMap(Double.init))
+                                           time: value(after: "--tid", in: args).flatMap(Double.init),
+                                           allDark: args.contains("--mork"))
             } else if let i = args.firstIndex(of: "--prov-ljudstyrka"), args.count > i + 1 {
                 let m = try? await Loudness.measure(AVURLAsset(url: URL(fileURLWithPath: args[i + 1])))
                 print(m.map { String(format: #"{"lufs":%.2f,"topp_dbfs":%.2f,"forstarkning_db":%.2f}"#, $0.integrated,
@@ -420,11 +423,9 @@ enum TestMode {
     static func transcribeTest(bundle url: URL, model: String?, language: String) async -> Int32 {
         do {
             let rec = try LoadedRecording.load(RecordingBundle(url: url))
-            guard let root = WhisperSetup.findRoot() else {
+            guard let setup = WhisperSetup.resolve(configuredRoot: "", model: model ?? "", language: language) else {
                 print(#"{"fel":"hittar inte whisper.cpp"}"#); return 1
             }
-            var setup = WhisperSetup(root: root, model: "", language: language)
-            setup.model = model ?? WhisperSetup.preferredModel(among: setup.availableModels, language: language) ?? ""
             let started = Date()
             let transcript = try await Transcriber.run(rec, setup: setup)
             try rec.bundle.saveTranscript(transcript)
@@ -432,6 +433,7 @@ enum TestMode {
             let captions = Captions(words: transcript.words, timeMap: TimeMap(segments: project.segments))
             let report: [String: Any] = [
                 "modell": setup.model,
+                "verktyg": setup.cli.path,
                 "sekunder": (Date().timeIntervalSince(started) * 10).rounded() / 10,
                 "ord": transcript.words.map { String(format: "%.2f–%.2f %@", $0.start, $0.end, $0.text) },
                 "undertexter": captions.cues.map { String(format: "%.2f–%.2f ", $0.start, $0.end) + $0.text.replacingOccurrences(of: "\n", with: " / ") },
@@ -442,6 +444,24 @@ enum TestMode {
         } catch {
             print("{\"fel\":\"\(error.localizedDescription)\"}")
             return 1
+        }
+    }
+
+    /// `--prov-talmodell <fil> [--katalog <mapp>]`: laddar ned en modell ur katalogen (t.ex.
+    /// `ggml-silero-v5.1.2.bin`, 885 kB) med appens nedladdare och kontrollerar den.
+    static func speechModelTest(file: String, into dir: URL?) async -> Int32 {
+        guard let entry = (SpeechModels.catalog + [SpeechModels.vad]).first(where: { $0.file == file }) else {
+            print(#"{"fel":"okänd modell"}"#); return 1
+        }
+        let target = dir ?? SpeechModels.directory
+        let started = Date()
+        do {
+            try await SpeechModels.download(entry, to: target)
+            print(String(format: #"{"modell":"%@","mapp":"%@","sekunder":%.1f,"installerad":%@}"#, entry.file, target.path,
+                         Date().timeIntervalSince(started), SpeechModels.isInstalled(entry, in: target) ? "true" : "false"))
+            return 0
+        } catch {
+            print("{\"fel\":\"\(error.localizedDescription)\"}"); return 1
         }
     }
 
@@ -477,10 +497,9 @@ enum TestMode {
     static func translateTest(bundle url: URL, model: String?, language: String) async -> Int32 {
         do {
             let rec = try LoadedRecording.load(RecordingBundle(url: url))
-            guard let root = WhisperSetup.findRoot() else {
+            guard var setup = WhisperSetup.resolve(configuredRoot: "", model: "", language: rec.transcript?.language ?? language) else {
                 print(#"{"fel":"hittar inte whisper.cpp"}"#); return 1
             }
-            var setup = WhisperSetup(root: root, model: "", language: rec.transcript?.language ?? language)
             setup.model = model ?? WhisperSetup.translationModel(among: setup.availableModels) ?? ""
             let started = Date()
             let translation = try await Transcriber.translate(rec, setup: setup)
@@ -566,13 +585,13 @@ enum TestMode {
     }
 
     /// Ritar appens fönster och paneler utanför skärmen, för att granska utseendet.
-    static func viewSnapshots(out: URL, bundle: URL, time: Double? = nil) async -> Int32 {
+    static func viewSnapshots(out: URL, bundle: URL, time: Double? = nil, allDark: Bool = false) async -> Int32 {
         do {
             try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
             func shot<V: View>(_ name: String, _ size: NSSize, _ view: V, dark: Bool = false) async throws {
                 let window = NSWindow(contentRect: NSRect(origin: CGPoint(x: -6000, y: -6000), size: size),
                                       styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-                window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+                window.appearance = NSAppearance(named: dark || allDark ? .darkAqua : .aqua)
                 // Fönstrets bakgrund bakom vyn: annars blir det genomskinliga svart i PNG:en.
                 let host = NSHostingView(rootView: view.background(Color(nsColor: .windowBackgroundColor)))
                 host.frame = NSRect(origin: .zero, size: size)

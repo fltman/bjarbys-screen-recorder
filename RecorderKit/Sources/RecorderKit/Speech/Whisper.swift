@@ -20,15 +20,35 @@ public struct WhisperSetup: Sendable, Equatable {
     /// "sv", "en" … eller "auto".
     public var language: String
 
+    /// Verktygen följer med appen (`Contents/Helpers`) och modellerna ligger i
+    /// `SpeechModels.directory` — för den som laddat ned appen och inte har whisper.cpp.
+    public var bundled: Bool
+
     public static let vadModel = "ggml-silero-v5.1.2.bin"
 
-    public init(root: URL, model: String, language: String) {
-        self.root = root; self.model = model; self.language = language
+    public init(root: URL, model: String, language: String, bundled: Bool = false) {
+        self.root = root; self.model = model; self.language = language; self.bundled = bundled
     }
 
-    public var cli: URL { root.appendingPathComponent("build/bin/whisper-cli") }
-    public var vadTool: URL { root.appendingPathComponent("build/bin/vad-speech-segments") }
-    public var modelsDir: URL { root.appendingPathComponent("models") }
+    /// Appens egna verktyg, om de finns.
+    public static var helpersDirectory: URL { Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers", isDirectory: true) }
+    public static var hasBundledTools: Bool {
+        FileManager.default.isExecutableFile(atPath: helpersDirectory.appendingPathComponent("whisper-cli").path)
+            && FileManager.default.isExecutableFile(atPath: helpersDirectory.appendingPathComponent("vad-speech-segments").path)
+    }
+
+    public var cli: URL { bundled ? Self.helpersDirectory.appendingPathComponent("whisper-cli") : root.appendingPathComponent("build/bin/whisper-cli") }
+    public var vadTool: URL {
+        bundled ? Self.helpersDirectory.appendingPathComponent("vad-speech-segments") : root.appendingPathComponent("build/bin/vad-speech-segments")
+    }
+    public var modelsDir: URL { bundled ? SpeechModels.directory : root.appendingPathComponent("models") }
+
+    /// Talmodellen saknas (men verktygen finns) — då kan appen erbjuda nedladdning.
+    public var needsModel: Bool {
+        let fm = FileManager.default
+        return fm.isExecutableFile(atPath: cli.path)
+            && (model.isEmpty || !fm.fileExists(atPath: modelURL.path) || !fm.fileExists(atPath: vadModelURL.path))
+    }
     public var modelURL: URL { modelsDir.appendingPathComponent(model) }
     public var vadModelURL: URL { modelsDir.appendingPathComponent(Self.vadModel) }
 
@@ -51,7 +71,8 @@ public struct WhisperSetup: Sendable, Equatable {
         var out: [String] = []
         if !fm.isExecutableFile(atPath: cli.path) { out.append(String(localized: "whisper-cli saknas i \(root.path)/build/bin")) }
         if !fm.isExecutableFile(atPath: vadTool.path) { out.append(String(localized: "vad-speech-segments saknas i \(root.path)/build/bin")) }
-        if !fm.fileExists(atPath: modelURL.path) { out.append(String(localized: "Modellen \(model) saknas")) }
+        if model.isEmpty { out.append(String(localized: "Ingen talmodell")) }
+        else if !fm.fileExists(atPath: modelURL.path) { out.append(String(localized: "Modellen \(model) saknas")) }
         if !fm.fileExists(atPath: vadModelURL.path) { out.append(String(localized: "Taldetektorn \(Self.vadModel) saknas")) }
         return out
     }
@@ -69,6 +90,28 @@ public struct WhisperSetup: Sendable, Equatable {
     public static func findRoot() -> URL? {
         candidateRoots.map { URL(fileURLWithPath: NSString(string: $0).expandingTildeInPath) }
             .first { FileManager.default.isExecutableFile(atPath: $0.appendingPathComponent("build/bin/whisper-cli").path) }
+    }
+
+    /// Inställningarna att transkribera med: en vald whisper.cpp-mapp; annars appens egna verktyg
+    /// om modeller redan laddats ned; annars en whisper.cpp-mapp på de vanliga ställena; annars
+    /// appens verktyg utan modell (`needsModel` — appen erbjuder nedladdning). nil = inget alls.
+    /// `model` tomt = den bästa som finns för språket.
+    public static func resolve(configuredRoot: String, model: String, language: String) -> WhisperSetup? {
+        var setup: WhisperSetup
+        if !configuredRoot.isEmpty {
+            setup = WhisperSetup(root: URL(fileURLWithPath: configuredRoot), model: model, language: language)
+        } else {
+            let bundled = WhisperSetup(root: SpeechModels.directory, model: model, language: language, bundled: true)
+            let downloaded = hasBundledTools && !bundled.availableModels.isEmpty
+            if downloaded { setup = bundled }
+            else if let root = findRoot() { setup = WhisperSetup(root: root, model: model, language: language) }
+            else if hasBundledTools { setup = bundled }
+            else { return nil }
+        }
+        if setup.model.isEmpty || !setup.availableModels.contains(setup.model) {
+            setup.model = preferredModel(among: setup.availableModels, language: language) ?? ""
+        }
+        return setup
     }
 
     /// Kan modellen översätta talet till engelska (`-tr`)? Bara OpenAI:s flerspråkiga modeller.

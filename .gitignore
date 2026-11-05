@@ -21,3 +21,7 @@ prov/
 
 # Produktvideons arbetsfiler (stora, genereras)
 marketing/
+# Produktfilmen laddas upp med sajten, inte i git
+site/media/*.mp4
+# Den notariserade skivavbilden laddas upp med sajten, inte i git
+site/download/

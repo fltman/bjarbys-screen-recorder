@@ -3112,6 +3112,23 @@
         }
       }
     },
+    "Hämtas från Hugging Face och kontrolleras mot en kontrollsumma. Sparas i Application Support, inte i inspelningarna.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded from Hugging Face and checked against a checksum. Saved in Application Support, not in your recordings."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hämtas från Hugging Face och kontrolleras mot en kontrollsumma. Sparas i Application Support, inte i inspelningarna."
+          }
+        }
+      }
+    },
     "Håll ansiktet i mitten": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4489,6 +4506,40 @@
         }
       }
     },
+    "Ladda ned (%@)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download (%@)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ladda ned (%@)"
+          }
+        }
+      }
+    },
+    "Ladda ned en talmodell …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download a speech model …"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ladda ned en talmodell …"
+          }
+        }
+      }
+    },
     "Ladda upp exporterade filmer till din egen S3-kompatibla lagring (Cloudflare R2, AWS S3, MinIO, Backblaze B2) och få en länk i urklipp.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -5335,6 +5386,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Namn"
+          }
+        }
+      }
+    },
+    "Nedladdad": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nedladdad"
           }
         }
       }
@@ -6236,6 +6304,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Röst"
+          }
+        }
+      }
+    },
+    "Sedan: Transkribera.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Then: Transcribe."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sedan: Transkribera."
           }
         }
       }
@@ -7838,6 +7923,40 @@
         }
       }
     },
+    "Talmodeller": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech Models"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Talmodeller"
+          }
+        }
+      }
+    },
+    "Talmodeller …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech Models …"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Talmodeller …"
+          }
+        }
+      }
+    },
     "Telefonnummer": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -8123,6 +8242,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Transkriberar …"
+          }
+        }
+      }
+    },
+    "Transkriberingen görs på datorn med whisper.cpp och behöver en talmodell (en gång).": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcription runs on your Mac with whisper.cpp and needs a speech model (once)."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkriberingen görs på datorn med whisper.cpp och behöver en talmodell (en gång)."
+          }
+        }
+      }
+    },
+    "Transkriberingen görs på datorn och behöver en talmodell. Den laddas ned en gång.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcription runs on your Mac and needs a speech model. It is downloaded once."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkriberingen görs på datorn och behöver en talmodell. Den laddas ned en gång."
+          }
+        }
+      }
+    },
+    "Transkriberingen och översättningen görs på datorn med whisper.cpp, som följer med appen. Modellerna laddas ned en gång.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcription and translation run on your Mac with whisper.cpp, which comes with the app. The models are downloaded once."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkriberingen och översättningen görs på datorn med whisper.cpp, som följer med appen. Modellerna laddas ned en gång."
           }
         }
       }
@@ -9211,6 +9381,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Översätter till engelska …"
+          }
+        }
+      }
+    },
+    "Översättning till engelska på datorn:": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation to English on your Mac:"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Översättning till engelska på datorn:"
           }
         }
       }

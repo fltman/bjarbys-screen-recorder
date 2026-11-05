@@ -616,12 +616,11 @@ enum MCPServer {
     private static func translateLocally(_ a: [String: Any]) async throws -> String {
         let rec = try resolve(a)
         let configured = UserDefaults.standard.string(forKey: "whisperRoot") ?? ""
-        guard let root = configured.isEmpty ? WhisperSetup.findRoot() : URL(fileURLWithPath: configured) else {
-            throw ToolError("whisper.cpp not found. Build it in ~/Projekt/whisper.cpp or ~/whisper.cpp, or choose its folder in the app.")
-        }
         let language = rec.transcript?.language ?? UserDefaults.standard.string(forKey: "speechLanguage") ?? "sv"
-        var setup = WhisperSetup(root: root, model: a["model"] as? String ?? "", language: language.isEmpty ? "sv" : language)
-        if setup.model.isEmpty { setup.model = WhisperSetup.translationModel(among: setup.availableModels) ?? "" }
+        guard var setup = WhisperSetup.resolve(configuredRoot: configured, model: "", language: language.isEmpty ? "sv" : language) else {
+            throw ToolError("No speech tools: build whisper.cpp in ~/Projekt/whisper.cpp or ~/whisper.cpp, choose its folder in the app, or use the downloaded app (it brings its own and downloads the models).")
+        }
+        setup.model = a["model"] as? String ?? WhisperSetup.translationModel(among: setup.availableModels) ?? ""
         guard !setup.model.isEmpty else {
             throw ToolError("No model that can translate in \(setup.modelsDir.path) — it needs a multilingual one such as ggml-medium.bin (ask the user before downloading ~1.5 GB). Or translate with get_caption_cues + set_caption_translation.")
         }
@@ -642,11 +641,12 @@ enum MCPServer {
         let rec = try resolve(a)
         let language = a["language"] as? String ?? UserDefaults.standard.string(forKey: "speechLanguage") ?? "sv"
         let configured = UserDefaults.standard.string(forKey: "whisperRoot") ?? ""
-        guard let root = configured.isEmpty ? WhisperSetup.findRoot() : URL(fileURLWithPath: configured) else {
-            throw ToolError("whisper.cpp not found. Build it in ~/Projekt/whisper.cpp or ~/whisper.cpp, or choose its folder in the app.")
+        guard let setup = WhisperSetup.resolve(configuredRoot: configured, model: a["model"] as? String ?? "", language: language) else {
+            throw ToolError("No speech tools: build whisper.cpp in ~/Projekt/whisper.cpp or ~/whisper.cpp, choose its folder in the app, or use the downloaded app (it brings its own and downloads the models).")
         }
-        var setup = WhisperSetup(root: root, model: a["model"] as? String ?? "", language: language)
-        if setup.model.isEmpty { setup.model = WhisperSetup.preferredModel(among: setup.availableModels, language: language) ?? "" }
+        if setup.needsModel {
+            throw ToolError("No speech model yet. Ask the user to download one in the app (Transcribe offers it; KB-Whisper medium is 1.5 GB) — don't download it yourself without a yes.")
+        }
         let t = try await Transcriber.run(rec, setup: setup)
         try rec.bundle.saveTranscript(t)
         guard !t.words.isEmpty else { return "No speech found (model \(setup.model))." }

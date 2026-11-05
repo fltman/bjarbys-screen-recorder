@@ -7,6 +7,7 @@ import RecorderKit
 /// ta tillbaka.
 struct TranscriptView: View {
     @ObservedObject var model: EditorModel
+    @ObservedObject private var speechModels = SpeechModelStore.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -48,9 +49,18 @@ struct TranscriptView: View {
 
     @ViewBuilder private var empty: some View {
         VStack(alignment: .leading, spacing: 10) {
+            if model.needsSpeechModel && model.transcribing == nil {
+                Text("Transkriberingen görs på datorn och behöver en talmodell. Den laddas ned en gång.")
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                SpeechModelsView(entries: [SpeechModels.kbMedium, SpeechModels.kbSmall], showsFootnote: false)
+                Text("Sedan: Transkribera.").font(.caption).foregroundStyle(.secondary)
+            }
             if let p = model.transcribing {
                 ProgressView(value: p) { Text("Transkriberar …") }
                 Button("Avbryt") { model.cancelTranscription() }.controlSize(.small)
+            } else if model.needsSpeechModel {
+                EmptyView()
             } else if model.recording.hasMicrophone || model.recording.hasComputerAudio {
                 Text("Transkribera inspelningen för att redigera den som text, få undertexter och klippa bort pauser.")
                     .foregroundStyle(.secondary)

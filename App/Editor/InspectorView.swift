@@ -6,6 +6,7 @@ import RecorderKit
 /// Inställningarna till höger. Allt här är ett beslut om utseendet; inspelningen rörs aldrig.
 struct InspectorView: View {
     @ObservedObject var model: EditorModel
+    @ObservedObject private var speechModels = SpeechModelStore.shared
 
     private func binding<T>(_ keyPath: WritableKeyPath<EditProject, T>) -> Binding<T> {
         Binding(get: { model.project[keyPath: keyPath] }, set: { v in model.update { $0[keyPath: keyPath] = v } })
@@ -476,6 +477,10 @@ struct InspectorView: View {
             if model.words.isEmpty {
                 if let p = model.transcribing {
                     ProgressView(value: p) { Text("Transkriberar …") }
+                } else if model.needsSpeechModel {
+                    Button("Ladda ned en talmodell …") { AppModel.shared.showSpeechModels() }
+                    Text("Transkriberingen görs på datorn med whisper.cpp och behöver en talmodell (en gång).")
+                        .font(.caption).foregroundStyle(.secondary)
                 } else {
                     Button("Transkribera") { model.transcribe() }
                     Text("Ger undertexter, redigering via texten och bortklippning av pauser. Görs lokalt med whisper.cpp.")
@@ -506,6 +511,10 @@ struct InspectorView: View {
                 }
                 if let e = model.translationError {
                     Text(e).font(.caption).foregroundStyle(.red)
+                }
+                if model.translating == nil, model.localTranslationModel == nil, model.canDownloadTranslationModel {
+                    Text("Översättning till engelska på datorn:").font(.caption).foregroundStyle(.secondary)
+                    SpeechModelsView(entries: [SpeechModels.multilingual], showsFootnote: false)
                 }
                 let dubs = Dubbing.languages(model.project)
                 if !dubs.isEmpty {

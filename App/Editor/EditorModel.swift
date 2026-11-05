@@ -429,6 +429,8 @@ final class EditorModel: ObservableObject {
             transcriptionError = String(localized: "Hittar inte whisper.cpp. Välj mappen med build/bin/whisper-cli och models/.")
             return
         }
+        // Den nedladdade appen har verktygen men ingen modell förrän användaren hämtat en.
+        guard !setup.needsModel else { return }
         transcribing = 0
         let rec = recording
         transcriptionTask = Task {
@@ -449,6 +451,14 @@ final class EditorModel: ObservableObject {
     }
 
     /// Modellen som kan översätta till engelska på datorn, om en sådan finns i whisper.cpp/models.
+    /// Verktygen finns men ingen talmodell (den nedladdade appen före första nedladdningen).
+    var needsSpeechModel: Bool { AppModel.shared.settings.whisperSetup?.needsModel ?? false }
+
+    /// Den nedladdade appen utan modell som kan översätta (då kan den laddas ned).
+    var canDownloadTranslationModel: Bool {
+        (AppModel.shared.settings.whisperSetup?.bundled ?? false) && !SpeechModels.isInstalled(SpeechModels.multilingual)
+    }
+
     var localTranslationModel: String? {
         AppModel.shared.settings.whisperSetup.flatMap { WhisperSetup.translationModel(among: $0.availableModels) }
     }

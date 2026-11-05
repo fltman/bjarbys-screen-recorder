@@ -70,6 +70,24 @@ final class AppModel: ObservableObject {
         hotKeyWindow?.makeKeyAndOrderFront(nil)
     }
 
+    private var speechModelsWindow: NSWindow?
+
+    func showSpeechModels() {
+        if speechModelsWindow == nil {
+            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 500, height: 380),
+                             styleMask: [.titled, .closable], backing: .buffered, defer: false)
+            w.title = String(localized: "Talmodeller")
+            w.isReleasedWhenClosed = false
+            let host = NSHostingController(rootView: SpeechModelsSettingsView())
+            host.sizingOptions = [.preferredContentSize]
+            w.contentViewController = host
+            w.center()
+            speechModelsWindow = w
+        }
+        NSApp.activate()
+        speechModelsWindow?.makeKeyAndOrderFront(nil)
+    }
+
     private var pluginWindow: NSWindow?
 
     func showPluginSettings() {

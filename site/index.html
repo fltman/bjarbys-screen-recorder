@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bjarbys skärminspelare – spela in skärmen, gör den snygg efteråt</title>
+  <meta name="description" content="En nativ skärminspelare för macOS som sparar inspelningen som data. Zoom, markör, bakgrund, undertexter och dubbning läggs på efteråt och går alltid att ändra. Öppen källkod.">
+  <meta property="og:title" content="Bjarbys skärminspelare">
+  <meta property="og:description" content="Spela in skärmen. Gör den snygg efteråt. En nativ skärminspelare för macOS – öppen källkod.">
+  <meta property="og:image" content="https://bjarby.com/screen-recorder/img/dela.png">
+  <meta property="og:url" content="https://bjarby.com/screen-recorder/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://bjarby.com/screen-recorder/">
+  <!-- Sajten ligger i en undermapp och alla sökvägar är relativa: utan snedstreck sist skulle
+       bilderna sökas i webbplatsens rot. -->
+  <script>if (!location.pathname.endsWith('/') && !/\.[a-z0-9]+$/i.test(location.pathname)) location.replace(location.pathname + '/' + location.search + location.hash);</script>
+  <link rel="icon" href="favicon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topp">
+  <a class="marke" href="#"><img src="img/ikon.png" alt="" width="28" height="28"> Bjarbys skärminspelare</a>
+  <nav>
+    <a href="#film">Filmen</a>
+    <a href="#funktioner">Funktioner</a>
+    <a href="#producenten">AI-producenten</a>
+    <a href="#kom-igang">Kom igång</a>
+    <a class="knapp liten" href="https://github.com/fltman/bjarbys-screen-recorder">GitHub</a>
+  </nav>
+</header>
+
+<section class="hjalte">
+  <div class="hjalte-text">
+    <p class="overrubrik">För macOS · Öppen källkod</p>
+    <h1>Spela in skärmen.<br>Gör den snygg efteråt.</h1>
+    <p class="ingress">Bjarbys skärminspelare sparar inspelningen som <em>data</em>: skärmen utan markör, varje ljud på sitt eget spår och varje klick som en händelse. Zoom, markör, bakgrund och undertexter läggs på i redigeraren – och går alltid att ändra.</p>
+    <div class="knappar">
+      <a class="knapp" href="download/Bjarbys-skarminspelare.dmg">Ladda ned för Mac</a>
+      <a class="knapp sekundar" href="#film">Se filmen</a>
+    </div>
+    <p class="krav">Gratis · macOS 26 eller senare · Apple silicon</p>
+  </div>
+  <figure class="hjalte-bild">
+    <img src="img/redigerare.png" alt="Redigeraren: texten till vänster, den polerade bilden i mitten, tidslinjen under och inspektören till höger." width="1400" height="860">
+  </figure>
+</section>
+
+<section id="film" class="film">
+  <div class="smal">
+    <h2>Fyra minuter om allt den kan</h2>
+    <p class="under">Rösten i filmen är en AI-version av Anders röst.</p>
+  </div>
+  <div class="spelare">
+    <video controls preload="none" poster="media/poster.jpg" playsinline>
+      <source src="media/bjarbys-skarminspelare.mp4" type="video/mp4">
+      <track kind="captions" srclang="sv" label="Svenska" src="media/bjarbys-skarminspelare.vtt">
+      Din webbläsare kan inte spela filmen. <a href="media/bjarbys-skarminspelare.mp4">Ladda ned den</a>.
+    </video>
+  </div>
+</section>
+
+<section class="tre">
+  <div class="smal">
+    <h2>Data, inte en färdig film</h2>
+    <p class="under">Allt du spelar in finns kvar. Allt du lägger till går att ändra.</p>
+  </div>
+  <div class="kort-rad">
+    <article class="kort">
+      <span class="steg">1</span>
+      <h3>Spela in</h3>
+      <p>Hela skärmen, ett fönster, ett program, ett område – eller en iPhone via kabel. Mikrofonen, datorljudet, varje app och kameran hamnar på egna spår.</p>
+    </article>
+    <article class="kort">
+      <span class="steg">2</span>
+      <h3>Polera</h3>
+      <p>Zoom där du klickar och skriver, en mjuk markör, bakgrund, ram och undertexter. Allt är förslag som du flyttar, ändrar eller tar bort.</p>
+    </article>
+    <article class="kort">
+      <span class="steg">3</span>
+      <h3>Dela</h3>
+      <p>MP4, 4K HDR, AV1, ProRes med genomskinlig bakgrund, GIF – eller en färdig mapp till Final Cut Pro och DaVinci Resolve.</p>
+    </article>
+  </div>
+</section>
+
+<div id="funktioner"></div>
+
+<section class="funktion">
+  <div class="funktion-text">
+    <p class="overrubrik">Inspelning</p>
+    <h2>Ingen tagning går förlorad</h2>
+    <p>Varje spår skrivs i en egen fil, i fragment om två sekunder. Kraschar något går inspelningen att spela fram till sista fragmentet och räddas vid nästa start.</p>
+    <ul>
+      <li><strong>Flashback</strong> – spela in i bakgrunden och spara de senaste 1–10 minuterna i efterhand.</li>
+      <li><strong>Ljud per app</strong> – ett samtal, en webbläsare och musik på var sitt spår.</li>
+      <li><strong>Penna och markeringar</strong> – ringa in något medan du spelar in, och sätt flaggor där du vill göra om.</li>
+      <li><strong>Teleprompter</strong> – manuset rullar nära kameran, synligt bara för dig.</li>
+      <li><strong>Panelen varnar</strong> för tyst mikrofon, full disk och spår som stannar.</li>
+    </ul>
+  </div>
+  <figure class="funktion-bild stack">
+    <img class="skugga" src="img/manus.png" alt="Teleprompterns manus." loading="lazy">
+    <img class="skugga flyt" src="img/hud.png" alt="Panelen under inspelningen: tid, nivåmätare, penna, flagga, paus och stopp." loading="lazy">
+  </figure>
+</section>
+
+<section class="funktion vand">
+  <div class="funktion-text">
+    <p class="overrubrik">Redigeraren</p>
+    <h2>Kameran följer det du gör</h2>
+    <p>Zoomar föreslås ur dina klick och där du skriver. En fjäderdriven kamera håller markören i en säker zon och tittar framåt – samma bana i förhandsvisningen som i exporten.</p>
+    <ul>
+      <li>Lupp eller strålkastare i stället för zoom, och rörelseoskärpa som en riktig kamera.</li>
+      <li>Markören ritas om på en utjämnad bana, i valfri storlek, med klickringar och halo.</li>
+      <li>Bakgrund, marginal, rundade hörn, skugga, fönsterram och din logotyp.</li>
+      <li>Snabbval för YouTube, Reels/Shorts och kvadrat – Reel-läget följer markören i stående bild.</li>
+    </ul>
+  </div>
+  <figure class="funktion-bild par">
+    <img class="skugga" src="img/inspektor-style.png" alt="Inspektörens flik Stil: bakgrund, format, marginal, hörn och skugga." loading="lazy">
+    <img class="skugga" src="img/inspektor-motion.png" alt="Inspektörens flik Rörelse: zoom, markör och klick." loading="lazy">
+  </figure>
+</section>
+
+<section class="funktion">
+  <div class="funktion-text">
+    <p class="overrubrik">Tal</p>
+    <h2>Redigera filmen som text</h2>
+    <p>Talet transkriberas på din Mac med whisper.cpp och KB-Whispers svenska modeller. Stryk ett ord i texten så försvinner det ur filmen – det strukna syns kvar och går att ta tillbaka.</p>
+    <ul>
+      <li>Dödtid bort med en knapp – eller spela den fyra gånger fortare.</li>
+      <li>Undertexter i filmen och som <code>.srt</code>, nere, mitt i eller uppe.</li>
+      <li>Översättning till engelska på datorn, eller till valfritt språk via AI-producenten.</li>
+      <li><strong>Dubbning</strong> – undertexterna inlästa med en röst du väljer, även en klon av din egen, och lagda på rätt tid. Exporten får originalet och dubbningen som egna ljudspår.</li>
+      <li>Eko och brus bort medan du spelar in, och ljudet utjämnat till −16 LUFS.</li>
+    </ul>
+  </div>
+  <figure class="funktion-bild">
+    <img class="skugga smal-bild" src="img/inspektor-speech.png" alt="Inspektörens flik Tal: undertexter, språk i bild, översättning och ljud." loading="lazy">
+  </figure>
+</section>
+
+<section class="funktion vand">
+  <div class="funktion-text">
+    <p class="overrubrik">Dölj</p>
+    <h2>Det känsliga hittar sig självt</h2>
+    <p>E-postadresser, telefonnummer, personnummer, kortnummer och API-nycklar letas upp i bilden med textigenkänning på datorn. Välj oskärpa, pixlar eller en fylld ruta – maskerna följer texten när den rullar.</p>
+  </div>
+  <figure class="funktion-bild">
+    <img class="skugga smal-bild" src="img/inspektor-privacy.png" alt="Inspektörens flik Dölj: hittade uppgifter och egna masker." loading="lazy">
+  </figure>
+</section>
+
+<section class="funktion">
+  <div class="funktion-text">
+    <p class="overrubrik">Lager och kapitel</p>
+    <h2>Det som sägs ska synas</h2>
+    <p>Rubrikkort, pilar som ritar fram sig, markeringar runt knappen du klickade på, faktarutor, QR-koder, bilder och videoinslag. Kapitlen följer med i filen och blir tidsstämplar till YouTube.</p>
+  </div>
+  <figure class="funktion-bild">
+    <img class="skugga smal-bild" src="img/inspektor-layers.png" alt="Inspektörens flik Lager: rubrikkort, markeringar, pilar och kapitel." loading="lazy">
+  </figure>
+</section>
+
+<section id="producenten" class="producent">
+  <div class="smal">
+    <p class="overrubrik ljus">AI-producenten</p>
+    <h2>Be Claude Code producera inspelningen</h2>
+    <p class="under ljus">Appen har en MCP-server inbyggd. Producenten klipper bort dödtid och felstarter i pauserna mellan orden, sätter zoomar, kapitel, rubrikkort och markeringar, kontrollerar varje färdig ruta mot reglerna – och lämnar ett leveransbrev. Besluten är data som du kan ändra.</p>
+  </div>
+  <div class="dialog">
+    <p class="du">Producera senaste inspelningen. Den ska bli en kort instruktionsfilm.</p>
+    <p class="ai">Klart. Jag har klippt bort dödtiden och felstarterna, satt zoomar på klicken och delat filmen i kapitel. Markeringen sitter på knappen Exportera – jag har kontrollerat det i de färdiga rutorna. Leveransbrevet ligger i paketet, med två saker jag vill att du tar ställning till.</p>
+  </div>
+  <p class="fotnot ljus">Exempel på ett samtal. Producenten frågar alltid innan något kostar pengar, och laddar aldrig upp något utan ditt ja.</p>
+</section>
+
+<section class="funktion">
+  <div class="funktion-text">
+    <p class="overrubrik">Export och delning</p>
+    <h2>Ett klick, alla format</h2>
+    <p>⌘-klicka flera format så exporteras alla på en gång. Kapitlen följer med i MP4, MOV, MKV och M4A, och varje ljudkälla kan bli en egen WAV-fil till Logic eller Resolve.</p>
+    <ul class="taggar">
+      <li>MP4 1080p</li><li>MP4 4K</li><li>4K HDR</li><li>AV1</li><li>MKV</li><li>ProRes 422</li><li>ProRes 4444 med alfa</li><li>GIF</li><li>M4A</li><li>WAV per källa</li><li>FCPXML</li>
+    </ul>
+    <p>Ladda upp till YouTube (alltid som privat film) eller Dropbox med din egen app-registrering, eller till din egen S3-hink. Ingen tjänst i mitten. Insticksprogram i valfritt språk kan köras efter varje inspelning eller export.</p>
+  </div>
+  <figure class="funktion-bild">
+    <img class="skugga" src="img/export-flera.png" alt="Exportfönstret med tre valda format." loading="lazy">
+  </figure>
+</section>
+
+<section class="matt">
+  <div class="smal">
+    <h2>Uppmätt, inte antaget</h2>
+  </div>
+  <div class="siffror">
+    <div><strong>≈ 5 ms</strong><span>mellan bild och ljud, mätt mot en referensfilm med blixt och pip</span></div>
+    <div><strong>10,0 s</strong><span>spelbart efter <code>kill -9</code> vid cirka 10 sekunder</span></div>
+    <div><strong>2–3,5×</strong><span>realtid för en 1080p-export på en Apple M5</span></div>
+  </div>
+  <p class="fotnot">Hur siffrorna togs står i <a href="https://github.com/fltman/bjarbys-screen-recorder/blob/main/docs/VERIFIERAD-STACK.md">docs/VERIFIERAD-STACK.md</a>.</p>
+</section>
+
+<section class="integritet">
+  <div class="smal">
+    <h2>Din Mac, dina filer</h2>
+    <p class="under">Transkribering, maskning och ansiktsigenkänning körs på datorn. Det finns inget konto och ingen server. Dubbning och AI-producenten går genom dina egna verktyg och nycklar – och bara när du ber om det.</p>
+  </div>
+</section>
+
+<section id="kom-igang" class="kom-igang">
+  <div class="smal">
+    <h2>Kom igång</h2>
+    <p class="under">Kräver macOS 26 eller senare på en Mac med Apple silicon.</p>
+  </div>
+  <div class="ladda">
+    <a class="knapp stor" href="download/Bjarbys-skarminspelare.dmg">Ladda ned Bjarbys skärminspelare</a>
+    <p class="fotnot">Skivavbild, cirka 9 MB · signerad med Developer ID och notariserad av Apple</p>
+  </div>
+  <ol class="steg-lista">
+    <li><strong>Öppna skivavbilden</strong> och dra appen till Program.</li>
+    <li><strong>Starta appen.</strong> macOS frågar om skärminspelning, mikrofon och kamera första gången.</li>
+    <li><strong>Transkribera</strong> – första gången laddar appen ned en talmodell (KB-Whisper, 1,5 GB, eller en mindre på 490 MB). Allt tal hanteras sedan på datorn.</li>
+  </ol>
+  <p class="smal fotnot">Gränssnittet är på svenska, med engelska som översättning. AV1-exporten kräver <a href="https://ffmpeg.org">ffmpeg</a>.</p>
+
+  <details class="bygg smal">
+    <summary>Bygga själv från källkoden</summary>
+    <p>Kräver Xcode 26.1. Talet byggs med <a href="https://github.com/ggml-org/whisper.cpp">whisper.cpp</a> (cmake).</p>
+    <pre><code>git clone https://github.com/fltman/bjarbys-screen-recorder
+cd bjarbys-screen-recorder
+./scripts/build-whisper.sh ~/whisper.cpp   # verktygen för talet
+./scripts/build.sh                         # → dist/Bjarbys skärminspelare.app</code></pre>
+  </details>
+
+  <div class="knappar mitt">
+    <a class="knapp sekundar" href="https://github.com/fltman/bjarbys-screen-recorder">Källkoden på GitHub</a>
+    <a class="knapp sekundar" href="https://www.patreon.com/AndersBjarby">Stöd arbetet på Patreon</a>
+  </div>
+</section>
+
+<footer class="fot">
+  <img src="img/ikon.png" alt="" width="40" height="40">
+  <p>Bjarbys skärminspelare · av Anders Bjarby · <a href="https://github.com/fltman/bjarbys-screen-recorder/blob/main/LICENSE">MIT-licens</a></p>
+</footer>
+
+</body>
+</html>
