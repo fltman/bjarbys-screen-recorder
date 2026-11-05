@@ -50,10 +50,15 @@ translation that follows the system language.
   screen (Vision OCR, locally) and blur, pixelate or cover them. The masks follow text that
   scrolls. Add your own areas too.
 
+**Step-by-step guides**
+- Turn a recording into a guide: one finished image per click or keyboard shortcut, with what
+  you said as the text (or "Click button «Export»" from the accessibility name). Markdown and a
+  self-contained HTML file.
+
 **Control from agents, scripts and Shortcuts**
 - An MCP server built into the app: `--mcp` gives agents such as Claude Code tools to record
   the screen, transcribe, edit (format, Reel, captions, cuts, dead time, noise, loudness,
-  hiding sensitive text), render frames to look at, and export.
+  hiding sensitive text), render frames to look at, make a step-by-step guide, and export.
 - A URL scheme (`skarminspelare://spela-in`, `…/stoppa`, `…/paus`, `…/oppna?sokvag=…`) and
   Shortcuts actions for the app itself.
 
@@ -129,7 +134,7 @@ the screen recording permission of the terminal it runs from.
 
 The recording engine, the editor and export are done, and most of the speech phase of
 [`docs/FÄRDPLAN.md`](docs/FÄRDPLAN.md). Masking of sensitive text is
-done too. Next on the roadmap are a "save the last minutes" buffer, a step-by-step guide generator, and HDR
+done too. Next on the roadmap are a "save the last minutes" buffer, and HDR
 and 120 fps.
 
 Built and tested on macOS 26.1 on an Apple M5 only. Not yet tried with a real camera or

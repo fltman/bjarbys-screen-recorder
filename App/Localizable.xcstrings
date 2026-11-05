@@ -664,6 +664,40 @@
         }
       }
     },
+    "Dubbelklicka här.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-click here."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dubbelklicka här."
+          }
+        }
+      }
+    },
+    "Dubbelklicka på %@.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-click %@."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dubbelklicka på %@."
+          }
+        }
+      }
+    },
     "Dödtid längre än": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -745,6 +779,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eget område"
+          }
+        }
+      }
+    },
+    "En bild per klick och kortkommando, med det du sa som text. Markdown och HTML.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One image per click and keyboard shortcut, with what you said as the text. Markdown and HTML."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En bild per klick och kortkommando, med det du sa som text. Markdown och HTML."
           }
         }
       }
@@ -1191,6 +1242,40 @@
         }
       }
     },
+    "Högerklicka här.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right-click here."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Högerklicka här."
+          }
+        }
+      }
+    },
+    "Högerklicka på %@.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right-click %@."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Högerklicka på %@."
+          }
+        }
+      }
+    },
     "Höjd": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1272,6 +1357,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Inga inspelningar än"
+          }
+        }
+      }
+    },
+    "Inga klick eller kortkommandon i de delar som är kvar.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No clicks or keyboard shortcuts in the parts that are left."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inga klick eller kortkommandon i de delar som är kvar."
           }
         }
       }
@@ -1663,6 +1765,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Klart"
+          }
+        }
+      }
+    },
+    "Klicka här.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click here."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klicka här."
+          }
+        }
+      }
+    },
+    "Klicka på %@.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click %@."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klicka på %@."
           }
         }
       }
@@ -2721,6 +2857,40 @@
         }
       }
     },
+    "Steg %lld": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step %lld"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steg %lld"
+          }
+        }
+      }
+    },
+    "Steg-för-steg-guide …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step-by-step guide …"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steg-för-steg-guide …"
+          }
+        }
+      }
+    },
     "Stoppa": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3210,6 +3380,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Transkriberar …"
+          }
+        }
+      }
+    },
+    "Tryck %@.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press %@."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tryck %@."
           }
         }
       }

@@ -53,7 +53,7 @@ En JSON-rad per händelse. `t` = sekunder på tidslinjen. Koordinater i globala 
 | `key` | `code`, `label` ("⌘⇧S"). Bara kortkommandon, aldrig vanlig text |
 | `cursor` | `cursor` = id i `cursors.json` |
 | `frame` | `rect` = fönstrets nya ram (bara fönsterinspelning) |
-| `element` | `rect` = ramen för gränssnittselementet under ett klick (Accessibility) |
+| `element` | `rect` = ramen för gränssnittselementet under ett klick (Accessibility), `label` = roll och namn ("knapp «Exportera»") |
 | `pause`, `resume` | — |
 
 Okända `k` läses som `unknown`; en avbruten sista rad hoppas över.

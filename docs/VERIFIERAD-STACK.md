@@ -142,3 +142,14 @@ mikrofonen förskjuten 1,0 s.
   "längst och upp till höger" (rått) rätt "längst upp till höger" (isolerat), både small och medium.
 - ⚠️ Sökvägar med å/ä/ö kan ligga i en annan Unicode-form på disken än i en sträng i skalet;
   jämför normaliserat (NFC) innan något raderas.
+
+## Steg-för-steg-guide (2026-11-05)
+
+Provad genom MCP (`make_guide`) på brusprovet med två klick, ett elementnamn och ⌘E.
+- whisper lade båda meningarna i ett segment; stegen fick då all text i steg 1. Meningar delas
+  nu också vid .!? och pauser > 1 s, och hamnar på rätt steg.
+- Instruktionerna kom ut på engelska mitt i svenskt tal: processen följer systemspråket, och
+  den här Macen har `AppleLanguages = (en-US, sv-SE)` — appens gränssnitt visas alltså på
+  engelska här. Guiden skrivs nu på transkriptets språk (annars förstaspråket).
+- Guidens bilder ärvde Reel-läge och undertext från filmen; nu görs de i inspelningens format,
+  utan undertext (texten står i guiden), med zoom, markör och bakgrund kvar.

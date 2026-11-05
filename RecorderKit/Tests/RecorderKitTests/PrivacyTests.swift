@@ -79,3 +79,62 @@ import CoreGraphics
         #expect(p.masks.isEmpty)
     }
 }
+
+@Suite struct StepGuideTests {
+    private let full = TimeMap(segments: [.init(start: 0, end: 30)])
+    private func click(_ t: Double, n: Int = 1, b: Int = 0) -> InputEvent { InputEvent(t: t, k: .down, x: 10, y: 10, b: b, n: n) }
+    private func words(_ s: [(Double, String)]) -> [Transcript.Word] {
+        s.map { Transcript.Word(start: $0.0, end: $0.0 + 0.3, text: $0.1, startsSegment: $0.1.first?.isUppercase ?? false) }
+    }
+
+    @Test func clicksShortcutsAndLabelsBecomeSteps() {
+        let ev = [click(2), InputEvent(t: 2, k: .element, label: "knapp «Exportera»"),
+                  click(5), click(5.2, n: 2),               // dubbelklick
+                  click(9, b: 1),                           // högerklick
+                  InputEvent(t: 12, k: .key, label: "⌘S"), InputEvent(t: 12.4, k: .key, label: "⌘S")]
+        let g = StepGuide(events: ev, words: [], timeMap: full, language: "sv")
+        #expect(g.steps.count == 4)
+        #expect(g.steps[0].action == .click("knapp «Exportera»"))
+        #expect(g.steps[1].action == .doubleClick(nil))
+        #expect(g.steps[2].action == .rightClick(nil))
+        #expect(g.steps[3].action == .shortcut("⌘S"))
+        #expect(g.steps[0].instruction("sv") == "Klicka på knapp «Exportera».")
+        #expect(g.steps[3].instruction("en") == "Press ⌘S.")
+    }
+
+    @Test func speechGoesToTheActionItLeadsUpTo() {
+        let ev = [click(6), click(14)]
+        let w = words([(0.5, "Hej"), (0.8, "allihop."), (4.5, "Nu"), (4.8, "öppnar"), (5.1, "vi"), (5.4, "menyn."),
+                       (12.5, "Sedan"), (12.8, "sparar"), (13.1, "vi."), (20, "Klart.")])
+        let g = StepGuide(events: ev, words: w, timeMap: full)
+        #expect(g.intro == "Hej allihop.")
+        #expect(g.steps[0].spoken == "Nu öppnar vi menyn.")
+        #expect(g.steps[1].spoken == "Sedan sparar vi. Klart.")
+    }
+
+    @Test func splitsSentencesInsideOneWhisperSegment() {
+        // Hela talet i ett segment (bara första ordet börjar det), som whisper ibland ger.
+        let w = [Transcript.Word(start: 1, end: 1.3, text: "Hej", startsSegment: true),
+                 Transcript.Word(start: 1.4, end: 1.8, text: "där."),
+                 Transcript.Word(start: 9.5, end: 9.8, text: "Först"),
+                 Transcript.Word(start: 9.85, end: 10.1, text: "klickar"),
+                 Transcript.Word(start: 10.15, end: 10.4, text: "vi.")]
+        let g = StepGuide(events: [click(3), click(9.9)], words: w, timeMap: full)
+        #expect(g.steps[0].spoken == "Hej där.")
+        #expect(g.steps[1].spoken == "Först klickar vi.")
+    }
+
+    @Test func cutPartsLeaveNoSteps() {
+        let g = StepGuide(events: [click(2), click(8)], words: [],
+                          timeMap: TimeMap(segments: [.init(start: 0, end: 5), .init(start: 10, end: 20)]))
+        #expect(g.steps.count == 1 && g.steps[0].outputTime == 2)
+    }
+
+    @Test func markdownAndHtml() {
+        let g = StepGuide(events: [click(2)], words: [], timeMap: full, language: "sv")
+        let md = g.markdown(title: "Exportera", images: ["steg-01.png"])
+        #expect(md.hasPrefix("# Exportera\n") && md.contains("](steg-01.png)"))
+        let html = g.html(title: "<Exportera>", images: [Data([1, 2, 3])])
+        #expect(html.contains("&lt;Exportera&gt;") && html.contains("data:image/png;base64,AQID"))
+    }
+}

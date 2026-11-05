@@ -135,7 +135,27 @@ public final class ElementProbe: @unchecked Sendable {
             var element: AXUIElement?
             guard AXUIElementCopyElementAtPosition(systemWide, Float(point.x), Float(point.y), &element) == .success,
                   let element, let rect = Self.frame(of: element) else { return }
-            log.append(InputEvent(t: t, k: .element, x: point.x, y: point.y, rect: Rect(rect)))
+            log.append(InputEvent(t: t, k: .element, x: point.x, y: point.y, label: Self.label(of: element),
+                                  rect: Rect(rect)))
+        }
+    }
+
+    /// "knapp «Exportera»": rollen som systemet beskriver den och elementets namn, för
+    /// steg-för-steg-guiden. Värdet i textfält läses aldrig (det kan vara vad som helst).
+    static func label(of element: AXUIElement) -> String? {
+        func string(_ attribute: String) -> String? {
+            var value: CFTypeRef?
+            guard AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success,
+                  let s = value as? String else { return nil }
+            let trimmed = s.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : String(trimmed.prefix(80))
+        }
+        let role = string(kAXRoleDescriptionAttribute)
+        let name = string(kAXTitleAttribute) ?? string(kAXDescriptionAttribute) ?? string(kAXHelpAttribute)
+        switch (role, name) {
+        case let (r?, n?): return "\(r) «\(n)»"
+        case let (nil, n?): return "«\(n)»"
+        default: return nil
         }
     }
 

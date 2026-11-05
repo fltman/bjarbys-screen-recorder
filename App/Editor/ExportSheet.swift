@@ -60,6 +60,10 @@ struct ExportSheet: View {
             }
 
             HStack {
+                if progress == nil && finishedURL == nil {
+                    Button("Steg-för-steg-guide …") { makeGuide() }
+                        .help("En bild per klick och kortkommando, med det du sa som text. Markdown och HTML.")
+                }
                 if let finishedURL {
                     Button("Visa i Finder") { NSWorkspace.shared.activateFileViewerSelecting([finishedURL]) }
                 }
@@ -87,6 +91,28 @@ struct ExportSheet: View {
         if let type = UTType(filenameExtension: preset.fileExtension) { panel.allowedContentTypes = [type] }
         guard panel.runModal() == .OK, let url = panel.url else { return }
         start(url)
+    }
+
+    private func makeGuide() {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "\(model.recording.bundle.name) – guide"
+        panel.directoryURL = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        error = nil
+        progress = 0
+        model.player.pause()
+        let rec = model.recording, project = model.project
+        Task {
+            do {
+                let out = try await GuideMaker.make(rec, project: project, title: rec.bundle.name, in: url)
+                progress = 1
+                finishedURL = out.html
+                if out.steps == 0 { error = String(localized: "Inga klick eller kortkommandon i de delar som är kvar.") }
+            } catch {
+                self.error = error.localizedDescription
+                progress = nil
+            }
+        }
     }
 
     private func start(_ url: URL) {

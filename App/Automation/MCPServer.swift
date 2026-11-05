@@ -156,6 +156,12 @@ enum MCPServer {
                                     "times": ["type": "array", "items": ["type": "number"], "description": "Output times in seconds."],
                                     "directory": ["type": "string", "description": "Where to write the PNGs (default: a temporary folder)."]],
                                    required: ["recording", "times"])],
+            ["name": "make_guide",
+             "description": "Make a step-by-step guide from the recording: one finished image per click or keyboard shortcut, with what was said as the text. Writes guide.md, guide.html (self-contained) and PNGs.",
+             "inputSchema": schema(["recording": recordingArg,
+                                    "title": ["type": "string"],
+                                    "directory": ["type": "string", "description": "Output folder (default: ~/Movies/<name> – guide)."]],
+                                   required: ["recording"])],
             ["name": "export",
              "description": "Export the edited recording. Returns the file path.",
              "inputSchema": schema(["recording": recordingArg,
@@ -193,6 +199,7 @@ enum MCPServer {
         case "edit_recording": return try await edit(a)
         case "render_frames": return try await renderFrames(a)
         case "export": return try await export(a)
+        case "make_guide": return try await makeGuide(a)
         default: throw ToolError("Unknown tool \(name)")
         }
     }
@@ -377,23 +384,28 @@ enum MCPServer {
         let dir = (a["directory"] as? String).map { URL(fileURLWithPath: NSString(string: $0).expandingTildeInPath) }
             ?? FileManager.default.temporaryDirectory.appendingPathComponent("skarminspelare-rutor-\(UUID().uuidString.prefix(8))")
         let project = rec.bundle.loadProject(duration: rec.meta.duration)
-        let canvas = RenderPlan.canvasSize(aspect: project.aspect, source: rec.sourceSize, shortSide: 1080)
-        let plan = rec.makePlan(project: project, canvas: canvas)
-        let built = try await CompositionBuilder.build(rec, plan: plan, fps: 30)
-        let generator = AVAssetImageGenerator(asset: built.composition)
-        generator.videoComposition = built.videoComposition
-        generator.requestedTimeToleranceBefore = .zero
-        generator.requestedTimeToleranceAfter = .zero
+        let (images, plan) = try await FrameGrabber.frames(rec, project: project, outputTimes: times)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         var out: [String] = []
-        for t in times {
-            let clamped = min(max(0, t), max(0, plan.outputDuration - 0.02))
-            let (image, _) = try await generator.image(at: CMTime(seconds: clamped, preferredTimescale: 600))
-            let file = dir.appendingPathComponent(String(format: "frame-%07.2f.png", clamped))
-            try NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])?.write(to: file)
+        for (t, image) in zip(times, images) {
+            let file = dir.appendingPathComponent(String(format: "frame-%07.2f.png", t))
+            try FrameGrabber.writePNG(image, to: file)
             out.append(file.path)
         }
-        return "Rendered \(out.count) frames (\(Int(canvas.width))×\(Int(canvas.height)), output length \(String(format: "%.1f", plan.outputDuration)) s):\n" + out.joined(separator: "\n")
+        return "Rendered \(out.count) frames (\(Int(plan.canvas.width))×\(Int(plan.canvas.height)), output length \(String(format: "%.1f", plan.outputDuration)) s):\n" + out.joined(separator: "\n")
+    }
+
+    private static func makeGuide(_ a: [String: Any]) async throws -> String {
+        let rec = try resolve(a)
+        let project = rec.bundle.loadProject(duration: rec.meta.duration)
+        let title = a["title"] as? String ?? rec.bundle.name
+        let movies = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first!
+        let dir = (a["directory"] as? String).map { URL(fileURLWithPath: NSString(string: $0).expandingTildeInPath) }
+            ?? movies.appendingPathComponent("\(rec.bundle.name) – guide", isDirectory: true)
+        let out = try await GuideMaker.make(rec, project: project, title: title, in: dir)
+        guard out.steps > 0 else { return "No clicks or keyboard shortcuts in the kept parts; the guide is empty.\n\(out.html.path)" }
+        return "Guide with \(out.steps) steps:\n\(out.markdown.path)\n\(out.html.path)"
+            + (rec.transcript == nil ? "\nTip: transcribe first, and the steps get what was said as text." : "")
     }
 
     private static func export(_ a: [String: Any]) async throws -> String {
