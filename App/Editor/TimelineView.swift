@@ -22,16 +22,29 @@ struct TimelineView: View {
     private let laneH: CGFloat = 20
     private let waveH: CGFloat = 30
     private let leading: CGFloat = 12
-    private var captionY: CGFloat? { model.plan.captions == nil ? nil : zoomY + zoomH + 6 }
-    private var maskY: CGFloat? {
-        model.project.masks.isEmpty ? nil : (captionY.map { $0 + laneH + 4 } ?? zoomY + zoomH + 6)
+    /// Valfria filer under zoomen, i ordning; nil = filen finns inte.
+    private var optionalLanes: [String] {
+        var lanes: [String] = []
+        if !model.project.overlays.isEmpty { lanes.append("overlays") }
+        if model.plan.captions != nil { lanes.append("captions") }
+        if !model.project.masks.isEmpty { lanes.append("masks") }
+        if !model.project.audioClips.isEmpty { lanes.append("audio") }
+        return lanes
     }
-    private var waveY: CGFloat { (maskY ?? captionY).map { $0 + laneH + 8 } ?? zoomY + zoomH + 8 }
+    private func laneY(_ name: String) -> CGFloat? {
+        optionalLanes.firstIndex(of: name).map { zoomY + zoomH + 6 + CGFloat($0) * (laneH + 4) }
+    }
+    private var overlayY: CGFloat? { laneY("overlays") }
+    private var captionY: CGFloat? { laneY("captions") }
+    private var maskY: CGFloat? { laneY("masks") }
+    private var audioY: CGFloat? { laneY("audio") }
+    private var waveY: CGFloat { zoomY + zoomH + 8 + CGFloat(optionalLanes.count) * (laneH + 4) }
 
     /// Höjden tidslinjen behöver för filerna som finns.
     static func height(for model: EditorModel) -> CGFloat {
         let waves = (model.micWave.isEmpty ? 0 : 1) + (model.systemWave.isEmpty ? 0 : 1)
         let extra = (model.plan.captions == nil ? 0 : 24) + (model.project.masks.isEmpty ? 0 : 24)
+            + (model.project.overlays.isEmpty ? 0 : 24) + (model.project.audioClips.isEmpty ? 0 : 24)
         return 26 + 58 + 6 + 26 + 8 + CGFloat(extra) + CGFloat(max(waves, 1)) * 34 + 10 + 26
     }
 
@@ -41,7 +54,9 @@ struct TimelineView: View {
             Color.clear
             laneIcon("film", y: clipY + clipH / 2, help: "Klipp")
             laneIcon("plus.magnifyingglass", y: zoomY + zoomH / 2, help: "Zoom")
+            if let y = overlayY { laneIcon("square.on.square", y: y + laneH / 2, help: "Bildlager") }
             if let y = captionY { laneIcon("captions.bubble", y: y + laneH / 2, help: "Undertexter") }
+            if let y = audioY { laneIcon("music.note", y: y + laneH / 2, help: "Extra ljud") }
             if let y = maskY { laneIcon("eye.slash", y: y + laneH / 2, help: "Dölj känsligt") }
             let waves = [(model.micWave, "mic"), (model.systemWave, "speaker.wave.2")].filter { !$0.0.isEmpty }
             ForEach(Array(waves.enumerated()), id: \.offset) { i, w in
@@ -180,6 +195,59 @@ struct TimelineView: View {
             }
         }
 
+        // Bildlager: block per ruta, färg efter sort.
+        if let y = overlayY {
+            for o in model.project.overlays {
+                guard let start = model.timeMap.output(at: o.at) else { continue }
+                let rect = CGRect(x: x(start, pps), y: y, width: max(4, CGFloat(o.duration * pps)), height: laneH)
+                let shape = RoundedRectangle(cornerRadius: 4).path(in: rect)
+                let color: Color = switch o.kind {
+                case .title: .indigo
+                case .callout: .blue
+                case .fact: .mint
+                case .qr: .brown
+                }
+                let selected = o.id == model.selectedOverlayID
+                ctx.fill(shape, with: .color(color.opacity(selected ? 0.5 : 0.25)))
+                ctx.stroke(shape, with: .color(color.opacity(selected ? 1 : 0.6)), lineWidth: selected ? 2 : 0.8)
+                if rect.width > 34 {
+                    var inner = ctx
+                    inner.clip(to: shape)
+                    inner.draw(Text(o.title).font(.system(size: 10, weight: .medium)),
+                               at: CGPoint(x: rect.minX + 5, y: rect.midY), anchor: .leading)
+                }
+            }
+        }
+
+        // Extra ljud: block per klipp.
+        if let y = audioY {
+            for c in model.project.audioClips {
+                guard let start = model.timeMap.output(at: c.at) else { continue }
+                let end = min(model.duration, start + c.duration)
+                let rect = CGRect(x: x(start, pps), y: y, width: max(4, CGFloat((end - start) * pps)), height: laneH)
+                let shape = RoundedRectangle(cornerRadius: 4).path(in: rect)
+                let color: Color = c.role == .music ? .pink : (c.role == .narration ? .orange : .yellow)
+                ctx.fill(shape, with: .color(color.opacity(0.22)))
+                ctx.stroke(shape, with: .color(color.opacity(0.6)), lineWidth: 0.8)
+                if rect.width > 34 {
+                    var inner = ctx
+                    inner.clip(to: shape)
+                    inner.draw(Text(c.text.isEmpty ? c.file : c.text).font(.system(size: 10)),
+                               at: CGPoint(x: rect.minX + 5, y: rect.midY), anchor: .leading)
+                }
+            }
+        }
+
+        // Kapitel: flaggor på linjalen.
+        for c in model.project.chapters {
+            guard let t = model.timeMap.output(at: c.at) else { continue }
+            let px = x(t, pps)
+            ctx.fill(Path(CGRect(x: px, y: 0, width: 1.5, height: clipY + clipH)), with: .color(.accentColor.opacity(0.8)))
+            ctx.fill(Path(roundedRect: CGRect(x: px, y: 1, width: 9, height: 7), cornerRadius: 1.5), with: .color(.accentColor))
+            ctx.draw(Text(c.title).font(.system(size: 9, weight: .semibold)).foregroundStyle(Color.accentColor),
+                     at: CGPoint(x: px + 12, y: 5), anchor: .leading)
+        }
+
         // Masker: där något döljs i den redigerade filmen.
         if let y = maskY {
             for mask in model.project.masks {
@@ -288,6 +356,12 @@ struct TimelineView: View {
                     else { drag = .move(zoom.id, start: zoom.start, end: zoom.end, outStart: r.lowerBound) }
                     break
                 }
+            } else if let y = overlayY, p.y >= y && p.y <= y + laneH {
+                let hit = model.project.overlays.last { o in
+                    guard let s = model.timeMap.output(at: o.at) else { return false }
+                    return p.x >= x(s, pps) - 4 && p.x <= x(s + o.duration, pps) + 4
+                }
+                model.selectedOverlayID = hit?.id
             } else if let y = maskY, p.y >= y && p.y <= y + laneH {
                 let hit = model.project.masks.last { m in
                     guard let r = outputRange(start: m.start, end: m.end) else { return false }

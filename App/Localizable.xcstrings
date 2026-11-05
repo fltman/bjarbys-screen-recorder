@@ -256,6 +256,23 @@
         }
       }
     },
+    "(utan text)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(no text)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(utan text)"
+          }
+        }
+      }
+    },
     "120 bilder/s": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -596,6 +613,23 @@
         }
       }
     },
+    "Bildlager": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overlays"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildlager"
+          }
+        }
+      }
+    },
     "Bredd": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -609,6 +643,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bredd"
+          }
+        }
+      }
+    },
+    "Brevet": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The letter"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brevet"
           }
         }
       }
@@ -643,6 +694,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Börja här"
+          }
+        }
+      }
+    },
+    "Börja vid spelhuvudet": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start at the playhead"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Börja vid spelhuvudet"
           }
         }
       }
@@ -1038,6 +1106,23 @@
         }
       }
     },
+    "En rad text": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A line of text"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En rad text"
+          }
+        }
+      }
+    },
     "Enfärgad": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1102,6 +1187,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Exporterar …"
+          }
+        }
+      }
+    },
+    "Extra ljud": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra audio"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra ljud"
+          }
+        }
+      }
+    },
+    "Faktaruta": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fact box"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faktaruta"
           }
         }
       }
@@ -1208,6 +1327,23 @@
         }
       }
     },
+    "Flytta hit": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move here"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flytta hit"
+          }
+        }
+      }
+    },
     "Flytta till papperskorgen": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1289,6 +1425,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fortsätt (⌃⌥⌘P)"
+          }
+        }
+      }
+    },
+    "Från producenten": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From the producer"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Från producenten"
           }
         }
       }
@@ -2262,6 +2415,40 @@
         }
       }
     },
+    "Kapitel": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chapters"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapitel"
+          }
+        }
+      }
+    },
+    "Kapitelrad i bild": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chapter banner in video"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapitelrad i bild"
+          }
+        }
+      }
+    },
     "Klart": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2483,6 +2670,23 @@
         }
       }
     },
+    "Lager": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Layers"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lager"
+          }
+        }
+      }
+    },
     "Ljud": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2500,6 +2704,23 @@
         }
       }
     },
+    "Ljudeffekt …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sound effect …"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ljudeffekt …"
+          }
+        }
+      }
+    },
     "Lägg till en zoom vid spelhuvudet": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2513,6 +2734,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lägg till en zoom vid spelhuvudet"
+          }
+        }
+      }
+    },
+    "Lägg till vid spelhuvudet": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add at the playhead"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lägg till vid spelhuvudet"
+          }
+        }
+      }
+    },
+    "Längd": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Length"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Längd"
+          }
+        }
+      }
+    },
+    "Läs mer": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read more"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Läs mer"
           }
         }
       }
@@ -2649,6 +2921,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Markerad zoom"
+          }
+        }
+      }
+    },
+    "Markering": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Callout"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markering"
           }
         }
       }
@@ -2840,6 +3129,40 @@
         }
       }
     },
+    "Musik …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Music …"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Musik …"
+          }
+        }
+      }
+    },
+    "Musiken sänks under tal och berättarröst. Berättarröst görs med AI-producenten i Claude Code.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Music is lowered under speech and narration. Narration is made with the AI producer in Claude Code."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Musiken sänks under tal och berättarröst. Berättarröst görs med AI-producenten i Claude Code."
+          }
+        }
+      }
+    },
     "Nedräkning": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2955,6 +3278,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nycklar och lösenord"
+          }
+        }
+      }
+    },
+    "Nytt kapitel": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New chapter"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nytt kapitel"
+          }
+        }
+      }
+    },
+    "Nytt kapitel vid spelhuvudet": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New chapter at the playhead"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nytt kapitel vid spelhuvudet"
           }
         }
       }
@@ -3180,6 +3537,40 @@
         }
       }
     },
+    "QR-kod": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR code"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR-kod"
+          }
+        }
+      }
+    },
+    "Rader (en per rad)": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lines (one per line)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rader (en per rad)"
+          }
+        }
+      }
+    },
     "Region": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3193,6 +3584,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Region"
+          }
+        }
+      }
+    },
+    "Rubrik": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rubrik"
+          }
+        }
+      }
+    },
+    "Rubrikkort": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title card"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rubrikkort"
+          }
+        }
+      }
+    },
+    "Rubrikkort, markeringar runt det du klickar på, faktarutor och QR-koder. AI-producenten i Claude Code kan lägga dem åt dig.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title cards, callouts around what you click, fact boxes and QR codes. The AI producer in Claude Code can add them for you."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rubrikkort, markeringar runt det du klickar på, faktarutor och QR-koder. AI-producenten i Claude Code kan lägga dem åt dig."
           }
         }
       }
@@ -4081,6 +4523,40 @@
         }
       }
     },
+    "Ta bort kapitlet": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete the chapter"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta bort kapitlet"
+          }
+        }
+      }
+    },
+    "Ta bort ljudklippet": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete the audio clip"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta bort ljudklippet"
+          }
+        }
+      }
+    },
     "Ta bort markerad zoom eller del (⌫)": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4438,6 +4914,23 @@
         }
       }
     },
+    "Underrad": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtitle"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Underrad"
+          }
+        }
+      }
+    },
     "Undertexter": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4723,6 +5216,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Visa texten"
+          }
+        }
+      }
+    },
+    "Volym": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volume"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volym"
           }
         }
       }

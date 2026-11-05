@@ -12,12 +12,13 @@ struct InspectorView: View {
 
     /// Flikarna: efter vad man håller på med, så att varje flik ryms utan att rulla.
     enum Tab: String, CaseIterable, Identifiable {
-        case style, motion, speech, privacy
+        case style, motion, layers, speech, privacy
         var id: String { rawValue }
         var icon: String {
             switch self {
             case .style: "paintpalette"
             case .motion: "cursorarrow.motionlines"
+            case .layers: "square.stack.3d.up"
             case .speech: "waveform"
             case .privacy: "eye.slash"
             }
@@ -26,6 +27,7 @@ struct InspectorView: View {
             switch self {
             case .style: "Stil"
             case .motion: "Rörelse"
+            case .layers: "Lager"
             case .speech: "Tal"
             case .privacy: "Dölj"
             }
@@ -52,6 +54,8 @@ struct InspectorView: View {
                         autoZoomSection
                         cursorSection
                         shortcutSection
+                    case .layers:
+                        LayersInspector(model: model)
                     case .speech:
                         if model.recording.hasMicrophone || model.recording.hasSystemAudio {
                             speechSection
@@ -69,6 +73,7 @@ struct InspectorView: View {
         .background(Color(nsColor: .windowBackgroundColor))
         // Markeras något i tidslinjen visas fliken där det hör hemma.
         .onChange(of: model.selectedMaskID) { _, id in if id != nil { tab = .privacy } }
+        .onChange(of: model.selectedOverlayID) { _, id in if id != nil { tab = .layers } }
     }
 
     private var tabBar: some View {
@@ -451,7 +456,7 @@ struct InspectorView: View {
 
 // MARK: - Byggstenar
 
-private struct Section2<Content: View>: View {
+struct Section2<Content: View>: View {
     let title: LocalizedStringKey
     let systemImage: String
     @ViewBuilder let content: Content
@@ -471,7 +476,7 @@ private struct Section2<Content: View>: View {
     }
 }
 
-private struct LabeledSlider: View {
+struct LabeledSlider: View {
     let title: LocalizedStringKey
     @Binding var value: Double
     let range: ClosedRange<Double>

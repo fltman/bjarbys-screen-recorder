@@ -391,6 +391,82 @@ final class EditorModel: ObservableObject {
         update { p in for r in ranges { p.cut(r) } }
     }
 
+    // MARK: - Lager, kapitel och ljudklipp
+
+    @Published var selectedOverlayID: UUID? {
+        didSet { if selectedOverlayID != nil { selectedZoomID = nil; selectedSegmentID = nil; wordSelection = nil } }
+    }
+
+    /// Producentens brev (leverans.md), om det finns.
+    var deliveryNote: String? { try? String(contentsOf: recording.bundle.deliveryNoteURL, encoding: .utf8) }
+
+    func addOverlay(_ kind: Overlay.Kind) {
+        let s = sourceTimeAtPlayhead
+        var o = Overlay(kind: kind, at: s, duration: kind == .title ? 2.5 : 4)
+        switch kind {
+        case .title: o.title = String(localized: "Rubrik")
+        case .fact: o.title = String(localized: "Faktaruta"); o.lines = [String(localized: "En rad text")]
+        case .qr: o.title = String(localized: "Läs mer"); o.url = "https://"; o.corner = .bottomRight
+        case .callout:
+            if let hit = Producer.clickTarget(recording, near: s) {
+                o.target = Rect(hit.rect)
+                o.title = hit.label.flatMap { $0.split(separator: "«").last.map { String($0).replacingOccurrences(of: "»", with: "") } } ?? ""
+            } else {
+                let c = plan.cursorPath.hasData ? plan.cursorPath.position(at: s) : CGPoint(x: 0.5, y: 0.5)
+                o.target = Rect(x: max(0, c.x - 0.05), y: max(0, c.y - 0.025), width: 0.1, height: 0.05)
+            }
+        }
+        update { $0.overlays.append(o); $0.overlays.sort { $0.at < $1.at } }
+        selectedOverlayID = o.id
+    }
+
+    func updateOverlay(_ id: UUID, _ change: (inout Overlay) -> Void) {
+        update { p in if let i = p.overlays.firstIndex(where: { $0.id == id }) { change(&p.overlays[i]) } }
+    }
+
+    func deleteOverlay(_ id: UUID) {
+        update { $0.overlays.removeAll { $0.id == id } }
+        if selectedOverlayID == id { selectedOverlayID = nil }
+    }
+
+    func addChapter() {
+        let c = Chapter(at: sourceTimeAtPlayhead, title: String(localized: "Nytt kapitel"))
+        update { $0.chapters.append(c); $0.chapters.sort { $0.at < $1.at } }
+    }
+
+    func updateChapter(_ id: UUID, _ change: (inout Chapter) -> Void) {
+        update { p in
+            if let i = p.chapters.firstIndex(where: { $0.id == id }) { change(&p.chapters[i]) }
+            p.chapters.sort { $0.at < $1.at }
+        }
+    }
+
+    func deleteChapter(_ id: UUID) { update { $0.chapters.removeAll { $0.id == id } } }
+
+    /// Kopierar en ljudfil in i paketet och lägger den vid spelhuvudet.
+    func addAudio(from url: URL, role: AudioClip.Role) {
+        let at = sourceTimeAtPlayhead
+        let bundle = recording.bundle
+        Task {
+            guard let track = try? await AVURLAsset(url: url).loadTracks(withMediaType: .audio).first,
+                  let range = try? await track.load(.timeRange) else { return }
+            let name = "\(role.rawValue)-\(UUID().uuidString.prefix(6)).\(url.pathExtension.isEmpty ? "m4a" : url.pathExtension)"
+            do {
+                try FileManager.default.createDirectory(at: bundle.mediaDir, withIntermediateDirectories: true)
+                try FileManager.default.copyItem(at: url, to: bundle.mediaDir.appendingPathComponent(name))
+            } catch { return }
+            let clip = AudioClip(role: role, at: role == .music ? 0 : at, file: name, duration: range.duration.seconds,
+                                 volume: role == .music ? 0.35 : 1, fadeIn: role == .music ? 1.5 : 0, fadeOut: role == .music ? 2.5 : 0)
+            update { $0.audioClips.append(clip); $0.audioClips.sort { $0.at < $1.at } }
+        }
+    }
+
+    func updateAudio(_ id: UUID, _ change: (inout AudioClip) -> Void) {
+        update { p in if let i = p.audioClips.firstIndex(where: { $0.id == id }) { change(&p.audioClips[i]) } }
+    }
+
+    func deleteAudio(_ id: UUID) { update { $0.audioClips.removeAll { $0.id == id } } }
+
     // MARK: - Masker
 
     @Published private(set) var scanning: Double?
