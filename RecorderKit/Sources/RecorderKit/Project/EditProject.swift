@@ -47,6 +47,8 @@ public struct EditProject: Codable, Equatable, Sendable {
     public var showsInk: Bool
     /// Hur länge ett färdigt streck ligger kvar innan det tonar bort (s).
     public var inkHold: Double
+    /// En ritad fönsterram runt skärmen: titelrad som i macOS, eller en webbläsare med adress.
+    public var chrome: ChromeStyle
 
     public init() {
         schemaVersion = RecorderKit.formatVersion
@@ -75,6 +77,7 @@ public struct EditProject: Codable, Equatable, Sendable {
         motionBlur = false
         showsInk = true
         inkHold = InkTrack.standardHold
+        chrome = ChromeStyle()
     }
 
     /// Ett nytt projekt för en inspelning: allt med, i normal hastighet.
@@ -101,6 +104,8 @@ public struct EditProject: Codable, Equatable, Sendable {
         showsChapterBanner = other.showsChapterBanner; transition = other.transition
         fadeInOut = other.fadeInOut; motionBlur = other.motionBlur
         showsInk = other.showsInk; inkHold = other.inkHold
+        // Ramens sort och ton är utseende; titeln och adressen hör till filmen.
+        chrome.kind = other.chrome.kind; chrome.dark = other.chrome.dark
     }
 
     /// Bara utseendet, för att spara som standard.
@@ -142,6 +147,7 @@ public struct EditProject: Codable, Equatable, Sendable {
         motionBlur = c.value(.motionBlur, d.motionBlur)
         showsInk = c.value(.showsInk, d.showsInk)
         inkHold = c.value(.inkHold, d.inkHold)
+        chrome = c.value(.chrome, d.chrome)
     }
 
     // MARK: - Delar
@@ -344,6 +350,31 @@ public struct EditProject: Codable, Equatable, Sendable {
     }
 
     /// Kortkommandon som spelades in, visade som en bubbla i bilden.
+    /// Fönsterramen runt skärmen (ritas ovanför innehållet, med ramens rundade hörn och skugga).
+    public struct ChromeStyle: Codable, Equatable, Hashable, Sendable {
+        public enum Kind: String, Codable, Sendable, CaseIterable { case none, mac, browser }
+        public var kind: Kind
+        /// Mörk titelrad (annars ljus).
+        public var dark: Bool
+        /// Fönstrets titel (macOS-fönster), mitt i titelraden.
+        public var title: String
+        /// Adressen i webbläsarens adressfält.
+        public var address: String
+
+        public init(kind: Kind = .none, dark: Bool = false, title: String = "", address: String = "") {
+            self.kind = kind; self.dark = dark; self.title = title; self.address = address
+        }
+
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            let d = ChromeStyle()
+            kind = c.value(.kind, d.kind)
+            dark = c.value(.dark, d.dark)
+            title = c.value(.title, d.title)
+            address = c.value(.address, d.address)
+        }
+    }
+
     public struct ShortcutStyle: Codable, Equatable, Hashable, Sendable {
         public enum Position: String, Codable, Sendable, CaseIterable { case bottom, top }
         public var visible: Bool

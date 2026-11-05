@@ -1497,6 +1497,23 @@
         }
       }
     },
+    "En ritad titelrad ovanför inspelningen — bra för ett område, som annars saknar fönsterram.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A drawn title bar above the recording — good for an area, which otherwise has no window frame."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En ritad titelrad ovanför inspelningen — bra för ett område, som annars saknar fönsterram."
+          }
+        }
+      }
+    },
     "Enfärgad": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1969,6 +1986,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fönster …"
+          }
+        }
+      }
+    },
+    "Fönsterram": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window frame"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fönsterram"
           }
         }
       }
@@ -2768,6 +2802,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ingen signal från %@"
+          }
+        }
+      }
+    },
+    "Ingen titel": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No title"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen titel"
           }
         }
       }
@@ -4043,6 +4094,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Musiken sänks under tal och berättarröst. Berättarröst görs med AI-producenten i Claude Code."
+          }
+        }
+      }
+    },
+    "Mörk titelrad": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark title bar"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mörk titelrad"
           }
         }
       }
@@ -6342,6 +6410,23 @@
         }
       }
     },
+    "Titel": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titel"
+          }
+        }
+      }
+    },
     "Tona": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -7022,6 +7107,23 @@
         }
       }
     },
+    "Webbläsare": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browser"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Webbläsare"
+          }
+        }
+      }
+    },
     "Zoom": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -7035,6 +7137,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zoom"
+          }
+        }
+      }
+    },
+    "macOS-fönster": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS window"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS-fönster"
           }
         }
       }

@@ -237,6 +237,20 @@ struct InspectorView: View {
                 LabeledSlider("Marginal", value: binding(\.padding), range: 0...0.25, format: "%.0f %%", scale: 100)
                 LabeledSlider("Hörn", value: binding(\.cornerRadius), range: 0...0.06, format: "%.1f %%", scale: 100)
                 LabeledSlider("Skugga", value: binding(\.shadow), range: 0...1, format: "%.0f %%", scale: 100)
+                Picker("Fönsterram", selection: binding(\.chrome.kind)) {
+                    Text("Ingen").tag(EditProject.ChromeStyle.Kind.none)
+                    Text("macOS-fönster").tag(EditProject.ChromeStyle.Kind.mac)
+                    Text("Webbläsare").tag(EditProject.ChromeStyle.Kind.browser)
+                }
+                .help("En ritad titelrad ovanför inspelningen — bra för ett område, som annars saknar fönsterram.")
+                if model.project.chrome.kind != .none {
+                    Toggle("Mörk titelrad", isOn: binding(\.chrome.dark))
+                    if model.project.chrome.kind == .mac {
+                        TextField("Titel", text: binding(\.chrome.title), prompt: Text("Ingen titel"))
+                    } else {
+                        TextField("Adress", text: binding(\.chrome.address), prompt: Text(verbatim: "example.com"))
+                    }
+                }
             }
             .disabled(fills)
             if fills {

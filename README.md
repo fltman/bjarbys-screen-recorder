@@ -50,6 +50,8 @@ is included; to have the app follow your system language instead, run
   when it stands still.
 - Gradient, solid or blurred backgrounds, padding, rounded corners, shadow, and 16:9,
   9:16, 1:1 or 4:3 output.
+- A drawn window frame around the recording: a macOS title bar with the three dots and a title,
+  or a browser with your address — light or dark, with the frame's corners and shadow.
 - Reel mode: a landscape recording fills a 9:16 (or any other) frame and the frame follows
   the pointer, with or without zoom.
 - Keyboard shortcuts pressed during recording appear as a small caption ("⌘Z ×3").

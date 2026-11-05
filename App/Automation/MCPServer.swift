@@ -178,6 +178,10 @@ enum MCPServer {
                 "transition_duration": ["type": "number"],
                 "fade_in_out": ["type": "boolean", "description": "Fade in from black at the start and out at the end."],
                 "motion_blur": ["type": "boolean", "description": "Motion blur while the camera zooms and pans."],
+                "window_frame": ["type": "string", "enum": ["none", "mac", "browser"], "description": "A drawn title bar above the recording: a macOS window or a browser with an address field."],
+                "window_frame_dark": ["type": "boolean", "description": "Dark title bar."],
+                "window_title": ["type": "string", "description": "Title in the macOS window frame."],
+                "window_address": ["type": "string", "description": "Address in the browser frame's address field."],
                 "ink": ["type": "boolean", "description": "Show what was drawn on screen with the pen during the recording (default true)."],
                 "ink_hold": ["type": "number", "minimum": 0.5, "maximum": 15, "description": "Seconds a finished pen stroke stays before it fades (default 3)."],
                 "click_sound": ["type": "boolean", "description": "A short soft click sound at every mouse click."],
@@ -507,6 +511,10 @@ enum MCPServer {
         if let v = a["transition_duration"] as? Double { p.transition.duration = min(1.5, max(0.2, v)) }
         if let v = a["fade_in_out"] as? Bool { p.fadeInOut = v }
         if let v = a["motion_blur"] as? Bool { p.motionBlur = v }
+        if let v = (a["window_frame"] as? String).flatMap(EditProject.ChromeStyle.Kind.init(rawValue:)) { p.chrome.kind = v }
+        if let v = a["window_frame_dark"] as? Bool { p.chrome.dark = v }
+        if let v = a["window_title"] as? String { p.chrome.title = v }
+        if let v = a["window_address"] as? String { p.chrome.address = v }
         if let v = a["ink"] as? Bool { p.showsInk = v }
         if let v = number(a["ink_hold"]) { p.inkHold = min(15, max(0.5, v)) }
         if let v = a["click_sound"] as? Bool { p.cursor.clickSound = v }

@@ -62,6 +62,8 @@ import Foundation
         _ = try BundleJSON.decoder.decode(EditProject.AudioMix.self, from: Data("{}".utf8))
         let keys = try BundleJSON.decoder.decode(EditProject.ShortcutStyle.self, from: Data("{}".utf8))
         #expect(keys.visible && keys.position == .bottom && keys.size == 1)
+        let chrome = try BundleJSON.decoder.decode(EditProject.ChromeStyle.self, from: Data("{}".utf8))
+        #expect(chrome.kind == .none && !chrome.dark && chrome.address.isEmpty && p.chrome.kind == .none)
         #expect(p.framing == .fit && p.shortcuts.visible)
         let caps = try BundleJSON.decoder.decode(EditProject.CaptionStyle.self, from: Data("{}".utf8))
         #expect(caps.visible && caps.size == 1)

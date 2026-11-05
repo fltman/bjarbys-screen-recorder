@@ -30,6 +30,10 @@ public final class RenderPlan: @unchecked Sendable {
     public let cameraPath: CameraPath
     /// Skärmytan i bildytan (Core Image-koordinater, origo nere till vänster).
     public let screenRect: CGRect
+    /// Hela fönstret: skärmytan och fönsterramens titelrad ovanför (= skärmytan utan ram).
+    public let frameRect: CGRect
+    /// Fönsterramens titelrad, förritad (nil utan ram).
+    let chromeBar: CIImage?
     let sourceSize: CGSize
     let pixelsPerPoint: Double
     let background: CIImage?
@@ -144,26 +148,32 @@ public final class RenderPlan: @unchecked Sendable {
         let srcRatio = sourceSize.width / sourceSize.height
         fills = project.framing == .fill && abs(srcRatio - canvas.width / canvas.height) > 0.01
         let w: CGFloat, h: CGFloat
+        // Fönsterramens titelrad tar plats ovanför skärmen (inte i Reel-läge).
+        let bar: CGFloat = fills ? 0 : Self.chromeBarHeight(project.chrome.kind, canvas: canvas)
         if fills {
             let cover = max(canvas.width / sourceSize.width, canvas.height / sourceSize.height)
             w = (sourceSize.width * cover).rounded(); h = (sourceSize.height * cover).rounded()
         } else {
             let pad = project.padding * min(canvas.width, canvas.height)
             let avail = CGRect(origin: .zero, size: canvas).insetBy(dx: pad, dy: pad)
-            let fit = min(avail.width / sourceSize.width, avail.height / sourceSize.height)
+            let fit = min(avail.width / sourceSize.width, (avail.height - bar) / sourceSize.height)
             w = (sourceSize.width * fit).rounded(); h = (sourceSize.height * fit).rounded()
         }
-        screenRect = CGRect(x: ((canvas.width - w) / 2).rounded(), y: ((canvas.height - h) / 2).rounded(), width: w, height: h)
+        let top = ((canvas.height - h - bar) / 2).rounded()
+        screenRect = CGRect(x: ((canvas.width - w) / 2).rounded(), y: top, width: w, height: h)
+        frameRect = CGRect(x: screenRect.minX, y: screenRect.minY, width: w, height: h + bar)
         let visible = CGSize(width: min(1, canvas.width / w), height: min(1, canvas.height / h))
         // Luppar zoomar inte kameran; de ritas för sig (`lens`).
         self.cameraPath = cameraPath ?? CameraPath(zooms: project.zooms.filter { $0.style == .camera }, cursor: cursorPath, duration: meta.duration,
                                                    visible: visible, followAtRest: fills)
 
         let radius = fills ? 0 : project.cornerRadius * min(w, h)
-        mask = Self.roundedRect(screenRect, radius: radius, color: .white)
+        mask = Self.roundedRect(frameRect, radius: radius, color: .white)
+        chromeBar = bar > 0 ? Self.makeChromeBar(project.chrome, rect: CGRect(x: frameRect.minX, y: screenRect.maxY,
+                                                                              width: w, height: bar)) : nil
         if !fills, project.shadow > 0.01, project.padding > 0.005 {
-            let blur = max(4, screenRect.height * 0.035)
-            let base = Self.roundedRect(screenRect.offsetBy(dx: 0, dy: -screenRect.height * 0.015), radius: radius,
+            let blur = max(4, frameRect.height * 0.035)
+            let base = Self.roundedRect(frameRect.offsetBy(dx: 0, dy: -frameRect.height * 0.015), radius: radius,
                                         color: CIColor(red: 0, green: 0, blue: 0, alpha: 0.75 * project.shadow))
             let canvasRect = CGRect(origin: .zero, size: canvas)
             shadow = Self.prerender(base.applyingGaussianBlur(sigma: blur).cropped(to: canvasRect), extent: canvasRect)
@@ -286,6 +296,8 @@ public final class RenderPlan: @unchecked Sendable {
                     .cropped(to: screenRect)
             }
             maskedScreen = masked
+            // Fönsterramens titelrad ovanför skärmen; ramens rundade mask tar båda.
+            if let chromeBar { masked = chromeBar.composited(over: masked) }
             layer = masked.applyingFilter("CIBlendWithMask", parameters: [
                 kCIInputBackgroundImageKey: CIImage.empty(),
                 kCIInputMaskImageKey: mask,
@@ -851,6 +863,76 @@ public final class RenderPlan: @unchecked Sendable {
         return CGRect(origin: placement(of: o, size: image.extent.size), size: image.extent.size)
     }
 
+    // MARK: - Fönsterram
+
+    /// Titelradens höjd i bildytans pixlar (0 utan ram): som en macOS-titelrad (28 pt) respektive
+    /// en webbläsares flik- och adressrad, räknat mot bildytans kortaste sida.
+    static func chromeBarHeight(_ kind: EditProject.ChromeStyle.Kind, canvas: CGSize) -> CGFloat {
+        let unit = min(canvas.width, canvas.height)
+        switch kind {
+        case .none: return 0
+        case .mac: return (unit * 0.034).rounded()
+        case .browser: return (unit * 0.052).rounded()
+        }
+    }
+
+    /// Titelraden, ritad en gång: bakgrund, en hårfin linje mot innehållet, de tre färgprickarna,
+    /// och titeln (macOS) eller ett adressfält med adressen (webbläsare).
+    static func makeChromeBar(_ style: EditProject.ChromeStyle, rect: CGRect) -> CIImage? {
+        let w = Int(rect.width), h = Int(rect.height)
+        guard w > 0, h > 0, let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+                                                 space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                                 bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        let H = CGFloat(h), W = CGFloat(w)
+        let dark = style.dark
+        ctx.setFillColor(dark ? CGColor(srgbRed: 0.17, green: 0.17, blue: 0.18, alpha: 1) : CGColor(srgbRed: 0.93, green: 0.93, blue: 0.93, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: W, height: H))
+        ctx.setFillColor(dark ? CGColor(gray: 0, alpha: 0.6) : CGColor(gray: 0, alpha: 0.12))
+        ctx.fill(CGRect(x: 0, y: 0, width: W, height: max(1, H / 40)))
+        // Prickarna: som macOS, 12 pt i en 28 pt hög rad med 20 pt mellan mittpunkterna.
+        let dotRow = style.kind == .browser ? H * 0.5 : H * 0.5
+        let d = (style.kind == .browser ? H * 0.28 : H * 0.43)
+        let gap = d * 1.67
+        let colors = [CGColor(srgbRed: 1, green: 0.373, blue: 0.341, alpha: 1), CGColor(srgbRed: 0.996, green: 0.737, blue: 0.18, alpha: 1),
+                      CGColor(srgbRed: 0.157, green: 0.784, blue: 0.251, alpha: 1)]
+        let left = d * 1.15
+        for (i, c) in colors.enumerated() {
+            ctx.setFillColor(c)
+            ctx.fillEllipse(in: CGRect(x: left + CGFloat(i) * gap, y: dotRow - d / 2, width: d, height: d))
+        }
+        let textColor = dark ? NSColor(white: 0.85, alpha: 1) : NSColor(white: 0.32, alpha: 1)
+        func draw(_ text: String, size: CGFloat, centerX: CGFloat, maxWidth: CGFloat, weight: NSFont.Weight) {
+            guard !text.isEmpty else { return }
+            let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: size, weight: weight), .foregroundColor: textColor]
+            var line = CTLineCreateWithAttributedString(NSAttributedString(string: text, attributes: attrs))
+            if CTLineGetTypographicBounds(line, nil, nil, nil) > maxWidth,
+               let truncated = CTLineCreateTruncatedLine(line, maxWidth, .end,
+                                                         CTLineCreateWithAttributedString(NSAttributedString(string: "…", attributes: attrs))) {
+                line = truncated
+            }
+            let width = CTLineGetTypographicBounds(line, nil, nil, nil)
+            let b = CTLineGetBoundsWithOptions(line, .useOpticalBounds)
+            ctx.textPosition = CGPoint(x: centerX - width / 2, y: dotRow - b.midY)
+            CTLineDraw(line, ctx)
+        }
+        switch style.kind {
+        case .none: break
+        case .mac:
+            draw(style.title, size: H * 0.46, centerX: W / 2, maxWidth: W - 2 * (left + 3 * gap), weight: .semibold)
+        case .browser:
+            // Adressfältet: en rundad ruta i mitten, hälften av bredden.
+            let fieldW = min(W * 0.5, max(W * 0.3, W - 2 * (left + 3 * gap) - H))
+            let field = CGRect(x: (W - fieldW) / 2, y: H * 0.2, width: fieldW, height: H * 0.6)
+            ctx.setFillColor(dark ? CGColor(srgbRed: 0.24, green: 0.24, blue: 0.25, alpha: 1) : CGColor(gray: 1, alpha: 1))
+            ctx.addPath(CGPath(roundedRect: field, cornerWidth: field.height * 0.3, cornerHeight: field.height * 0.3, transform: nil))
+            ctx.fillPath()
+            draw(style.address, size: H * 0.27, centerX: W / 2, maxWidth: fieldW - H * 0.6, weight: .regular)
+        }
+        guard let cg = ctx.makeImage() else { return nil }
+        let image = CIImage(cgImage: cg).transformed(by: CGAffineTransform(translationX: rect.minX, y: rect.minY))
+        return prerender(image, extent: rect)
+    }
+
     // MARK: - Pennan
 
     /// Ett streck (de första `count` punkterna) som bild i bildytans koordinater. Ritas i den
@@ -952,6 +1034,7 @@ public final class RenderPlan: @unchecked Sendable {
     // MARK: - Kameralayout per del
 
     struct LayoutFrame: Equatable {
+        /// Skärmlagret: hela fönstret (med fönsterramens titelrad).
         var screen: CGRect
         var camera: CGRect
         var cameraRadius: CGFloat
@@ -965,7 +1048,7 @@ public final class RenderPlan: @unchecked Sendable {
 
     func frame(for layout: EditProject.CameraLayout) -> LayoutFrame {
         let full = CGRect(origin: .zero, size: canvas)
-        let bubble = LayoutFrame(screen: screenRect, camera: cameraRect, cameraRadius: bubbleRadius,
+        let bubble = LayoutFrame(screen: frameRect, camera: cameraRect, cameraRadius: bubbleRadius,
                                  cameraAlpha: 1, screenAlpha: 1, shadow: true)
         switch layout {
         case .bubble: return bubble
@@ -973,7 +1056,7 @@ public final class RenderPlan: @unchecked Sendable {
             var f = bubble; f.cameraAlpha = 0; return f
         case .large:
             // Kameran fyller bilden; skärmen tonas bort bakom den.
-            return LayoutFrame(screen: screenRect, camera: full, cameraRadius: 0, cameraAlpha: 1, screenAlpha: 0, shadow: false)
+            return LayoutFrame(screen: frameRect, camera: full, cameraRadius: 0, cameraAlpha: 1, screenAlpha: 0, shadow: false)
         case .split:
             let pad = (min(canvas.width, canvas.height) * 0.04).rounded()
             let area: CGRect, cam: CGRect
@@ -986,8 +1069,8 @@ public final class RenderPlan: @unchecked Sendable {
                 cam = CGRect(x: pad, y: pad, width: canvas.width - 2 * pad, height: chh)
                 area = CGRect(x: pad, y: 2 * pad + chh, width: canvas.width - 2 * pad, height: canvas.height - 3 * pad - chh)
             }
-            let k = min(area.width / screenRect.width, area.height / screenRect.height)
-            let size = CGSize(width: screenRect.width * k, height: screenRect.height * k)
+            let k = min(area.width / frameRect.width, area.height / frameRect.height)
+            let size = CGSize(width: frameRect.width * k, height: frameRect.height * k)
             let screen = CGRect(x: area.midX - size.width / 2, y: area.midY - size.height / 2, width: size.width, height: size.height)
             return LayoutFrame(screen: screen, camera: cam, cameraRadius: min(cam.width, cam.height) * 0.06,
                                cameraAlpha: 1, screenAlpha: 1, shadow: true)
@@ -1022,9 +1105,9 @@ public final class RenderPlan: @unchecked Sendable {
     /// Hur skärmlagret flyttas och skalas av layouten (nil när det ligger som vanligt).
     func layoutTransform(at t: Double) -> CGAffineTransform? {
         let target = layoutFrame(at: t).screen
-        guard target != screenRect, screenRect.width > 0 else { return nil }
-        let k = target.width / screenRect.width
-        return CGAffineTransform(translationX: -screenRect.midX, y: -screenRect.midY)
+        guard target != frameRect, frameRect.width > 0 else { return nil }
+        let k = target.width / frameRect.width
+        return CGAffineTransform(translationX: -frameRect.midX, y: -frameRect.midY)
             .concatenating(CGAffineTransform(scaleX: k, y: k))
             .concatenating(CGAffineTransform(translationX: target.midX, y: target.midY))
     }
