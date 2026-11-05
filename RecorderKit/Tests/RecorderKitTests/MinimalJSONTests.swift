@@ -60,6 +60,9 @@ import Foundation
         _ = try BundleJSON.decoder.decode(EditProject.CursorStyle.self, from: Data("{}".utf8))
         _ = try BundleJSON.decoder.decode(EditProject.CameraStyle.self, from: Data("{}".utf8))
         _ = try BundleJSON.decoder.decode(EditProject.AudioMix.self, from: Data("{}".utf8))
+        let keys = try BundleJSON.decoder.decode(EditProject.ShortcutStyle.self, from: Data("{}".utf8))
+        #expect(keys.visible && keys.position == .bottom && keys.size == 1)
+        #expect(p.framing == .fit && p.shortcuts.visible)
     }
 
     @Test func unknownAspectFallsBack() throws {

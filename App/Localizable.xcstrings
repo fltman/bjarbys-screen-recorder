@@ -749,6 +749,23 @@
         }
       }
     },
+    "Fyll och följ markören": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fill and follow the pointer"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fyll och följ markören"
+          }
+        }
+      }
+    },
     "Färg": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -936,6 +953,23 @@
         }
       }
     },
+    "Hela inspelningen": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole recording"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hela inspelningen"
+          }
+        }
+      }
+    },
     "Hela skärmen under pekaren (⌃⌥⌘R)": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1000,6 +1034,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Inga inspelningar än"
+          }
+        }
+      }
+    },
+    "Inga kortkommandon i den här inspelningen. Slå på «Spela in kortkommandon» i menyn före nästa inspelning; det kräver Indataövervakning.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No keyboard shortcuts in this recording. Turn on “Record keyboard shortcuts” in the menu before the next recording; it needs Input Monitoring."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inga kortkommandon i den här inspelningen. Slå på «Spela in kortkommandon» i menyn före nästa inspelning; det kräver Indataövervakning."
           }
         }
       }
@@ -1089,6 +1140,23 @@
         }
       }
     },
+    "Innehåll": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Content"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Innehåll"
+          }
+        }
+      }
+    },
     "Inspelningen avbröts": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1102,6 +1170,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Inspelningen avbröts"
+          }
+        }
+      }
+    },
+    "Inspelningen fyller bilden och beskärs. Bilden följer markören, även utan zoom.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recording fills the frame and is cropped. The frame follows the pointer, even without zoom."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspelningen fyller bilden och beskärs. Bilden följer markören, även utan zoom."
           }
         }
       }
@@ -1238,6 +1323,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Klart"
+          }
+        }
+      }
+    },
+    "Kortkommandon": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keyboard shortcuts"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kortkommandon"
           }
         }
       }
@@ -1446,6 +1548,23 @@
         }
       }
     },
+    "Nere": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bottom"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nere"
+          }
+        }
+      }
+    },
     "Nere till höger": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -1595,6 +1714,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pausa (⌃⌥⌘P)"
+          }
+        }
+      }
+    },
+    "Placering": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Position"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Placering"
           }
         }
       }
@@ -2092,6 +2228,23 @@
         }
       }
     },
+    "Uppe": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uppe"
+          }
+        }
+      }
+    },
     "Uppe till höger": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2207,6 +2360,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Visa klick"
+          }
+        }
+      }
+    },
+    "Visa kortkommandon": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show keyboard shortcuts"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visa kortkommandon"
           }
         }
       }

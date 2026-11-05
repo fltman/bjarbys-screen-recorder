@@ -61,3 +61,22 @@ Okända `k` läses som `unknown`; en avbruten sista rad hoppas över.
 För att räkna om en global punkt till skärmspårets pixlar: dra av `contentRect`-origo (för
 fönster: senaste `frame`-ramen), multiplicera med `pixelScale`. Fönster som ändrat storlek
 skalas in med bibehållna proportioner, centrerat.
+
+## project.json
+
+Redigeringen. Alla tider i **källtid**, så att zoomar och kortkommandon sitter kvar på
+innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är ett giltigt projekt.
+
+| Fält | Betydelse |
+|---|---|
+| `segments[]` | delarna som är med, i ordning: `start`, `end`, `speed` |
+| `zooms[]` | `start`, `end`, `scale`, `centerX`/`centerY` (0–1), `followsCursor`, `isAuto` |
+| `autoZoom`, `zoomScale` | föreslå zoomar ur klicken, och hur mycket |
+| `background` | `kind` (`gradient`, `solid`, `blur`), `colorA`, `colorB`, `angle` |
+| `padding`, `cornerRadius`, `shadow` | ram runt skärmen, andelar |
+| `aspect` | `source`, `wide`, `vertical`, `square`, `classic` |
+| `framing` | `fit` (hela inspelningen med bakgrund) eller `fill` (fyller bilden, följer markören) |
+| `cursor` | `visible`, `scale`, `smoothing`, `hideWhenIdle`, `clickEffect` |
+| `shortcuts` | `visible`, `position` (`bottom`, `top`), `size` |
+| `camera` | `visible`, `shape`, `size`, `corner`, `mirror` |
+| `audio` | volym och tystning per spår |

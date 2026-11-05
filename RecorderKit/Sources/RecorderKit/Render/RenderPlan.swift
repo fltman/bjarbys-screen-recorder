@@ -38,6 +38,11 @@ public final class RenderPlan: @unchecked Sendable {
     let cameraMask: CIImage?
     let cameraShadow: CIImage?
     let cameraRect: CGRect
+    /// Inspelningen fyller bildytan (Reel-läge) i stället för att ligga med marginal.
+    let fills: Bool
+    public let shortcuts: ShortcutTrack?
+    /// Kortkommandobubblorna, ritade i förväg i bildytans pixlar, per text.
+    let shortcutPills: [String: CIImage]
 
     struct Sprite {
         let image: CIImage
@@ -74,18 +79,29 @@ public final class RenderPlan: @unchecked Sendable {
         let cursorPath = cursorPath ?? CursorPath(events: events, mapping: mapping, duration: meta.duration,
                                                   style: project.cursor)
         self.cursorPath = cursorPath
-        self.cameraPath = cameraPath ?? CameraPath(zooms: project.zooms, cursor: cursorPath, duration: meta.duration)
 
-        // Skärmytan: marginal runt om, källans proportioner, centrerad.
-        let pad = project.padding * min(canvas.width, canvas.height)
-        let avail = CGRect(origin: .zero, size: canvas).insetBy(dx: pad, dy: pad)
-        let fit = min(avail.width / sourceSize.width, avail.height / sourceSize.height)
-        let w = (sourceSize.width * fit).rounded(), h = (sourceSize.height * fit).rounded()
+        // Skärmytan: marginal runt om, källans proportioner, centrerad. I Reel-läge täcker den
+        // hela bildytan och sticker ut på ena axeln; kameran visar då en del av den.
+        let srcRatio = sourceSize.width / sourceSize.height
+        fills = project.framing == .fill && abs(srcRatio - canvas.width / canvas.height) > 0.01
+        let w: CGFloat, h: CGFloat
+        if fills {
+            let cover = max(canvas.width / sourceSize.width, canvas.height / sourceSize.height)
+            w = (sourceSize.width * cover).rounded(); h = (sourceSize.height * cover).rounded()
+        } else {
+            let pad = project.padding * min(canvas.width, canvas.height)
+            let avail = CGRect(origin: .zero, size: canvas).insetBy(dx: pad, dy: pad)
+            let fit = min(avail.width / sourceSize.width, avail.height / sourceSize.height)
+            w = (sourceSize.width * fit).rounded(); h = (sourceSize.height * fit).rounded()
+        }
         screenRect = CGRect(x: ((canvas.width - w) / 2).rounded(), y: ((canvas.height - h) / 2).rounded(), width: w, height: h)
+        let visible = CGSize(width: min(1, canvas.width / w), height: min(1, canvas.height / h))
+        self.cameraPath = cameraPath ?? CameraPath(zooms: project.zooms, cursor: cursorPath, duration: meta.duration,
+                                                   visible: visible, followAtRest: fills)
 
-        let radius = project.cornerRadius * min(w, h)
+        let radius = fills ? 0 : project.cornerRadius * min(w, h)
         mask = Self.roundedRect(screenRect, radius: radius, color: .white)
-        if project.shadow > 0.01, project.padding > 0.005 {
+        if !fills, project.shadow > 0.01, project.padding > 0.005 {
             let blur = max(4, screenRect.height * 0.035)
             let base = Self.roundedRect(screenRect.offsetBy(dx: 0, dy: -screenRect.height * 0.015), radius: radius,
                                         color: CIColor(red: 0, green: 0, blue: 0, alpha: 0.75 * project.shadow))
@@ -94,7 +110,9 @@ public final class RenderPlan: @unchecked Sendable {
         } else {
             shadow = nil
         }
-        background = Self.makeBackground(project.background, canvas: canvas)
+        background = fills
+            ? CIImage(color: .black).cropped(to: CGRect(origin: .zero, size: canvas))
+            : Self.makeBackground(project.background, canvas: canvas)
         ring = Self.makeRing()
 
         var sprites: [String: Sprite] = [:]
@@ -132,6 +150,19 @@ public final class RenderPlan: @unchecked Sendable {
             cameraRect = .zero
             cameraMask = nil
             cameraShadow = nil
+        }
+
+        // Kortkommandon: bara de texter som faktiskt förekommer ritas, en gång var.
+        let track = ShortcutTrack(events: events, timeMap: timeMap)
+        if project.shortcuts.visible && !track.items.isEmpty {
+            shortcuts = track
+            let pillHeight = (min(canvas.width, canvas.height) * 0.062 * project.shortcuts.size).rounded()
+            var pills: [String: CIImage] = [:]
+            for text in track.texts { pills[text] = Self.makePill(text, height: pillHeight) }
+            shortcutPills = pills
+        } else {
+            shortcuts = nil
+            shortcutPills = [:]
         }
     }
 
@@ -193,7 +224,7 @@ public final class RenderPlan: @unchecked Sendable {
         // Zoomen: punkten `center` i innehållet hamnar mitt i skärmytan, förstorad `zoom` gånger.
         let (zoom, rawCenter) = cameraPath.viewport(at: s)
         let center = coverageClamped(rawCenter, zoom: zoom)
-        if zoom > 1.0005 {
+        if zoom > 1.0005 || fills {
             let p = point(center)
             let transform = CGAffineTransform(translationX: -p.x, y: -p.y)
                 .concatenating(CGAffineTransform(scaleX: zoom, y: zoom))
@@ -219,6 +250,18 @@ public final class RenderPlan: @unchecked Sendable {
             ])
             if let cameraShadow { out = cameraShadow.composited(over: out) }
             out = bubble.composited(over: out)
+        }
+
+        // Kortkommandot ligger fast i bildytan, ovanpå allt, och glider upp när det dyker upp.
+        if let shortcuts, let shown = shortcuts.visible(at: t), let pill = shortcutPills[shown.text],
+           shown.opacity > 0.01 {
+            let e = pill.extent
+            let margin = (min(canvas.width, canvas.height) * 0.055).rounded()
+            let rise = (1 - shown.entrance) * e.height * 0.3
+            let y = project.shortcuts.position == .bottom ? margin - rise : canvas.height - margin - e.height + rise
+            let placed = pill.transformed(by: CGAffineTransform(translationX: ((canvas.width - e.width) / 2).rounded() - e.minX,
+                                                                y: y - e.minY))
+            out = Self.withAlpha(placed, shown.opacity).composited(over: out)
         }
         return out.cropped(to: canvasRect)
     }
@@ -350,6 +393,42 @@ public final class RenderPlan: @unchecked Sendable {
         ctx.setStrokeColor(CGColor(red: 0.15, green: 0.39, blue: 0.92, alpha: 1))
         ctx.setLineWidth(14)
         ctx.strokeEllipse(in: r)
+        guard let img = ctx.makeImage() else { return CIImage.empty() }
+        let ci = CIImage(cgImage: img)
+        return prerender(ci, extent: ci.extent)
+    }
+
+    /// En kortkommandobubbla: mörk, rundad, vit text. Ritad i exakt de pixlar den visas i,
+    /// så att texten blir skarp, och lagd i en IOSurface.
+    static func makePill(_ text: String, height: CGFloat) -> CIImage {
+        let font = NSFont.systemFont(ofSize: height * 0.46, weight: .semibold)
+        let attributed = NSAttributedString(string: text, attributes: [
+            .font: font,
+            .foregroundColor: CGColor(red: 1, green: 1, blue: 1, alpha: 1),
+            .kern: height * 0.02,
+        ])
+        let line = CTLineCreateWithAttributedString(attributed)
+        let bounds = CTLineGetBoundsWithOptions(line, .useOpticalBounds)
+        let padX = height * 0.42
+        let width = (bounds.width + padX * 2).rounded(.up)
+        let w = Int(width), h = Int(height)
+        guard w > 0, h > 0,
+              let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+                                  space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return CIImage.empty() }
+        let rect = CGRect(x: 0, y: 0, width: width, height: height)
+        let radius = height * 0.28
+        ctx.addPath(CGPath(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), cornerWidth: radius, cornerHeight: radius, transform: nil))
+        ctx.setFillColor(CGColor(red: 0.07, green: 0.07, blue: 0.09, alpha: 0.78))
+        ctx.fillPath()
+        ctx.addPath(CGPath(roundedRect: rect.insetBy(dx: 1, dy: 1), cornerWidth: radius - 1, cornerHeight: radius - 1, transform: nil))
+        ctx.setStrokeColor(CGColor(red: 1, green: 1, blue: 1, alpha: 0.14))
+        ctx.setLineWidth(max(1, height * 0.025))
+        ctx.strokePath()
+        // Texten centrerad optiskt: mitt i bubblan mellan versalhöjd och baslinje.
+        let capHeight = CTFontGetCapHeight(font)
+        ctx.textPosition = CGPoint(x: (width - bounds.width) / 2 - bounds.minX, y: (height - capHeight) / 2)
+        CTLineDraw(line, ctx)
         guard let img = ctx.makeImage() else { return CIImage.empty() }
         let ci = CIImage(cgImage: img)
         return prerender(ci, extent: ci.extent)

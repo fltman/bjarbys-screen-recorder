@@ -20,5 +20,11 @@ tagning, sedan redigerbar polish, sedan resten.
 - Kameraspåret är inte provat med en riktig kamera (koden finns, provet kördes utan).
 - Fönsterinspelning där fönstret flyttas under inspelningen (`frame`-händelser) är inte provad.
 - Ändringsbara kortkommandon; rörelseoskärpa vid panorering; gifski om ImageIO-GIF:en bandar.
-- Stående format: "Reel"-läge där liggande innehåll beskärs och följer markören i stället för
-  att ligga som ett band med bakgrund ovanför och under.
+
+## Byggt efter fas 2
+
+- Kortkommandon i filmen (2026-11-05): bubbla nere eller uppe i mitten, räknar upp
+  upprepningar ("⌘Z ×3"), visas i utdatatid så att 4×-delar inte blinkar förbi.
+- Reel-läge (2026-11-05): `framing: fill` låter inspelningen fylla en bildyta med andra
+  proportioner. Kameran följer då markören även utan zoom, med samma säkra zon och
+  framförhållning som inom en zoom.

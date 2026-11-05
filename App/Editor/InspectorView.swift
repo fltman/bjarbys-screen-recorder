@@ -19,6 +19,7 @@ struct InspectorView: View {
                 frameSection
                 autoZoomSection
                 cursorSection
+                shortcutSection
                 if model.recording.hasCamera { cameraSection }
                 if model.recording.hasMicrophone || model.recording.hasSystemAudio { audioSection }
             }
@@ -100,9 +101,23 @@ struct InspectorView: View {
                 Text("1:1 kvadrat").tag(EditProject.Aspect.square)
                 Text("4:3").tag(EditProject.Aspect.classic)
             }
-            LabeledSlider("Marginal", value: binding(\.padding), range: 0...0.25, format: "%.0f %%", scale: 100)
-            LabeledSlider("Hörn", value: binding(\.cornerRadius), range: 0...0.06, format: "%.1f %%", scale: 100)
-            LabeledSlider("Skugga", value: binding(\.shadow), range: 0...1, format: "%.0f %%", scale: 100)
+            if model.project.aspect != .source {
+                Picker("Innehåll", selection: binding(\.framing)) {
+                    Text("Hela inspelningen").tag(EditProject.Framing.fit)
+                    Text("Fyll och följ markören").tag(EditProject.Framing.fill)
+                }
+            }
+            let fills = model.project.framing == .fill && model.project.aspect != .source
+            Group {
+                LabeledSlider("Marginal", value: binding(\.padding), range: 0...0.25, format: "%.0f %%", scale: 100)
+                LabeledSlider("Hörn", value: binding(\.cornerRadius), range: 0...0.06, format: "%.1f %%", scale: 100)
+                LabeledSlider("Skugga", value: binding(\.shadow), range: 0...1, format: "%.0f %%", scale: 100)
+            }
+            .disabled(fills)
+            if fills {
+                Text("Inspelningen fyller bilden och beskärs. Bilden följer markören, även utan zoom.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -136,6 +151,23 @@ struct InspectorView: View {
             Toggle("Visa klick", isOn: binding(\.cursor.clickEffect))
             if !model.plan.cursorPath.hasData {
                 Text("Ingen markördata i den här inspelningen.").font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var shortcutSection: some View {
+        Section2("Kortkommandon", systemImage: "command") {
+            if model.recording.meta.keystrokesRecorded {
+                Toggle("Visa kortkommandon", isOn: binding(\.shortcuts.visible))
+                Picker("Placering", selection: binding(\.shortcuts.position)) {
+                    Text("Nere").tag(EditProject.ShortcutStyle.Position.bottom)
+                    Text("Uppe").tag(EditProject.ShortcutStyle.Position.top)
+                }
+                .pickerStyle(.segmented)
+                LabeledSlider("Storlek", value: binding(\.shortcuts.size), range: 0.6...1.8, format: "%.0f %%", scale: 100)
+            } else {
+                Text("Inga kortkommandon i den här inspelningen. Slå på «Spela in kortkommandon» i menyn före nästa inspelning; det kräver Indataövervakning.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
         }
     }

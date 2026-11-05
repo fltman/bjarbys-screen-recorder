@@ -21,9 +21,12 @@ public struct EditProject: Codable, Equatable, Sendable {
     /// Skuggans styrka 0–1.
     public var shadow: Double
     public var aspect: Aspect
+    /// Hur inspelningen placeras i en bildyta med andra proportioner.
+    public var framing: Framing
     public var cursor: CursorStyle
     public var camera: CameraStyle
     public var audio: AudioMix
+    public var shortcuts: ShortcutStyle
 
     public init() {
         schemaVersion = RecorderKit.formatVersion
@@ -36,9 +39,11 @@ public struct EditProject: Codable, Equatable, Sendable {
         cornerRadius = 0.018
         shadow = 0.55
         aspect = .wide
+        framing = .fit
         cursor = CursorStyle()
         camera = CameraStyle()
         audio = AudioMix()
+        shortcuts = ShortcutStyle()
     }
 
     /// Ett nytt projekt för en inspelning: allt med, i normal hastighet.
@@ -61,9 +66,11 @@ public struct EditProject: Codable, Equatable, Sendable {
         cornerRadius = c.value(.cornerRadius, d.cornerRadius)
         shadow = c.value(.shadow, d.shadow)
         aspect = c.value(.aspect, d.aspect)
+        framing = c.value(.framing, d.framing)
         cursor = c.value(.cursor, d.cursor)
         camera = c.value(.camera, d.camera)
         audio = c.value(.audio, d.audio)
+        shortcuts = c.value(.shortcuts, d.shortcuts)
     }
 
     // MARK: - Delar
@@ -180,6 +187,14 @@ public struct EditProject: Codable, Equatable, Sendable {
         }
     }
 
+    public enum Framing: String, Codable, Sendable, CaseIterable {
+        /// Hela inspelningen syns, med bakgrund runt om.
+        case fit
+        /// Inspelningen fyller bildytan; det som inte får plats beskärs och bilden följer
+        /// markören (Reel-läge för stående format).
+        case fill
+    }
+
     public struct CursorStyle: Codable, Equatable, Hashable, Sendable {
         public var visible: Bool
         /// Storlek relativt originalet (1 = som på skärmen).
@@ -229,6 +244,27 @@ public struct EditProject: Codable, Equatable, Sendable {
             size = c.value(.size, d.size)
             corner = c.value(.corner, d.corner)
             mirror = c.value(.mirror, d.mirror)
+        }
+    }
+
+    /// Kortkommandon som spelades in, visade som en bubbla i bilden.
+    public struct ShortcutStyle: Codable, Equatable, Hashable, Sendable {
+        public enum Position: String, Codable, Sendable, CaseIterable { case bottom, top }
+        public var visible: Bool
+        public var position: Position
+        /// Storlek relativt standard (1).
+        public var size: Double
+
+        public init(visible: Bool = true, position: Position = .bottom, size: Double = 1) {
+            self.visible = visible; self.position = position; self.size = size
+        }
+
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            let d = ShortcutStyle()
+            visible = c.value(.visible, d.visible)
+            position = c.value(.position, d.position)
+            size = c.value(.size, d.size)
         }
     }
 

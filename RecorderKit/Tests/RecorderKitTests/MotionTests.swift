@@ -270,9 +270,72 @@ import CoreGraphics
         #expect(rightEdge <= 1 + 1e-9 && topEdge >= -1e-9)
     }
 
+    @Test func fillCoversTheCanvasAndFollowsTheCursor() {
+        // Liggande 16:10 i stående 9:16: skärmytan täcker hela höjden och sticker ut på bredden.
+        var meta = RecordingMeta(source: .init(kind: .display, title: "", displayID: 1, windowID: nil,
+                                               contentRect: Rect(x: 0, y: 0, width: 1600, height: 1000),
+                                               pixelScale: 1, pixelWidth: 1600, pixelHeight: 1000),
+                                 fps: 60, appVersion: "t")
+        meta.duration = 10
+        var project = EditProject.initial(duration: 10)
+        project.aspect = .vertical
+        project.framing = .fill
+        project.zooms = []
+        let canvas = RenderPlan.canvasSize(aspect: .vertical, source: CGSize(width: 1600, height: 1000), shortSide: 1080)
+        // Markören i högra kanten hela tiden.
+        let ev = [InputEvent(t: 0, k: .move, x: 1500, y: 500), InputEvent(t: 9.9, k: .move, x: 1500, y: 500)]
+        let plan = RenderPlan(canvas: canvas, project: project, meta: meta, events: ev, cursors: CursorCatalog(),
+                              cursorsDir: FileManager.default.temporaryDirectory, hasCamera: false)
+        #expect(plan.screenRect.height == canvas.height && plan.screenRect.width > canvas.width)
+        let v = plan.cameraPath.viewport(at: 5)
+        #expect(abs(v.scale - 1) < 1e-6)
+        let visibleHalf = canvas.width / (2 * plan.screenRect.width)
+        #expect(abs(v.center.x - (1 - visibleHalf)) < 0.01, "längst till höger, men inte förbi kanten")
+        #expect(abs(v.center.y - 0.5) < 1e-6)
+    }
+
     @Test func noZoomIsAlwaysCentered() {
         let p = plan(aspect: .wide, source: (1440, 900))
         let c = p.coverageClamped(CGPoint(x: 0.2, y: 0.8), zoom: 1)
         #expect(c == CGPoint(x: 0.5, y: 0.5))
+    }
+}
+
+@Suite struct ShortcutTrackTests {
+    private func key(_ t: Double, _ label: String) -> InputEvent { InputEvent(t: t, k: .key, code: 0, label: label) }
+
+    @Test func repeatsCountUpInsteadOfBlinking() {
+        let track = ShortcutTrack(events: [key(1, "⌘Z"), key(1.4, "⌘Z"), key(1.8, "⌘Z")],
+                                  timeMap: TimeMap(segments: [.init(start: 0, end: 10)]))
+        let shown = track.visible(at: 2.0)
+        #expect(shown?.text == "⌘Z ×3")
+        #expect(shown.map { $0.opacity > 0.99 } == true, "ingen ny infadning vid uppräkning")
+        #expect(track.visible(at: 1.8 + ShortcutTrack.hold + 0.01) == nil)
+    }
+
+    @Test func aNewShortcutReplacesTheOldAtOnce() {
+        let track = ShortcutTrack(events: [key(1, "⌘C"), key(1.5, "⌘V")],
+                                  timeMap: TimeMap(segments: [.init(start: 0, end: 10)]))
+        #expect(track.visible(at: 1.49)?.text == "⌘C")
+        #expect(track.visible(at: 1.51)?.text == "⌘V")
+    }
+
+    @Test func followsCutsAndSpeed() {
+        // 0–4 s i 4× (1 s ut), 4–6 bortklippt, 6–10 i 1× (börjar vid 1 s ut).
+        let map = TimeMap(segments: [.init(start: 0, end: 4, speed: 4), .init(start: 6, end: 10)])
+        let track = ShortcutTrack(events: [key(2, "⌘S"), key(5, "⌘W"), key(7, "⌘Q")], timeMap: map)
+        #expect(track.items.map(\.label) == ["⌘S", "⌘Q"], "inget ur den bortklippta delen")
+        #expect(abs(track.items[0].start - 0.5) < 1e-9)
+        #expect(abs(track.items[1].start - 2.0) < 1e-9)
+        // Visas i 1,5 s utdatatid även fast delen spelas i 4×, tills nästa tar över.
+        #expect(track.visible(at: 1.9)?.text == "⌘S")
+    }
+
+    @Test func fadesInAndOut() {
+        let track = ShortcutTrack(events: [key(1, "⌘K")], timeMap: TimeMap(segments: [.init(start: 0, end: 10)]))
+        #expect(track.visible(at: 0.99) == nil)
+        #expect((track.visible(at: 1.06)?.opacity ?? 0) < 0.6)
+        #expect((track.visible(at: 1.7)?.opacity ?? 0) > 0.99)
+        #expect((track.visible(at: 1 + ShortcutTrack.hold - 0.05)?.opacity ?? 1) < 0.3)
     }
 }

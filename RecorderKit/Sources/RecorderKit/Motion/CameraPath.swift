@@ -76,6 +76,10 @@ public enum AutoZoom {
 /// Lämnar den zonen tittar kameran en sekund framåt: kommer markören tillbaka hoppas
 /// panoreringen över (ingen nervös kamera). Annars siktar den på markörens medelposition
 /// under den kommande halvsekunden och glider dit med en överdämpad fjäder.
+///
+/// `visible` är hur stor del av innehållet som syns utan zoom, per axel. Normalt hela
+/// (1 × 1). När innehållet fyller en bildyta med andra proportioner (Reel-läge) syns bara en
+/// del, och då följer kameran markören även utan zoom (`followAtRest`).
 public struct CameraPath: Sendable {
     public static let rate = 240.0
     static let safeZone = 0.7
@@ -85,18 +89,26 @@ public struct CameraPath: Sendable {
     let ys: [Float]
     public let duration: Double
 
-    public init(zooms: [EditProject.ZoomSegment], cursor: CursorPath, duration: Double) {
+    public init(zooms: [EditProject.ZoomSegment], cursor: CursorPath, duration: Double,
+                visible: CGSize = CGSize(width: 1, height: 1), followAtRest: Bool = false) {
         self.duration = max(duration, 0)
         let n = Int((self.duration * Self.rate).rounded(.up)) + 1
         let sorted = zooms.filter { $0.end > $0.start }.sorted { $0.start < $1.start }
+        let vis = CGSize(width: min(max(visible.width, 0.01), 1), height: min(max(visible.height, 0.01), 1))
+        /// Halva det synliga fönstret per axel vid zoomen `s`.
+        func halves(_ s: Double) -> CGSize {
+            CGSize(width: 0.5 * vis.width / max(s, 1), height: 0.5 * vis.height / max(s, 1))
+        }
+        let follow = followAtRest && cursor.hasData
+        let start = follow ? Self.clamp(cursor.position(at: 0), half: halves(1)) : CGPoint(x: 0.5, y: 0.5)
         var scales = [Float](repeating: 1, count: n)
         var xs = [Float](repeating: 0.5, count: n)
         var ys = [Float](repeating: 0.5, count: n)
         var scale = SpringFollower(1)
-        var cx = SpringFollower(0.5)
-        var cy = SpringFollower(0.5)
+        var cx = SpringFollower(start.x)
+        var cy = SpringFollower(start.y)
         var activeID: UUID?
-        var focus = CGPoint(x: 0.5, y: 0.5)
+        var focus = start
         let dt = 1 / Self.rate
         var k = 0
         for i in 0..<n {
@@ -104,30 +116,34 @@ public struct CameraPath: Sendable {
             while k < sorted.count && sorted[k].end <= t { k += 1 }
             let active = k < sorted.count && sorted[k].start <= t ? sorted[k] : nil
             let targetScale = active?.scale ?? 1
-            let half = 0.5 / max(targetScale, 1)
+            let half = halves(targetScale)
 
+            var tracking = false
             if let z = active {
                 if z.id != activeID {
                     focus = CGPoint(x: z.centerX, y: z.centerY)
                     activeID = z.id
                 }
-                if z.followsCursor && cursor.hasData {
-                    let p = cursor.position(at: t)
-                    if !Self.inside(p, focus: focus, half: half) {
-                        let ahead = cursor.position(at: t + 1.0)
-                        if !Self.inside(ahead, focus: focus, half: half) {
-                            var sx = 0.0, sy = 0.0
-                            for s in 0..<10 {
-                                let q = cursor.position(at: t + Double(s) * 0.05)
-                                sx += q.x; sy += q.y
-                            }
-                            focus = CGPoint(x: sx / 10, y: sy / 10)
+                tracking = z.followsCursor && cursor.hasData
+            } else {
+                // Utan zoom: mitten, eller (Reel-läge) vidare efter markören därifrån den är.
+                activeID = nil
+                tracking = follow
+                if !follow { focus = CGPoint(x: 0.5, y: 0.5) }
+            }
+            if tracking {
+                let p = cursor.position(at: t)
+                if !Self.inside(p, focus: focus, half: half) {
+                    let ahead = cursor.position(at: t + 1.0)
+                    if !Self.inside(ahead, focus: focus, half: half) {
+                        var sx = 0.0, sy = 0.0
+                        for s in 0..<10 {
+                            let q = cursor.position(at: t + Double(s) * 0.05)
+                            sx += q.x; sy += q.y
                         }
+                        focus = CGPoint(x: sx / 10, y: sy / 10)
                     }
                 }
-            } else {
-                activeID = nil
-                focus = CGPoint(x: 0.5, y: 0.5)
             }
             focus = Self.clamp(focus, half: half)
 
@@ -135,7 +151,7 @@ public struct CameraPath: Sendable {
             cx.step(toward: focus.x, dt: dt, spring: .viewport)
             cy.step(toward: focus.y, dt: dt, spring: .viewport)
             let s = max(scale.position, 1)
-            let c = Self.clamp(CGPoint(x: cx.position, y: cy.position), half: 0.5 / s)
+            let c = Self.clamp(CGPoint(x: cx.position, y: cy.position), half: halves(s))
             scales[i] = Float(s)
             xs[i] = Float(c.x)
             ys[i] = Float(c.y)
@@ -143,14 +159,13 @@ public struct CameraPath: Sendable {
         self.scales = scales; self.xs = xs; self.ys = ys
     }
 
-    static func inside(_ p: CGPoint, focus: CGPoint, half: Double) -> Bool {
-        let h = half * safeZone
-        return abs(p.x - focus.x) <= h && abs(p.y - focus.y) <= h
+    static func inside(_ p: CGPoint, focus: CGPoint, half: CGSize) -> Bool {
+        abs(p.x - focus.x) <= half.width * safeZone && abs(p.y - focus.y) <= half.height * safeZone
     }
 
-    static func clamp(_ p: CGPoint, half: Double) -> CGPoint {
-        let h = min(half, 0.5)
-        return CGPoint(x: min(max(p.x, h), 1 - h), y: min(max(p.y, h), 1 - h))
+    static func clamp(_ p: CGPoint, half: CGSize) -> CGPoint {
+        let hx = min(half.width, 0.5), hy = min(half.height, 0.5)
+        return CGPoint(x: min(max(p.x, hx), 1 - hx), y: min(max(p.y, hy), 1 - hy))
     }
 
     /// Zoomgrad (≥ 1) och mittpunkt (normaliserad, origo uppe till vänster) vid källtiden `t`.

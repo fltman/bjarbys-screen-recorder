@@ -31,6 +31,9 @@ translation that follows the system language.
   when it stands still.
 - Gradient, solid or blurred backgrounds, padding, rounded corners, shadow, and 16:9,
   9:16, 1:1 or 4:3 output.
+- Reel mode: a landscape recording fills a 9:16 (or any other) frame and the frame follows
+  the pointer, with or without zoom.
+- Keyboard shortcuts pressed during recording appear as a small caption ("⌘Z ×3").
 - Split, delete and change the speed of parts of the recording, with undo.
 - A camera bubble in any corner, round or rounded square.
 
@@ -68,8 +71,8 @@ SKARMINSPELARE_SIGNERING="Apple Development" SKARMINSPELARE_TEAM=<your team id> 
 On first launch the app asks for **Screen Recording**, which is the only permission it
 needs. Microphone and Camera are optional, as are **Accessibility** (lets zooms frame the
 button you clicked rather than a box around the pointer) and **Input Monitoring**, which
-records keyboard shortcuts: only keys pressed with ⌘, ⌃ or ⌥, never text. Showing those
-shortcuts in the video is not built yet.
+records keyboard shortcuts so they can be shown in the video: only keys pressed with ⌘, ⌃
+or ⌥, never text.
 
 ## How it is put together
 

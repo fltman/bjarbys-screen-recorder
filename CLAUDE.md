@@ -29,6 +29,9 @@ open Skarminspelare.xcodeproj
   Startad från terminalen lånar binären terminalens skärminspelningsbehörighet.
 - `./scripts/sync-check.sh` mäter A/V-synk mot en blixt+pip-referens i QuickTime.
 - `swift scripts/make-icon.swift <png>` ritar appikonen (skalas in i `App/Assets.xcassets`).
+- `python3 scripts/strings.py check` efter ett bygge: hittar gränssnittstexter som saknas i
+  `Localizable.xcstrings` eller saknar engelska. xcodebuild extraherar dem men skriver inte in
+  dem i katalogen (bara Xcode-fönstret gör det). `… add fil.json` lägger in `{"sv": "en"}`.
 
 ## Struktur
 
