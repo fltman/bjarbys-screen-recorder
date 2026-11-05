@@ -124,6 +124,16 @@ section { padding: clamp(4rem, 9vw, 7rem) 1.2rem; }
 .funktion-bild.stack img:first-child { max-width: 440px; }
 .funktion-bild.stack .flyt { max-width: 300px; margin-top: -2.5rem; margin-left: 9rem; border-radius: 18px; }
 
+/* Loopar och breda bilder */
+video.loop { width: 100%; height: auto; display: block; border-radius: 14px; background: #111; }
+.funktion-bild video.loop { max-width: 620px; }
+.bred { max-width: var(--max); margin: 3rem auto 0; }
+.bred img, .bred video { width: 100%; border-radius: 16px; box-shadow: var(--shadow); }
+.bred figcaption, .par-klipp figcaption { color: var(--muted); font-size: .92rem; text-align: center; margin-top: .9rem; }
+.format { padding-top: 0; }
+.par-klipp { max-width: var(--max); margin: 0 auto; padding-top: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem; }
+.par-klipp figure { margin: 0; }
+
 .taggar { list-style: none; padding: 0 !important; display: flex; flex-wrap: wrap; gap: .5rem; margin: 1.4rem 0 !important; }
 .taggar li { margin: 0 !important; padding: .35rem .8rem; border-radius: 999px; background: #ececf0; color: var(--ink); font-size: .88rem; font-weight: 600; }
 
@@ -167,6 +177,7 @@ section { padding: clamp(4rem, 9vw, 7rem) 1.2rem; }
   .funktion { grid-template-columns: 1fr; }
   .funktion.vand .funktion-text { order: 0; }
   .funktion-bild.stack .flyt { margin-left: 0; }
+  .par-klipp { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
