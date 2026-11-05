@@ -120,8 +120,8 @@ enum MCPServer {
 
     private static var tools: [[String: Any]] {
         [
-            ["name": "list_recordings", "description": "List recordings in the library, newest first.",
-             "inputSchema": schema([:])],
+            ["name": "list_recordings", "description": "List recordings in the library, newest first. With `query`: only those whose name, source or speech (transcribed) contains every word, with a quote when it was said.",
+             "inputSchema": schema(["query": ["type": "string", "description": "Words to look for (optional)."]])],
             ["name": "record_screen",
              "description": "Record the main display for a number of seconds and return the new recording. Blocks until done.",
              "inputSchema": schema(["seconds": ["type": "number", "minimum": 1, "maximum": 900],
@@ -307,7 +307,7 @@ enum MCPServer {
 
     private static func call(_ name: String, _ a: [String: Any]) async throws -> String {
         switch name {
-        case "list_recordings": return listRecordings()
+        case "list_recordings": return listRecordings(query: a["query"] as? String ?? "")
         case "list_audio_apps":
             let apps = AudioProcesses.apps()
             guard !apps.isEmpty else { return "No apps are connected to the audio system right now." }
@@ -432,15 +432,22 @@ enum MCPServer {
 
     // MARK: - Bibliotek
 
-    private static func listRecordings() -> String {
+    private static func listRecordings(query: String) -> String {
         let items = RecordingLibrary.scan()
         guard !items.isEmpty else { return "No recordings in \(RecordingLibrary.defaultDirectory.path)." }
-        return items.map { item in
+        let rows: [String] = items.compactMap { item in
             let m = item.meta
+            let transcript = item.bundle.readTranscript()
+            let speech = transcript.map { $0.words.map(\.text).joined(separator: " ") }
+            guard let match = LibrarySearch.match(query: query, titles: [m?.name ?? "", m?.source.title ?? "", item.bundle.name],
+                                                  transcript: speech) else { return nil }
             let d = m.map { String(format: "%.1f s", $0.duration) } ?? "?"
-            let transcribed = FileManager.default.fileExists(atPath: item.bundle.transcriptURL.path) ? ", transcribed" : ""
-            return "- \(item.bundle.name) (\(d)\(transcribed)): \(item.bundle.url.path)"
-        }.joined(separator: "\n")
+            let name = (m?.name).flatMap { $0.isEmpty ? nil : " «\($0)»" } ?? ""
+            var row = "- \(item.bundle.name)\(name) (\(d)\(transcript != nil ? ", transcribed" : "")): \(item.bundle.url.path)"
+            if case .speech(let quote) = match { row += "\n  said: \(quote)" }
+            return row
+        }
+        return rows.isEmpty ? "Nothing matches «\(query)»." : rows.joined(separator: "\n")
     }
 
     private static func resolve(_ a: [String: Any]) throws -> LoadedRecording {

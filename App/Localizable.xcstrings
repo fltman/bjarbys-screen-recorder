@@ -953,6 +953,40 @@
         }
       }
     },
+    "Byt namn": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Byt namn"
+          }
+        }
+      }
+    },
+    "Byt namn …": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename…"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Byt namn …"
+          }
+        }
+      }
+    },
     "Börja här": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -3095,6 +3129,23 @@
         }
       }
     },
+    "Inget hittades för «%@».": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing found for «%@»."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inget hittades för «%@»."
+          }
+        }
+      }
+    },
     "Inget känsligt hittades.": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -4502,6 +4553,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mörk titelrad"
+          }
+        }
+      }
+    },
+    "Namn": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Namn"
           }
         }
       }
@@ -6546,6 +6614,23 @@
         }
       }
     },
+    "Sök i namn och i det som sades": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search names and what was said"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sök i namn och i det som sades"
+          }
+        }
+      }
+    },
     "Ta bort": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -6882,6 +6967,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Titel"
+          }
+        }
+      }
+    },
+    "Tomt namn visar datumet igen.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An empty name shows the date again."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomt namn visar datumet igen."
           }
         }
       }

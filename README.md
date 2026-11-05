@@ -37,6 +37,8 @@ is included; to have the app follow your system language instead, run
   to you.
 - Flashback: keep recording in the background and save the last 1–10 minutes after the fact
   (⌃⌥⌘S), as a normal recording you can edit.
+- A library you can search: by name (rename any recording), by source, and by what was said in
+  transcribed recordings — with the quote where it was said.
 - Crash-safe: every track is its own file, written in 2-second fragments. A recording that
   is cut off is playable up to the last fragment and is recovered at the next launch.
 

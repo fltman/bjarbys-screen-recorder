@@ -120,6 +120,8 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
     /// Skärmspåret är HDR: HEVC Main10, BT.2020 PQ, SDR-vitt på 100 nits (ScreenCaptureKits
     /// HDR10-förval). Renderaren lyfter det till 203 nits, där Core Image har SDR-vitt.
     public var hdr: Bool
+    /// Namnet användaren gett inspelningen i biblioteket ("" = visa datumet).
+    public var name: String
 
     public init(source: Source, fps: Int, appVersion: String) {
         self.schemaVersion = RecorderKit.formatVersion
@@ -136,6 +138,7 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
         self.droppedFrames = 0
         self.startHostTime = 0
         self.hdr = false
+        self.name = ""
     }
 
     public init(from decoder: Decoder) throws {
@@ -154,6 +157,7 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
         droppedFrames = c.value(.droppedFrames, 0)
         startHostTime = c.value(.startHostTime, 0)
         hdr = c.value(.hdr, false)
+        name = c.value(.name, "")
     }
 
     public func track(_ kind: TrackKind) -> Track? {

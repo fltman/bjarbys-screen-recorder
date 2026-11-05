@@ -43,6 +43,7 @@ de att spela upp till sista fragmentet; `meta.json` har då `finished: false` ti
 | `keystrokesRecorded` | om kortkommandon spelades in |
 | `startHostTime` | tidslinjens nollpunkt i värdklockan (s); flashback syr ihop delar med den |
 | `hdr` | skärmspåret är HDR: 10 bit BT.2020 PQ med SDR-vitt på 100 nits (ScreenCaptureKits HDR10-förval) |
+| `name` | namnet användaren gett inspelningen i biblioteket ("" = datumet visas) |
 
 ## events.jsonl
 

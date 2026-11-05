@@ -77,6 +77,9 @@ private struct LibraryGrid: View {
     @ObservedObject var library: LibraryModel
     /// Ihopslagningen: vilka som är valda (nil = rutan stängd).
     @State private var merging: Set<URL>?
+    /// Inspelningen som byter namn, och det nya namnet.
+    @State private var renaming: RecordingLibrary.Item?
+    @State private var newName = ""
 
     private let columns = [GridItem(.adaptive(minimum: 230, maximum: 320), spacing: 18)]
 
@@ -88,6 +91,14 @@ private struct LibraryGrid: View {
                     library.reload()
                     if let merged { app.openEditor(merged) }
                 }
+            }
+            .alert("Byt namn", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
+                TextField("Namn", text: $newName)
+                Button("Byt namn") { if let item = renaming { library.rename(item, to: newName) }; renaming = nil }
+                    .keyboardShortcut(.defaultAction)
+                Button("Avbryt", role: .cancel) { renaming = nil }
+            } message: {
+                Text("Tomt namn visar datumet igen.")
             }
     }
 
@@ -104,14 +115,46 @@ private struct LibraryGrid: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
+            VStack(spacing: 0) {
+                HStack {
+                    Spacer()
+                    HStack(spacing: 6) {
+                        Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                        TextField("Sök i namn och i det som sades", text: $library.query)
+                            .textFieldStyle(.plain)
+                        if !library.query.isEmpty {
+                            Button { library.query = "" } label: { Image(systemName: "xmark.circle.fill") }
+                                .buttonStyle(.plain).foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.horizontal, 9).padding(.vertical, 5)
+                    .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 7))
+                    .frame(width: 320)
+                }
+                .padding(.horizontal, 20).padding(.top, 14)
+                grid
+            }
+        }
+    }
+
+    private var grid: some View {
+        let found = library.filtered
+        return Group {
+            if found.isEmpty {
+                Text("Inget hittades för «\(library.query)».")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
             ScrollView {
                 LazyVGrid(columns: columns, spacing: 18) {
-                    ForEach(library.items) { item in
-                        RecordingCard(item: item)
+                    ForEach(found, id: \.item.id) { entry in
+                        let item = entry.item
+                        RecordingCard(item: item, quote: { if case .speech(let s) = entry.match { return s } else { return nil } }())
                             .onTapGesture(count: 2) { app.openEditor(item.bundle) }
                             .contextMenu {
                                 Button("Öppna") { app.openEditor(item.bundle) }
                                 Button("Visa i Finder") { library.revealInFinder(item) }
+                                Button("Byt namn …") { newName = item.meta?.name ?? ""; renaming = item }
                                 Button("Slå ihop med andra …") { merging = [item.bundle.url] }
                                 Divider()
                                 Button("Flytta till papperskorgen", role: .destructive) { library.moveToTrash(item) }
@@ -120,12 +163,15 @@ private struct LibraryGrid: View {
                 }
                 .padding(20)
             }
+            }
         }
     }
 }
 
-private struct RecordingCard: View {
+struct RecordingCard: View {
     let item: RecordingLibrary.Item
+    /// Ett citat ur talet, när sökningen träffade där.
+    var quote: String? = nil
     @State private var hovering = false
 
     var body: some View {
@@ -176,11 +222,22 @@ private struct RecordingCard: View {
                 badges
             }
             Group {
-                if let title = item.meta?.source.title { Text(verbatim: title) } else { Text("Oläslig meta.json") }
+                if let meta = item.meta {
+                    // Med eget namn står datumet här, före källan.
+                    Text(verbatim: meta.name.isEmpty ? meta.source.title : "\(Self.dateTitle(for: item)) · \(meta.source.title)")
+                } else {
+                    Text("Oläslig meta.json")
+                }
             }
             .font(.caption)
             .foregroundStyle(.secondary)
             .lineLimit(1)
+            if let quote {
+                Text(verbatim: "«\(quote)»")
+                    .font(.caption.italic())
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
         }
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
@@ -204,8 +261,14 @@ private struct RecordingCard: View {
         .foregroundStyle(.tertiary)
     }
 
-    /// "Idag kl. 02.04", "Igår kl. 22.27", "4 nov. kl. 22.27" — ur inspelningens tid.
+    /// Namnet användaren gett inspelningen, annars datumet.
     static func title(for item: RecordingLibrary.Item) -> String {
+        if let name = item.meta?.name, !name.isEmpty { return name }
+        return dateTitle(for: item)
+    }
+
+    /// "Idag kl. 02.04", "Igår kl. 22.27", "4 nov. kl. 22.27" — ur inspelningens tid.
+    static func dateTitle(for item: RecordingLibrary.Item) -> String {
         guard let date = item.meta?.createdAt, date.timeIntervalSince1970 > 0 else {
             return item.bundle.name.replacingOccurrences(of: "Inspelning ", with: "")
         }

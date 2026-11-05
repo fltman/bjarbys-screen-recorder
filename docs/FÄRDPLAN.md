@@ -84,6 +84,10 @@ tagning, sedan redigerbar polish, sedan resten.
 - Lupp (2026-11-05): ett zoomblock kan vara av sorten Lupp — kameran står still och ett runt
   förstoringsglas (18 % av skärmhöjden, vit kant, skugga) följer markören och förstorar det som
   syns, med maskerna; växer fram och krymper bort på 0,25 s. "Ny lupp" vid spelhuvudet.
+- Sök och byt namn i biblioteket (2026-11-05): sökfält ovanför korten (alla ord måste finnas i
+  namnet, källan, datumtexten eller talet; skiftläget spelar ingen roll, å ä ö är egna bokstäver),
+  med citatet kring träffen när den var i talet; transkripten läses i bakgrunden. Byt namn …
+  sparar `name` i `meta.json`. MCP `list_recordings` med `query`.
 - Undertextstil (2026-11-05): Tal › Placering (nere, mitt i — 36 % upp, för stående filmer —
   eller uppe) och Utseende (platta, eller fet text med svart kontur och mjuk skugga). Det som
   annars lägger sig ovanför undertexterna (kortkommandon, faktarutor) gör det bara på samma kant.
