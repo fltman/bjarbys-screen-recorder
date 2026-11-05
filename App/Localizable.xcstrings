@@ -1055,6 +1055,23 @@
         }
       }
     },
+    "Dra i ändarna i tidslinjen för att trimma (⌥ ändrar farten), dra delen för att flytta den. Q och W trimmar början och slutet till spelhuvudet.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag the ends on the timeline to trim (⌥ changes the speed), drag the part to move it. Q and W trim the start and end to the playhead."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dra i ändarna i tidslinjen för att trimma (⌥ ändrar farten), dra delen för att flytta den. Q och W trimmar början och slutet till spelhuvudet."
+          }
+        }
+      }
+    },
     "Dra i ändarna i tidslinjen för att trimma (⌥ ändrar farten), dra delen för att flytta den. ⌥[ och ⌥] trimmar till spelhuvudet.": {
       "extractionState": "extracted_with_value",
       "localizations": {

@@ -80,8 +80,9 @@ tagning, sedan redigerbar polish, sedan resten.
   i inspelningen (inget tas bort, materialet går att dra fram igen; stannar vid grannarna, vid
   inspelningens ändar och vid 0,1 s); ⌥-dra för att sträcka delen till en ny fart (0,25–8×).
   Spelhuvudet hamnar på den nya kanten; tidslinjen ritas direkt ur delarna medan man drar.
-  Den markerade delen dras till en ny plats (spöke och insättningsmärke); ⌥[ och ⌥] trimmar
-  delen under spelhuvudet till spelhuvudet.
+  Den markerade delen dras till en ny plats (spöke och insättningsmärke); Q och W trimmar
+  början och slutet av delen under spelhuvudet till spelhuvudet (som i Premiere; ⌥[ och ⌥]
+  gick inte att trycka på ett svenskt tangentbord, där klamrarna själva kräver ⌥).
 - Videoinslag med hastighet 0,25–4×, beskärning och mjuka kanter (2026-11-05), i lagrets
   inspektör och via MCP (`speed`, `crop`, `softness`). Delarna kan nu också gå i 0,25×.
 - GIF utan band (2026-11-05): ImageIOs palett per ruta bandade (uppmätt), så GIF:en får en

@@ -36,6 +36,8 @@ struct EditorHost: View {
 
 struct EditorView: View {
     @ObservedObject var model: EditorModel
+    @State private var keyMonitor: Any?
+    @State private var window = WindowBox()
 
     var body: some View {
         HStack(spacing: 0) {
@@ -61,7 +63,30 @@ struct EditorView: View {
         }
         .background(shortcuts)
         .sheet(isPresented: $model.exportPresented) { ExportSheet(model: model) }
-        .onDisappear { model.saveNow(); model.player.pause() }
+        .background(WindowReader(box: window))
+        .onAppear { installKeys() }
+        .onDisappear {
+            model.saveNow(); model.player.pause()
+            if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
+            keyMonitor = nil
+        }
+    }
+
+    /// Q och W trimmar delen under spelhuvudet till spelhuvudet (som i Premiere): bokstäver som
+    /// ligger likadant på alla tangentbord (⌥[ och ⌥] går inte att trycka på ett svenskt, där
+    /// klamrarna själva kräver ⌥). Bara när inget textfält har fokus och bara i redigerarens fönster.
+    private func installKeys() {
+        guard keyMonitor == nil else { return }
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [model, window] event in
+            let mods = event.modifierFlags.intersection([.command, .option, .control, .shift])
+            guard mods.isEmpty, let w = event.window, w === window.window, w.isKeyWindow,
+                  !(w.firstResponder is NSText) else { return event }
+            switch event.charactersIgnoringModifiers?.lowercased() {
+            case "q": model.trimToPlayhead(start: true); return nil
+            case "w": model.trimToPlayhead(start: false); return nil
+            default: return event
+            }
+        }
     }
 
     /// Kortkommandon via osynliga knappar.
@@ -69,8 +94,6 @@ struct EditorView: View {
         Group {
             Button("") { model.togglePlay() }.keyboardShortcut(.space, modifiers: [])
             Button("") { model.split() }.keyboardShortcut("b", modifiers: .command)
-            Button("") { model.trimToPlayhead(start: true) }.keyboardShortcut("[", modifiers: .option)
-            Button("") { model.trimToPlayhead(start: false) }.keyboardShortcut("]", modifiers: .option)
             Button("") { model.deleteSelection() }.keyboardShortcut(.delete, modifiers: [])
             Button("") { model.undo() }.keyboardShortcut("z", modifiers: .command)
             Button("") { model.redo() }.keyboardShortcut("z", modifiers: [.command, .shift])
@@ -158,5 +181,20 @@ private struct TransportBar: View {
     static func time(_ s: Double) -> String {
         let t = max(0, s)
         return String(format: "%d:%02d.%d", Int(t) / 60, Int(t) % 60, Int((t * 10).truncatingRemainder(dividingBy: 10)))
+    }
+}
+
+/// Fönstret en SwiftUI-vy ligger i (för tangenter som bara ska gälla det fönstret).
+final class WindowBox { weak var window: NSWindow? }
+
+struct WindowReader: NSViewRepresentable {
+    let box: WindowBox
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async { box.window = view.window }
+        return view
+    }
+    func updateNSView(_ view: NSView, context: Context) {
+        if box.window == nil { DispatchQueue.main.async { box.window = view.window } }
     }
 }

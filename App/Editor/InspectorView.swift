@@ -128,7 +128,7 @@ struct InspectorView: View {
                 ForEach([0.25, 0.5, 1, 1.5, 2, 4, 8], id: \.self) { Text(AppLocale.format("%g×", $0)).tag($0) }
             }
             Text("\(AppLocale.format("%.1f", seg.duration)) s i inspelningen").font(.caption).foregroundStyle(.secondary)
-            Text("Dra i ändarna i tidslinjen för att trimma (⌥ ändrar farten), dra delen för att flytta den. ⌥[ och ⌥] trimmar till spelhuvudet.")
+            Text("Dra i ändarna i tidslinjen för att trimma (⌥ ändrar farten), dra delen för att flytta den. Q och W trimmar början och slutet till spelhuvudet.")
                 .font(.caption).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             // Övergången in i delen (inte för den första).
