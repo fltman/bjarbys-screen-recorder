@@ -83,6 +83,9 @@ struct HUDView: View {
             if controller.settings.systemAudio {
                 LevelRow(icon: "speaker.wave.2.fill", level: s.systemLevel)
             }
+            ForEach(Array(s.appLevels.enumerated()), id: \.offset) { _, level in
+                LevelRow(icon: "app.badge.fill", level: level)
+            }
             if let warning = warning(s) {
                 Label(warning, systemImage: "exclamationmark.triangle.fill")
                     .font(.caption)

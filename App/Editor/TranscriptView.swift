@@ -51,7 +51,7 @@ struct TranscriptView: View {
             if let p = model.transcribing {
                 ProgressView(value: p) { Text("Transkriberar …") }
                 Button("Avbryt") { model.cancelTranscription() }.controlSize(.small)
-            } else if model.recording.hasMicrophone || model.recording.hasSystemAudio {
+            } else if model.recording.hasMicrophone || model.recording.hasComputerAudio {
                 Text("Transkribera inspelningen för att redigera den som text, få undertexter och klippa bort pauser.")
                     .foregroundStyle(.secondary)
                 Button("Transkribera") { model.transcribe() }

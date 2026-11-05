@@ -58,7 +58,7 @@ struct InspectorView: View {
                     case .layers:
                         LayersInspector(model: model)
                     case .speech:
-                        if model.recording.hasMicrophone || model.recording.hasSystemAudio {
+                        if model.recording.hasMicrophone || model.recording.hasComputerAudio {
                             speechSection
                             audioSection
                         } else {
@@ -397,7 +397,7 @@ struct InspectorView: View {
                 Toggle("Undertexter i filmen", isOn: binding(\.captions.visible))
                 LabeledSlider("Textstorlek", value: binding(\.captions.size), range: 0.6...1.6, format: "%.0f %%", scale: 100)
                     .disabled(!model.project.captions.visible)
-                if model.recording.hasSystemAudio && model.recording.hasMicrophone {
+                if model.recording.hasComputerAudio && model.recording.hasMicrophone {
                     Toggle("Sänk datorljudet när du pratar", isOn: binding(\.audio.duckSystem))
                 }
                 let fillers = model.fillerWords
@@ -479,10 +479,30 @@ struct InspectorView: View {
                     Toggle("", isOn: Binding(get: { !model.project.audio.systemMuted },
                                              set: { v in model.update { $0.audio.systemMuted = !v } }))
                         .labelsHidden()
-                    LabeledSlider("Datorljud", value: decibels(\.audio.systemVolume), range: -30...20, format: "%+.1f dB")
+                    LabeledSlider(model.recording.apps.isEmpty ? "Datorljud" : "Övrigt datorljud",
+                                  value: decibels(\.audio.systemVolume), range: -30...20, format: "%+.1f dB")
+                }
+            }
+            // Apparna med eget spår: volym och tystning var för sig.
+            ForEach(model.recording.apps, id: \.id) { app in
+                HStack {
+                    Toggle("", isOn: Binding(get: { !model.project.audio.isAppMuted(app.id) }, set: { on in
+                        model.update { p in
+                            p.audio.appMuted.removeAll { $0 == app.id }
+                            if !on { p.audio.appMuted.append(app.id) }
+                        }
+                    }))
+                    .labelsHidden()
+                    LabeledSlider(LocalizedStringKey(app.name), value: appDecibels(app.id), range: -30...20, format: "%+.1f dB")
                 }
             }
         }
+    }
+
+    /// En apps volym visad och ändrad i dB.
+    private func appDecibels(_ id: String) -> Binding<Double> {
+        Binding(get: { 20 * log10(max(model.project.audio.appVolume(id), 0.0316)) },
+                set: { db in model.update { $0.audio.appVolumes[id] = pow(10, db / 20) } })
     }
 
     /// En linjär volym visad och ändrad i dB.

@@ -18,6 +18,8 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         public var isPaused = false
         public var micLevel: Float = 0
         public var systemLevel: Float = 0
+        /// Nivån per app med eget spår, i `options.apps` ordning.
+        public var appLevels: [Float] = []
         public var micSilent = false
         public var droppedFrames = 0
         public var freeBytes: Int64?
@@ -65,6 +67,10 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
     private var windowTracker: WindowTracker?
     private let micMeter = LevelMeter()
     private let systemMeter = LevelMeter()
+    /// Apparnas spår (Core Audio-tappar) och "övrigt datorljud" när appar är valda.
+    private var appWriters: [TrackWriter] = []
+    private var appMeters: [LevelMeter] = []
+    private var taps: [ProcessTap] = []
     private let videoQueue = DispatchQueue(label: "skarminspelare.video", qos: .userInteractive)
     private let audioQueue = DispatchQueue(label: "skarminspelare.audio", qos: .userInteractive)
     private let micQueue = DispatchQueue(label: "skarminspelare.mic", qos: .userInteractive)
@@ -104,7 +110,14 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         meta.tracks = [.init(kind: .screen, file: RecordingBundle.fileName(for: .screen), deviceName: target.title)]
         if options.systemAudio {
             writers[.system] = try TrackWriter(kind: .system, url: bundle.trackURL(.system), settings: .audio)
-            meta.tracks.append(.init(kind: .system, file: RecordingBundle.fileName(for: .system), deviceName: "Datorljud"))
+            meta.tracks.append(.init(kind: .system, file: RecordingBundle.fileName(for: .system),
+                                     deviceName: options.apps.isEmpty ? "Datorljud" : "Övrigt datorljud"))
+        }
+        for (i, app) in options.apps.enumerated() {
+            let file = RecordingBundle.appFileName(i)
+            appWriters.append(try TrackWriter(kind: .app, url: bundle.recordingDir.appendingPathComponent(file), settings: .audio))
+            appMeters.append(LevelMeter())
+            meta.tracks.append(.init(kind: .app, file: file, deviceName: app.name, appID: app.id))
         }
         if let mic = options.microphone {
             writers[.microphone] = try TrackWriter(kind: .microphone, url: bundle.trackURL(.microphone), settings: .audio)
@@ -128,6 +141,7 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
 
         camera?.onFrame = { [weak self] buffer, host in self?.handleCamera(buffer, host: host) }
         camera?.start()
+        startTaps()
 
         let input = InputRecorder(clock: clock, log: log, keystrokes: options.keystrokes)
         let probe = ElementProbe(log: log)
@@ -165,7 +179,7 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         c.scalesToFit = true
         c.preservesAspectRatio = true
         c.ignoreShadowsSingleWindow = true
-        c.capturesAudio = options.systemAudio
+        c.capturesAudio = options.systemAudioFromStream
         c.sampleRate = 48_000
         c.channelCount = 2
         c.excludesCurrentProcessAudio = true
@@ -180,7 +194,7 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
     private func makeStream() throws -> SCStream {
         let stream = SCStream(filter: target.filter, configuration: makeConfiguration(), delegate: self)
         try stream.addStreamOutput(self, type: .screen, sampleHandlerQueue: videoQueue)
-        if options.systemAudio {
+        if options.systemAudioFromStream {
             try stream.addStreamOutput(self, type: .audio, sampleHandlerQueue: audioQueue)
         }
         if options.microphone != nil {
@@ -221,6 +235,8 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         try? await stream?.stopCapture()
         stream = nil
         camera?.stop()
+        for tap in taps { tap.stop() }
+        taps = []
 
         // Sista rutan vid sluttiden, och töm köerna innan filerna stängs.
         videoQueue.sync {
@@ -236,6 +252,13 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         for (kind, writer) in writers {
             let ok = await writer.finish()
             if !ok || writer.appended == 0, let i = meta.tracks.firstIndex(where: { $0.kind == kind }) {
+                meta.tracks[i].failed = true
+            }
+        }
+        for (n, writer) in appWriters.enumerated() {
+            let ok = await writer.finish()
+            let file = RecordingBundle.appFileName(n)
+            if !ok || writer.appended == 0, let i = meta.tracks.firstIndex(where: { $0.file == file }) {
                 meta.tracks[i].failed = true
             }
         }
@@ -299,6 +322,37 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
             writers[.microphone]?.append(sampleBuffer, at: t)
         @unknown default:
             break
+        }
+    }
+
+    /// Core Audio-tapparna: en per app, och "övrigt datorljud" (allt utom apparna och oss själva)
+    /// när appar är valda. Tiderna är värdklocka och går genom samma `RecordingClock` som allt annat.
+    @MainActor
+    private func startTaps() {
+        guard !options.apps.isEmpty else { return }
+        for (i, app) in options.apps.enumerated() {
+            let tap = ProcessTap(mode: .only([app]), name: app.name)
+            let writer = appWriters[i], meter = appMeters[i]
+            tap.onBuffer = { [weak self] buffer, host in
+                meter.process(buffer, host: host)
+                guard let t = self?.clock.map(host) else { return }
+                writer.append(buffer, at: t)
+            }
+            do { try tap.start(); taps.append(tap) } catch {
+                notice = String(localized: "Ljudet från \(app.name) gick inte att spela in: \(error.localizedDescription)")
+            }
+        }
+        if options.systemAudio, let writer = writers[.system] {
+            let tap = ProcessTap(mode: .allExcept(options.apps), name: "Övrigt datorljud")
+            let meter = systemMeter
+            tap.onBuffer = { [weak self] buffer, host in
+                meter.process(buffer, host: host)
+                guard let t = self?.clock.map(host) else { return }
+                writer.append(buffer, at: t)
+            }
+            do { try tap.start(); taps.append(tap) } catch {
+                notice = String(localized: "Datorljudet gick inte att spela in: \(error.localizedDescription)")
+            }
         }
     }
 
@@ -382,12 +436,13 @@ public final class CaptureSession: NSObject, SCStreamOutput, SCStreamDelegate, @
         s.isPaused = clock.isPaused
         s.micLevel = micMeter.read().peak
         s.systemLevel = systemMeter.read().peak
+        s.appLevels = appMeters.map { $0.read().peak }
         s.micSilent = options.microphone != nil && s.elapsed > 3 && !s.isPaused && micMeter.isSilent(for: 3)
         s.droppedFrames = writers[.screen]?.dropped ?? 0
         s.freeBytes = freeBytes
         s.diskLow = (freeBytes ?? .max) < DiskSpace.warnBelow
         s.keystrokesActive = input?.keystrokesActive ?? false
-        s.failedTracks = writers.filter { $0.value.hasFailed }.map(\.key)
+        s.failedTracks = writers.filter { $0.value.hasFailed }.map(\.key) + (appWriters.contains { $0.hasFailed } ? [.app] : [])
         s.notice = notice
         onStatus?(s)
     }

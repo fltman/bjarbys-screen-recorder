@@ -44,7 +44,7 @@ struct TimelineView: View {
 
     /// Höjden tidslinjen behöver för filerna som finns.
     static func height(for model: EditorModel) -> CGFloat {
-        let waves = (model.micWave.isEmpty ? 0 : 1) + (model.systemWave.isEmpty ? 0 : 1)
+        let waves = model.waveLanes.count
         let extra = (model.plan.captions == nil ? 0 : 24) + (model.project.masks.isEmpty ? 0 : 24)
             + (model.project.overlays.isEmpty ? 0 : 24) + (model.project.audioClips.isEmpty ? 0 : 24)
         return 26 + 58 + 6 + 26 + 8 + CGFloat(extra) + CGFloat(max(waves, 1)) * 34 + 10 + 26
@@ -60,10 +60,8 @@ struct TimelineView: View {
             if let y = captionY { laneIcon("captions.bubble", y: y + laneH / 2, help: "Undertexter") }
             if let y = audioY { laneIcon("music.note", y: y + laneH / 2, help: "Extra ljud") }
             if let y = maskY { laneIcon("eye.slash", y: y + laneH / 2, help: "Dölj känsligt") }
-            let waves = [(model.micWave, "mic"), (model.systemWave, "speaker.wave.2")].filter { !$0.0.isEmpty }
-            ForEach(Array(waves.enumerated()), id: \.offset) { i, w in
-                laneIcon(w.1, y: waveY + CGFloat(i) * (waveH + 4) + waveH / 2,
-                         help: w.1 == "mic" ? "Mikrofon" : "Datorljud")
+            ForEach(Array(model.waveLanes.enumerated()), id: \.offset) { i, w in
+                laneIcon(w.icon, y: waveY + CGFloat(i) * (waveH + 4) + waveH / 2, help: LocalizedStringKey(w.name))
             }
         }
         .frame(width: 30)
@@ -291,7 +289,7 @@ struct TimelineView: View {
 
         // Vågformer.
         var y = waveY
-        for (wave, color) in [(model.micWave, Color.green), (model.systemWave, Color.blue)] where !wave.isEmpty {
+        for (wave, color) in model.waveLanes.map({ ($0.samples, $0.color) }) {
             let mid = y + waveH / 2
             var path = Path()
             var px = max(leading, 0)

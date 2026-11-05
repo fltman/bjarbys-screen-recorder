@@ -21,6 +21,8 @@ is included; to have the app follow your system language instead, run
   discard. It warns about a silent microphone, a disk running full and tracks that stop.
 - Global shortcuts: ⌃⌥⌘R start/stop, ⌃⌥⌘P pause, ⌃⌥⌘A record an area.
 - The app's own windows never end up in the recording.
+- Audio per app: pick apps (a call, a browser, music) and each gets its own track through Core
+  Audio taps, mixable and mutable in the editor; the rest of the computer audio on another.
 - A teleprompter: your script scrolls at reading speed in a box near the camera, visible only
   to you.
 - Flashback: keep recording in the background and save the last 1–10 minutes after the fact
@@ -169,8 +171,8 @@ the screen recording permission of the terminal it runs from.
 ## Status
 
 The recording engine, the editor, export, speech, masking of sensitive text, the flashback
-buffer and control from agents are done (see [`docs/FÄRDPLAN.md`](docs/FÄRDPLAN.md)). Next are
-HDR and per-app audio. Recording at 120 fps (on ProMotion displays) and exporting at 120 are in,
+buffer and control from agents are done (see [`docs/FÄRDPLAN.md`](docs/FÄRDPLAN.md)). Per-app audio
+is in. Next is HDR. Recording at 120 fps (on ProMotion displays) and exporting at 120 are in,
 but the recording side has not been measured yet.
 
 Built and tested on macOS 26.1 on an Apple M5 only. Not yet tried with a real camera or

@@ -36,7 +36,19 @@ struct MenuBarContent: View {
                 Text("Ingen").tag("")
                 ForEach(settings.cameras) { Text($0.name).tag($0.id) }
             }
-            Toggle("Datorljud", isOn: $settings.systemAudio)
+            Toggle(settings.appAudio.isEmpty ? "Datorljud" : "Övrigt datorljud", isOn: $settings.systemAudio)
+            Menu("Ljud per app") {
+                let apps = settings.menuAudioApps
+                if apps.isEmpty { Text("Inga appar med ljud just nu") }
+                ForEach(apps) { a in
+                    Toggle(a.isPlaying ? "\(a.name)  ♪" : a.name,
+                           isOn: Binding(get: { settings.isAppChosen(a.bundleID) },
+                                         set: { settings.setApp(a.bundleID, name: a.name, chosen: $0) }))
+                }
+                Divider()
+                Text("Varje vald app får ett eget spår.")
+                Text("Datorljud blir då allt annat.")
+            }
             Divider()
             Menu("Inspelning") {
                 Toggle("Spela in kortkommandon", isOn: $settings.keystrokes)

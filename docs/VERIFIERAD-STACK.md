@@ -278,3 +278,25 @@ vänster kanal:
 - `AVAssetReaderAudioMixOutput` tillämpar volymrampar (fristående prov: 1 → 0,5 → 0).
 - ⚠️ Första mätningen visade ingen övertoning: den kördes mot en appbinär byggd före ändringen
   (`test.sh` bygger bara paketet). Mät alltid efter xcodebuild.
+
+## Ljud per app (2026-11-05)
+
+`--prov-appljud`: två `afplay` (440 och 660 Hz, volym 0,15) samtidigt; den ena får ett eget spår
+(tapp per process), "övrigt datorljud" är en global tapp utom den och oss själva. Utgång: AirPods.
+- **Separation:** appspåret 440 Hz 0,170 / 660 Hz 0,000002–0,00005, övrigt 660 Hz 0,170 /
+  440 Hz 0,000004–0,00016 — 69–93 dB isär.
+- **Synk mot ScreenCaptureKits datorljud:** samma `afplay` i båda, skarp 1 kHz-ansats, samma
+  `RecordingClock`: 0,00–0,06 ms (aggregatenhet med bara tappen). Med högtalarna som underenhet
+  i aggregatenheten 1,7 ms, och en gång −147 ms — därför bara tappen.
+- `kAudioProcessPropertyBundleID` + `responsibility_get_pid_responsible_for_pid` (libSystem,
+  odokumenterad) knyter hjälpprocesser till appen: `com.google.Chrome.helper` → Chrome,
+  `com.apple.WebKit.GPU` → Mail respektive CodeRunner, `com.microsoft.teams2.modulehost` → Teams.
+- ⚠️ **Inget annat på tappens ljudkö.** Att räkna om processlistan tar 80–190 ms
+  (`NSRunningApplication` utanför huvudtråden); på ljudkön missade IOProc 0,19–0,25 s varje gång
+  en app började eller slutade spela. Listan räknas nu på en egen kö och apparna cachas.
+- En ny tapp ger nollor de första 50–200 ms.
+- Ett hack på ~1 s i första körningen efter en paus, när en ny ljudklient ansluter: syns lika i
+  ScreenCaptureKits datorljud **utan** tappar (`--prov-tappglapp … sck+ny`). Det är källan
+  (`afplay` på AirPods via Bluetooth) som tystnar, inte inspelningen.
+- Tillståndet (Ljudinspelning) gäller den ansvariga processen: från Terminal frågar macOS om
+  Terminal; startad som app om appen. Frågan blockerar tappen tills den besvaras.

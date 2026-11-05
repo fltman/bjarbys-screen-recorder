@@ -783,6 +783,23 @@
         }
       }
     },
+    "Datorljud blir då allt annat.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer audio is then everything else."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datorljud blir då allt annat."
+          }
+        }
+      }
+    },
     "Dela": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2024,6 +2041,23 @@
         }
       }
     },
+    "Inga appar med ljud just nu": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No apps with audio right now"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inga appar med ljud just nu"
+          }
+        }
+      }
+    },
     "Inga inspelningar än": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -2751,6 +2785,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ljud"
+          }
+        }
+      }
+    },
+    "Ljud per app": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio per App"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ljud per app"
           }
         }
       }
@@ -5186,6 +5237,23 @@
         }
       }
     },
+    "Varje vald app får ett eget spår.": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each chosen app gets its own track."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varje vald app får ett eget spår."
+          }
+        }
+      }
+    },
     "Via svart": {
       "extractionState": "extracted_with_value",
       "localizations": {
@@ -5658,6 +5726,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Övertoning"
+          }
+        }
+      }
+    },
+    "Övrigt datorljud": {
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other Computer Audio"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Övrigt datorljud"
           }
         }
       }

@@ -49,19 +49,22 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
     }
 
     public enum TrackKind: String, Codable, Sendable, CaseIterable {
-        case screen, microphone, system, camera
+        /// `app`: ljudet från en enda app (Core Audio-tapp), ett spår per app.
+        case screen, microphone, system, camera, app
     }
 
     public struct Track: Codable, Equatable, Sendable {
         public var kind: TrackKind
         /// Sökväg relativt `recording/`.
         public var file: String
-        /// Läsbart namn på källan, t.ex. mikrofonens namn.
+        /// Läsbart namn på källan, t.ex. mikrofonens eller appens namn.
         public var deviceName: String
         public var failed: Bool
+        /// Appens bundle-id (bara `app`-spår): nyckeln för volymen i redigeringsläget.
+        public var appID: String
 
-        public init(kind: TrackKind, file: String, deviceName: String = "", failed: Bool = false) {
-            self.kind = kind; self.file = file; self.deviceName = deviceName; self.failed = failed
+        public init(kind: TrackKind, file: String, deviceName: String = "", failed: Bool = false, appID: String = "") {
+            self.kind = kind; self.file = file; self.deviceName = deviceName; self.failed = failed; self.appID = appID
         }
 
         public init(from decoder: Decoder) throws {
@@ -70,6 +73,7 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
             file = c.value(.file, "")
             deviceName = c.value(.deviceName, "")
             failed = c.value(.failed, false)
+            appID = c.value(.appID, "")
         }
     }
 
@@ -145,4 +149,7 @@ public struct RecordingMeta: Codable, Equatable, Sendable {
     public func track(_ kind: TrackKind) -> Track? {
         tracks.first { $0.kind == kind && !$0.failed }
     }
+
+    /// Apparnas egna ljudspår, i inspelningens ordning.
+    public var appTracks: [Track] { tracks.filter { $0.kind == .app && !$0.failed } }
 }

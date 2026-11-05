@@ -113,6 +113,10 @@ enum MCPServer {
         ["type": "object", "properties": props, "required": required]
     }
     private static let recordingArg: [String: Any] = ["type": "string", "description": "Path to a .bsrec bundle, its name, or \"latest\"."]
+    private static let appsArg: [String: Any] = [
+        "type": "array", "items": ["type": "string"],
+        "description": "Bundle ids of apps to record on their own audio tracks (see list_audio_apps). system_audio then means everything else.",
+    ]
 
     private static var tools: [[String: Any]] {
         [
@@ -123,10 +127,14 @@ enum MCPServer {
              "inputSchema": schema(["seconds": ["type": "number", "minimum": 1, "maximum": 900],
                                     "microphone": ["type": "boolean", "description": "Record the default microphone (default false)."],
                                     "system_audio": ["type": "boolean", "description": "Record computer audio (default true)."],
-                                    "keystrokes": ["type": "boolean", "description": "Record keyboard shortcuts (needs Input Monitoring)."]],
+                                    "keystrokes": ["type": "boolean", "description": "Record keyboard shortcuts (needs Input Monitoring)."],
+                                    "apps": appsArg],
                                    required: ["seconds"])],
             ["name": "start_recording", "description": "Start recording the main display. Stop with stop_recording.",
-             "inputSchema": schema(["microphone": ["type": "boolean"], "system_audio": ["type": "boolean"], "keystrokes": ["type": "boolean"]])],
+             "inputSchema": schema(["microphone": ["type": "boolean"], "system_audio": ["type": "boolean"], "keystrokes": ["type": "boolean"],
+                                    "apps": appsArg])],
+            ["name": "list_audio_apps", "description": "Apps connected to the audio system right now (bundle id, name, whether they are playing). Use the bundle ids in `apps` to record each app on its own track.",
+             "inputSchema": schema([:])],
             ["name": "stop_recording", "description": "Stop the recording started with start_recording.",
              "inputSchema": schema([:])],
             ["name": "transcribe",
@@ -267,6 +275,10 @@ enum MCPServer {
     private static func call(_ name: String, _ a: [String: Any]) async throws -> String {
         switch name {
         case "list_recordings": return listRecordings()
+        case "list_audio_apps":
+            let apps = AudioProcesses.apps()
+            guard !apps.isEmpty else { return "No apps are connected to the audio system right now." }
+            return apps.map { "- \($0.name) (\($0.bundleID))\($0.isPlaying ? ", playing" : "")" }.joined(separator: "\n")
         case "record_screen":
             let seconds = min(900, max(1, a["seconds"] as? Double ?? 5))
             let session = try await startSession(a)
@@ -349,6 +361,10 @@ enum MCPServer {
         }
         options.systemAudio = a["system_audio"] as? Bool ?? true
         options.keystrokes = a["keystrokes"] as? Bool ?? false
+        let running = AudioProcesses.apps()
+        options.apps = (a["apps"] as? [String] ?? []).map { id in
+            AudioSourceChoice(bundleID: id, name: running.first { $0.bundleID == id }?.name ?? id)
+        }
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
         guard let display = content.displays.first(where: { $0.displayID == CGMainDisplayID() }) ?? content.displays.first else {
             throw ToolError("No display found.")

@@ -13,12 +13,25 @@ public struct LoadedRecording: @unchecked Sendable {
     /// Mikrofonen efter röstisolering, om den är gjord.
     public var isolatedMicrophone: AVURLAsset?
     let assets: [RecordingMeta.TrackKind: AVURLAsset]
+    /// Apparna med eget ljudspår, i inspelningens ordning.
+    public let apps: [AppAudio]
+
+    public struct AppAudio: @unchecked Sendable {
+        public let id: String
+        public let name: String
+        public let asset: AVURLAsset
+    }
 
     public static func load(_ bundle: RecordingBundle) throws -> LoadedRecording {
         let meta = try bundle.readMeta()
         let events = bundle.readEvents()
         var assets: [RecordingMeta.TrackKind: AVURLAsset] = [:]
-        for track in meta.tracks where !track.failed {
+        var apps: [AppAudio] = []
+        for track in meta.appTracks where FileManager.default.fileExists(atPath: bundle.url(for: track).path) {
+            apps.append(AppAudio(id: track.appID, name: track.deviceName,
+                                 asset: AVURLAsset(url: bundle.url(for: track), options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])))
+        }
+        for track in meta.tracks where !track.failed && track.kind != .app {
             let url = bundle.url(for: track)
             if FileManager.default.fileExists(atPath: url.path) {
                 assets[track.kind] = AVURLAsset(url: url, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
@@ -29,12 +42,14 @@ public struct LoadedRecording: @unchecked Sendable {
                                transcript: bundle.readTranscript(),
                                isolatedMicrophone: FileManager.default.fileExists(atPath: bundle.isolatedMicrophoneURL.path)
                                    ? AVURLAsset(url: bundle.isolatedMicrophoneURL) : nil,
-                               assets: assets)
+                               assets: assets, apps: apps)
     }
 
     public var hasCamera: Bool { assets[.camera] != nil }
     public var hasMicrophone: Bool { assets[.microphone] != nil }
     public var hasSystemAudio: Bool { assets[.system] != nil }
+    /// Datorljud av något slag: allt i ett spår, eller apparna var för sig.
+    public var hasComputerAudio: Bool { hasSystemAudio || !apps.isEmpty }
     public func asset(_ kind: RecordingMeta.TrackKind) -> AVURLAsset? { assets[kind] }
 
     public var sourceSize: CGSize {
@@ -84,10 +99,21 @@ public enum CompositionBuilder {
             pairs.append((cam, track, try await cam.load(.timeRange)))
             hasCamera = true
         }
-        for (kind, id) in [(RecordingMeta.TrackKind.microphone, microphoneTrackID), (.system, systemTrackID)] {
-            guard let src = await sourceTrack(kind, .audio),
-                  let track = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: id) else { continue }
-            pairs.append((src, track, try await src.load(.timeRange)))
+        // Ljudet från inspelningen: mikrofon, datorljud och apparnas egna spår, med B-spårens id
+        // för övertoningarna.
+        var recorded: [(source: AVAssetTrack, main: CMPersistentTrackID, alternate: CMPersistentTrackID)] = []
+        for (kind, id, alt) in [(RecordingMeta.TrackKind.microphone, microphoneTrackID, alternateMicTrackID),
+                                (.system, systemTrackID, alternateSystemTrackID)] {
+            if let src = await sourceTrack(kind, .audio) { recorded.append((src, id, alt)) }
+        }
+        for (i, app) in rec.apps.enumerated() {
+            if let src = try? await app.asset.loadTracks(withMediaType: .audio).first {
+                recorded.append((src, appTrackBase + CMPersistentTrackID(i), alternateAppTrackBase + CMPersistentTrackID(i)))
+            }
+        }
+        for r in recorded {
+            guard let track = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: r.main) else { continue }
+            pairs.append((r.source, track, try await r.source.load(.timeRange)))
         }
 
         // Delarna läggs efter varandra. Ett spår som börjar senare eller slutar tidigare än
@@ -162,9 +188,10 @@ public enum CompositionBuilder {
 
             // Samma förrulle och efterrulle för mikrofonen och datorljudet, så att ljudet tonas
             // över i stället för att klippas.
-            for (kind, id) in [(RecordingMeta.TrackKind.microphone, alternateMicTrackID), (.system, alternateSystemTrackID)] {
-                guard let src = await sourceTrack(kind, .audio), let range = try? await src.load(.timeRange),
-                      let track = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: id) else { continue }
+            for r in recorded {
+                let src = r.source
+                guard let range = try? await src.load(.timeRange),
+                      let track = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: r.alternate) else { continue }
                 var end = CMTime.zero
                 var any = false
                 func put(_ a: Double, _ b: Double, speed: Double, at out: Double) {
@@ -215,7 +242,7 @@ public enum CompositionBuilder {
         }
 
         let video = videoComposition(plan: plan, duration: cursor, fps: fps, hasCamera: hasCamera, hasAlternate: hasAlternate)
-        let mix = audioMix(for: composition, plan: plan)
+        let mix = audioMix(for: composition, plan: plan, appIDs: rec.apps.map(\.id))
         return Result(composition: composition, videoComposition: video, audioMix: mix, duration: cursor)
     }
 
@@ -233,6 +260,9 @@ public enum CompositionBuilder {
     /// Videoinslag: bild 200, 201 …, ljud 300, 301 … i videolagrens ordning.
     static let videoOverlayTrackBase: CMPersistentTrackID = 200
     static let videoAudioTrackBase: CMPersistentTrackID = 300
+    /// Apparnas egna ljudspår 400, 401 … och deras B-spår 500, 501 … i inspelningens ordning.
+    static let appTrackBase: CMPersistentTrackID = 400
+    static let alternateAppTrackBase: CMPersistentTrackID = 500
 
     public static func videoComposition(plan: RenderPlan, duration: CMTime, fps: Int, hasCamera: Bool,
                                         hasAlternate: Bool = false) -> AVVideoComposition {
@@ -252,7 +282,7 @@ public enum CompositionBuilder {
 
     /// Ljudmixen: volym och tystning per spår, datorljudet under tal (om valt), mikrofon och
     /// datorljud under berättarröst, musik under tal och berättarröst, och klippens toningar.
-    public static func audioMix(for composition: AVComposition, plan: RenderPlan) -> AVMutableAudioMix {
+    public static func audioMix(for composition: AVComposition, plan: RenderPlan, appIDs: [String] = []) -> AVMutableAudioMix {
         let mix = plan.project.audio
         let map = plan.timeMap
         // Berättarrösten i utdatatid.
@@ -284,6 +314,16 @@ public enum CompositionBuilder {
                 let isAlternate = track.trackID == alternateMicTrackID || track.trackID == alternateSystemTrackID
                 parts.append(isAlternate ? GainEnvelope.alternate(plan.cutPlan.cuts) : cutPart)
                 apply(p, GainEnvelope(base: volume, parts: parts))
+            case appTrackBase..<(alternateAppTrackBase + 100):
+                // En app: som datorljudet (sänks under berättarröst, och under tal om valt).
+                let isAlternate = track.trackID >= alternateAppTrackBase
+                let index = Int(track.trackID - (isAlternate ? alternateAppTrackBase : appTrackBase))
+                let id = appIDs.indices.contains(index) ? appIDs[index] : ""
+                let volume = mix.isAppMuted(id) ? 0 : mix.appVolume(id)
+                var under = narration
+                if mix.duckSystem { under += plan.speech }
+                apply(p, GainEnvelope(base: volume, parts: [GainEnvelope.duck(under: under, factor: mix.duckLevel),
+                                                            isAlternate ? GainEnvelope.alternate(plan.cutPlan.cuts) : cutPart]))
             case videoAudioTrackBase...:
                 let index = Int(track.trackID - videoAudioTrackBase)
                 let videos = plan.project.overlays.filter { $0.kind == .video }

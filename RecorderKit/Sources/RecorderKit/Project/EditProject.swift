@@ -408,6 +408,14 @@ public struct EditProject: Codable, Equatable, Sendable {
         public var duckLevel: Double
         /// Använd den röstisolerade mikrofonen (`derived/mic-isolated.caf`) i stället för originalet.
         public var voiceIsolation: Bool
+        /// Volym per app med eget spår (nyckel: appens bundle-id); saknas en app gäller `appDefault`.
+        public var appVolumes: [String: Double]
+        /// Tystade appar (bundle-id).
+        public var appMuted: [String]
+        public static let appDefault = 0.8
+
+        public func appVolume(_ id: String) -> Double { appVolumes[id] ?? Self.appDefault }
+        public func isAppMuted(_ id: String) -> Bool { appMuted.contains(id) }
 
         public init(microphoneVolume: Double = 1, systemVolume: Double = 0.8,
                     microphoneMuted: Bool = false, systemMuted: Bool = false,
@@ -416,6 +424,8 @@ public struct EditProject: Codable, Equatable, Sendable {
             self.microphoneMuted = microphoneMuted; self.systemMuted = systemMuted
             self.duckSystem = duckSystem; self.duckLevel = duckLevel
             self.voiceIsolation = voiceIsolation
+            self.appVolumes = [:]
+            self.appMuted = []
         }
 
         public init(from decoder: Decoder) throws {
@@ -428,6 +438,8 @@ public struct EditProject: Codable, Equatable, Sendable {
             duckSystem = c.value(.duckSystem, d.duckSystem)
             duckLevel = c.value(.duckLevel, d.duckLevel)
             voiceIsolation = c.value(.voiceIsolation, d.voiceIsolation)
+            appVolumes = c.value(.appVolumes, d.appVolumes)
+            appMuted = c.value(.appMuted, d.appMuted)
         }
     }
 }

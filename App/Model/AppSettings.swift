@@ -29,6 +29,35 @@ final class AppSettings: ObservableObject {
     /// Skärmdumparnas bakgrund (förval 0–7) och om de ska poleras alls.
     @AppStorage("screenshotBackground") var screenshotBackground: Int = 0
     @AppStorage("screenshotPolish") var screenshotPolish: Bool = true
+    /// Appar med eget ljudspår (JSON-lista med bundle-id och namn).
+    @AppStorage("appAudio") private var appAudioJSON: String = "[]"
+
+    var appAudio: [AudioSourceChoice] {
+        get { (try? JSONDecoder().decode([AudioSourceChoice].self, from: Data(appAudioJSON.utf8))) ?? [] }
+        set { appAudioJSON = (try? String(data: JSONEncoder().encode(newValue), encoding: .utf8) ?? "[]") ?? "[]" }
+    }
+
+    func isAppChosen(_ bundleID: String) -> Bool { appAudio.contains { $0.bundleID == bundleID } }
+
+    func setApp(_ bundleID: String, name: String, chosen: Bool) {
+        var list = appAudio.filter { $0.bundleID != bundleID }
+        if chosen { list.append(AudioSourceChoice(bundleID: bundleID, name: name)) }
+        appAudio = list
+    }
+
+    /// Apparna som är anslutna till ljudsystemet just nu (uppdateras när de kommer och går).
+    @Published private(set) var audioApps: [AudioProcesses.App] = []
+    private var audioObserver: AnyObject?
+
+    /// Det menyn visar: apparna med ljud just nu, och de valda även om de inte är igång.
+    var menuAudioApps: [AudioProcesses.App] {
+        let running = audioApps
+        let missing = appAudio.filter { c in !running.contains { $0.bundleID == c.bundleID } }
+            .map { AudioProcesses.App(bundleID: $0.bundleID, name: $0.name, isPlaying: false) }
+        return running + missing
+    }
+
+    func refreshAudioApps() { audioApps = AudioProcesses.apps() }
 
     /// Inställningarna för transkribering, eller nil om whisper.cpp inte går att hitta.
     var whisperSetup: WhisperSetup? {
@@ -44,7 +73,11 @@ final class AppSettings: ObservableObject {
     @Published private(set) var microphones: [Devices.Device] = []
     @Published private(set) var cameras: [Devices.Device] = []
 
-    init() { refreshDevices() }
+    init() {
+        refreshDevices()
+        refreshAudioApps()
+        audioObserver = AudioProcesses.observe { [weak self] in self?.refreshAudioApps() }
+    }
 
     func refreshDevices() {
         microphones = Devices.microphones()
@@ -65,6 +98,6 @@ final class AppSettings: ObservableObject {
 
     var captureOptions: CaptureOptions {
         CaptureOptions(fps: fps, systemAudio: systemAudio, microphone: selectedMicrophone,
-                       camera: selectedCamera, keystrokes: keystrokes)
+                       camera: selectedCamera, keystrokes: keystrokes, apps: appAudio)
     }
 }

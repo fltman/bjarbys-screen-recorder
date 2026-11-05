@@ -23,6 +23,30 @@ final class EditorModel: ObservableObject {
     @Published private(set) var thumbnails: [(t: Double, image: CGImage)] = []
     @Published private(set) var micWave: [Float] = []
     @Published private(set) var systemWave: [Float] = []
+    /// Apparnas egna spår, i inspelningens ordning.
+    @Published private(set) var appWaves: [[Float]] = []
+
+    struct WaveLane {
+        let samples: [Float]
+        let icon: String
+        let name: String
+        let color: Color
+    }
+
+    /// Vågformerna i tidslinjen: mikrofon, datorljud och en per app.
+    var waveLanes: [WaveLane] {
+        var out: [WaveLane] = []
+        if !micWave.isEmpty { out.append(.init(samples: micWave, icon: "mic", name: String(localized: "Mikrofon"), color: .green)) }
+        if !systemWave.isEmpty {
+            out.append(.init(samples: systemWave, icon: "speaker.wave.2",
+                             name: recording.apps.isEmpty ? String(localized: "Datorljud") : String(localized: "Övrigt datorljud"),
+                             color: .blue))
+        }
+        for (i, w) in appWaves.enumerated() where !w.isEmpty && i < recording.apps.count {
+            out.append(.init(samples: w, icon: "app.badge", name: recording.apps[i].name, color: .teal))
+        }
+        return out
+    }
     @Published var exportPresented = false
     @Published private(set) var loadError: String?
     /// Transkriberingens förlopp 0–1 medan den pågår.
@@ -178,7 +202,7 @@ final class EditorModel: ObservableObject {
             item.videoComposition = CompositionBuilder.videoComposition(
                 plan: newPlan, duration: built.duration, fps: Self.previewFPS, hasCamera: recording.hasCamera,
                 hasAlternate: built.composition.tracks.contains { $0.trackID == 6 })
-            item.audioMix = CompositionBuilder.audioMix(for: built.composition, plan: newPlan)
+            item.audioMix = CompositionBuilder.audioMix(for: built.composition, plan: newPlan, appIDs: recording.apps.map(\.id))
             if !isPlaying { await seek(to: currentTime) }
         }
     }
@@ -195,6 +219,9 @@ final class EditorModel: ObservableObject {
         if let sys = recording.asset(.system) {
             systemWave = await MediaPreviews.waveform(sys, duration: d, buckets: 1600)
         }
+        var waves: [[Float]] = []
+        for app in recording.apps { waves.append(await MediaPreviews.waveform(app.asset, duration: d, buckets: 1600)) }
+        appWaves = waves
     }
 
     // MARK: - Uppspelning

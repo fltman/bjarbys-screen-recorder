@@ -98,15 +98,16 @@ public enum WhisperError: LocalizedError {
 public enum Transcriber {
     public static let sampleRate = 16_000.0
 
-    /// Transkriberar mikrofonen (eller datorljudet om mikrofon saknas). `progress` får 0–1.
+    /// Transkriberar mikrofonen (eller datorljudet om mikrofon saknas, eller första appen med
+    /// eget spår om bara sådana finns). `progress` får 0–1.
     public static func run(_ rec: LoadedRecording, setup: WhisperSetup,
                            progress: @escaping @Sendable (Double) -> Void = { _ in }) async throws -> Transcript {
         let problems = setup.problems
         guard problems.isEmpty else { throw WhisperError.missing(problems) }
-        let kind: RecordingMeta.TrackKind = rec.hasMicrophone ? .microphone : .system
+        let kind: RecordingMeta.TrackKind = rec.hasMicrophone ? .microphone : (rec.hasSystemAudio ? .system : .app)
         // Den röstisolerade mikrofonen om den finns (samma tidslinje, utan brus).
         let isolated = kind == .microphone ? rec.isolatedMicrophone : nil
-        guard let asset = isolated ?? rec.asset(kind) else { throw WhisperError.noAudio }
+        guard let asset = isolated ?? (kind == .app ? rec.apps.first?.asset : rec.asset(kind)) else { throw WhisperError.noAudio }
 
         let work = FileManager.default.temporaryDirectory
             .appendingPathComponent("skarminspelare-whisper-\(UUID().uuidString)", isDirectory: true)

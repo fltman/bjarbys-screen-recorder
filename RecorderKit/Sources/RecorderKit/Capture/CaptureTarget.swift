@@ -133,10 +133,16 @@ public struct CaptureOptions: Sendable {
     public var microphone: Devices.Device?
     public var camera: Devices.Device?
     public var keystrokes: Bool = false
+    /// Appar med eget ljudspår (Core Audio-tappar). När listan inte är tom blir `systemAudio`
+    /// "övrigt datorljud": allt utom de valda apparna, också det via en tapp.
+    public var apps: [AudioSourceChoice] = []
 
     public init(fps: Int = 60, systemAudio: Bool = true, microphone: Devices.Device? = nil,
-                camera: Devices.Device? = nil, keystrokes: Bool = false) {
+                camera: Devices.Device? = nil, keystrokes: Bool = false, apps: [AudioSourceChoice] = []) {
         self.fps = fps; self.systemAudio = systemAudio; self.microphone = microphone
-        self.camera = camera; self.keystrokes = keystrokes
+        self.camera = camera; self.keystrokes = keystrokes; self.apps = apps
     }
+
+    /// Datorljudet tas från ScreenCaptureKit (beprövat, uppmätt synk) när inga appar är valda.
+    var systemAudioFromStream: Bool { systemAudio && apps.isEmpty }
 }

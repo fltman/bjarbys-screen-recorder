@@ -22,8 +22,12 @@ public struct RecordingBundle: Hashable, Identifiable, Sendable {
         case .microphone: "mic-0.mov"
         case .system: "system-0.mov"
         case .camera: "camera-0.mov"
+        case .app: "app-0-0.mov"
         }
     }
+
+    /// Den n:te appens ljudspår.
+    public static func appFileName(_ index: Int) -> String { "app-\(index)-0.mov" }
 
     public func trackURL(_ kind: RecordingMeta.TrackKind) -> URL {
         recordingDir.appendingPathComponent(Self.fileName(for: kind))

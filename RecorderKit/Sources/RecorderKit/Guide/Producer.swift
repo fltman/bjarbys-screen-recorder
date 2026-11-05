@@ -33,7 +33,7 @@ public enum Producer {
                 current += (current.isEmpty ? "" : " ") + w.text
             }
             if !current.isEmpty { out.append("[\(fmt(start))] \(current)") }
-        } else if rec.hasMicrophone || rec.hasSystemAudio {
+        } else if rec.hasMicrophone || rec.hasComputerAudio {
             out.append("\n## What is said\nNot transcribed yet — run the transcribe tool first.")
         }
 

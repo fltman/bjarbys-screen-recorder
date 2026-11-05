@@ -9,7 +9,8 @@ Inspelning 2026-11-04 kl. 22.27.41.bsrec/
   recording/                 rådata från inspelningen — skrivs bara under inspelning
     meta.json
     screen-0.mov             HEVC, utan markör
-    system-0.mov             datorljud, LPCM 24 bit
+    system-0.mov             datorljud, LPCM 24 bit ("övrigt datorljud" när appar har egna spår)
+    app-0-0.mov, app-1-0.mov …  en app per spår (Core Audio-tapp), LPCM 24 bit
     mic-0.mov                mikrofon, LPCM 24 bit, källans kanaler och frekvens
     camera-0.mov             HEVC (valfri)
     events.jsonl             mus, tangenter, markörbyten, fönsterramar, pauser
@@ -36,7 +37,7 @@ de att spela upp till sista fragmentet; `meta.json` har då `finished: false` ti
 | `source.kind` | `display`, `window`, `area` eller `application` |
 | `source.contentRect` | `[x, y, b, h]` i globala punkter, origo uppe till vänster på huvudskärmen |
 | `source.pixelScale`, `pixelWidth`, `pixelHeight` | skärmspårets pixlar |
-| `tracks[]` | `kind`, `file`, `deviceName`, `failed` |
+| `tracks[]` | `kind` (`screen`, `microphone`, `system`, `camera`, `app`), `file`, `deviceName` (för appar: appens namn), `failed`, `appID` (appens bundle-id) |
 | `duration` | sekunder, pauser borträknade |
 | `gaps[]` | avbrott där vakthunden startade om strömmen |
 | `keystrokesRecorded` | om kortkommandon spelades in |
@@ -86,7 +87,7 @@ innehållet när annat klipps bort. Varje fält har ett standardvärde; `{}` är
 | `overlays[]` | bildlagret: `kind` (`title`, `callout`, `fact`, `qr`, `text`, `image`, `video` — video med `offset` i filen och `volume`, helbild = `frame` [0,0,1,1]), `frame` (fri placering 0–1), `file` (bild i `media/`), `size`, `background`, `at` (källtid), `duration` (s i filmen), `title`, `lines`, `url`, `target` (0–1, markeringens mål), `corner` |
 | `chapters[]`, `showsChapterBanner` | kapitel (`at`, `title`) och om kapitelraden visas |
 | `audioClips[]` | extra ljud i `media/`: `role` (`narration`, `music`, `effect`), `at`, `file`, `text`, `duration`, `volume`, `fadeIn`, `fadeOut` |
-| `audio` | volym och tystning per spår; `duckSystem`, `duckLevel` sänker datorljudet under tal; `voiceIsolation` använder `derived/mic-isolated.caf` |
+| `audio` | volym och tystning per spår; `appVolumes` (bundle-id → volym, standard 0,8) och `appMuted` för appar med eget spår; `duckSystem`, `duckLevel` sänker datorljudet och apparna under tal; `voiceIsolation` använder `derived/mic-isolated.caf` |
 
 ## media/ och leverans.md
 
@@ -109,5 +110,5 @@ borttagna här; de ligger i luckor mellan `segments` i `project.json`.
 | Fält | Betydelse |
 |---|---|
 | `model`, `language` | modellfilen och språket, t.ex. `kb_whisper_ggml_medium.bin`, `sv` |
-| `track` | spåret som transkriberades: `microphone`, annars `system` |
+| `track` | spåret som transkriberades: `microphone`, annars `system`, annars första `app` |
 | `words[]` | `start`, `end` (källtid, ±0,1 s), `text` med skiljetecken, `startsSegment` |

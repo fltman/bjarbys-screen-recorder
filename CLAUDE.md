@@ -34,6 +34,9 @@ open Skarminspelare.xcodeproj
   - `--prov-teleprompter <png>` — teleprompterrutan efter 6 s rullning, utanför skärmen
   - `--prov-vyer <mapp> <paket>` — alla fönster och paneler (ljust och mörkt, inspektörens flikar)
     som PNG; material och videolager ritas inte utanför skärmen
+  - `--prov-appljud <mapp> [--behall]` — ljud per app med egna toner: separation och synk mot SCK
+  - `--prov-tappglapp <mapp> tappar|sck|bada[+ny]` — var tonen saknas, med/utan tappar och SCK,
+    `+ny` = en ny ljudprocess ansluter mitt i
   - `--prov-uppladdning <fil> <http://127.0.0.1:port>` — uppladdningen mot en lokal provserver
     med påhittade provnycklar (aldrig riktiga)
   Startad från terminalen lånar binären terminalens skärminspelningsbehörighet.
@@ -120,6 +123,9 @@ för taldetektering). Roten letas upp i `~/Projekt/whisper.cpp` m.fl., eller vä
   gamla koden (hände: en övertoning "fungerade inte" i en mätning mot en gammal binär).
 - Ljudvolymer byggs som `GainEnvelope` (kurvor som multipliceras och blir rampar kant i kant);
   lägg aldrig `setVolumeRamp` som kan överlappa.
+- Ljud per app (`Capture/AppAudio.swift`): **inget annat än IOProc på tappens ljudkö** — att
+  räkna om processlistan där gav 0,2 s glapp varje gång en app började spela. Aggregatenheten
+  har bara tappen (inga högtalare). Utan appar tas datorljudet som förr från ScreenCaptureKit.
 - Musdata: ett glapp > 0,1 s mellan händelser betyder att musen stod still. Interpolera aldrig
   över det (`CursorPath.stillGap`).
 - ⚠️ Disken är nästan full (≈12 GB ledigt nov 2026). Provinspelningar hålls korta och raderas.
