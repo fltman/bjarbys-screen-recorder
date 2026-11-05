@@ -13,6 +13,8 @@ struct TimelineView: View {
         case move(UUID, start: Double, end: Double, outStart: Double)
         case resizeStart(UUID)
         case resizeEnd(UUID)
+        case moveOverlay(UUID, outStart: Double)
+        case resizeOverlay(UUID, duration: Double)
     }
 
     // Filernas placering uppifrån. Undertexter och masker får egna filer när de finns.
@@ -365,6 +367,11 @@ struct TimelineView: View {
                     return p.x >= x(s, pps) - 4 && p.x <= x(s + o.duration, pps) + 4
                 }
                 model.selectedOverlayID = hit?.id
+                if let hit, let s = model.timeMap.output(at: hit.at) {
+                    // Högra kanten ändrar längden, resten flyttar.
+                    drag = abs(p.x - x(s + hit.duration, pps)) <= 7 ? .resizeOverlay(hit.id, duration: hit.duration)
+                                                                    : .moveOverlay(hit.id, outStart: s)
+                }
             } else if let y = maskY, p.y >= y && p.y <= y + laneH {
                 let hit = model.project.masks.last { m in
                     guard let r = outputRange(start: m.start, end: m.end) else { return false }
@@ -393,6 +400,12 @@ struct TimelineView: View {
         case let .resizeEnd(id):
             let s = map.source(at: t(value.location.x, pps))
             model.updateZoom(id) { $0.end = s }
+        case let .moveOverlay(id, outStart):
+            let newOut = max(0, min(model.duration - 0.2, outStart + Double(value.translation.width) / pps))
+            model.updateOverlay(id) { $0.at = map.source(at: newOut) }
+        case let .resizeOverlay(id, duration):
+            let d = max(0.5, duration + Double(value.translation.width) / pps)
+            model.updateOverlay(id) { $0.duration = d }
         }
     }
 }
