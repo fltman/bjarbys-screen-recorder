@@ -54,6 +54,30 @@ import Foundation
         #expect(abs(words[2].start - 11.1) < 1e-9)
     }
 
+    /// whisper-cli delar «ö» (C3 B6) mellan två tokens och skriver ogiltig UTF-8 i JSON-filen.
+    @Test func joinsCharactersSplitAcrossTokens() throws {
+        func token(_ text: [UInt8], _ from: Int, _ to: Int) -> [UInt8] {
+            Array(#"{"text":""#.utf8) + text + Array(#"","offsets":{"from":\#(from),"to":\#(to)}}"#.utf8)
+        }
+        let comma = [UInt8(ascii: ",")]
+        var json = Array(#"{"transcription":[{"text":" Det finns öppna kanaler.","tokens":["#.utf8)
+        json += token(Array(" Det".utf8), 0, 200) + comma
+        json += token(Array(" fin".utf8), 200, 400) + comma
+        json += token(Array("ns".utf8), 400, 500) + comma
+        json += token(Array(" ".utf8) + [0xC3], 600, 700) + comma
+        json += token([0xB6] + Array("ppna".utf8), 700, 900) + comma
+        json += token(Array(" kanaler".utf8), 900, 1300) + comma
+        json += token(Array(".".utf8), 1300, 1350)
+        json += Array("]}]}".utf8)
+        #expect(String(bytes: json, encoding: .utf8) == nil)
+        let chunks = SpeechChunks(speech: [0...4], sampleRate: 16_000, total: 16_000 * 5)
+        let words = try Transcriber.parse(Data(json), chunks: chunks, offset: 0)
+        #expect(words.map(\.text) == ["Det", "finns", "öppna", "kanaler."])
+        // Giltig UTF-8 lämnas orörd.
+        let valid = Data(#"{"a":"åäö"}"#.utf8)
+        #expect(Transcriber.escapingStrayBytes(valid) == valid)
+    }
+
     @Test func hallucinationFilter() {
         #expect(Hallucination.isNoise(" Tack."))
         #expect(Hallucination.isNoise("Textning av Jan Svensson"))

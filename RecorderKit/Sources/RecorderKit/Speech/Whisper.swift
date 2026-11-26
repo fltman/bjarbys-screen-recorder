@@ -344,8 +344,56 @@ public enum Transcriber {
             let tokens: [Token]
             /// Segmentets början och slut i millisekunder.
             let offsets: Token.Offsets?
+            /// Texten med eventuella lösa bytes ihopsatta till tecken (se `decodeOutput`).
+            var plainText: String { Transcriber.joiningStrayBytes(text) }
         }
         let transcription: [Segment]
+    }
+
+    /// whisper-cli skriver varje tokens text som råa bytes. Ett tecken som «ä» (C3 A4) kan
+    /// delas mellan två tokens, och då är filen ogiltig UTF-8 och JSONDecoder vägrar läsa den
+    /// («Data kunde inte läsas eftersom de är i fel format»). Lösa bytes skrivs därför om till
+    /// `\uF7xx` (privat område) före avkodningen och sätts ihop igen med `joiningStrayBytes`
+    /// när tokens slagits ihop till ord.
+    static func decodeOutput(_ data: Data) throws -> Output {
+        try JSONDecoder().decode(Output.self, from: escapingStrayBytes(data))
+    }
+
+    static let strayByteBase: UInt32 = 0xF700
+
+    /// Byter varje byte som inte ingår i en giltig UTF-8-sekvens mot JSON-escapen `\uF7xx`.
+    static func escapingStrayBytes(_ data: Data) -> Data {
+        guard String(data: data, encoding: .utf8) == nil else { return data }
+        let b = [UInt8](data)
+        var out = Data(capacity: b.count + 64)
+        var i = 0
+        while i < b.count {
+            let c = b[i]
+            let n = c < 0x80 ? 1 : (0xC2...0xDF).contains(c) ? 2 : (0xE0...0xEF).contains(c) ? 3 : (0xF0...0xF4).contains(c) ? 4 : 0
+            if n == 1 { out.append(c); i += 1; continue }
+            if n > 0, i + n <= b.count, String(bytes: b[i..<i + n], encoding: .utf8) != nil {
+                out.append(contentsOf: b[i..<i + n]); i += n
+            } else {
+                out.append(contentsOf: Array(String(format: "\\u%04X", strayByteBase + UInt32(c)).utf8)); i += 1
+            }
+        }
+        return out
+    }
+
+    /// Sätter ihop följder av `\uF7xx` till bytes och läser dem som UTF-8 (ogiltigt blir �).
+    static func joiningStrayBytes(_ s: String) -> String {
+        let range = strayByteBase...(strayByteBase + 0xFF)
+        guard s.unicodeScalars.contains(where: { range.contains($0.value) }) else { return s }
+        var out = String.UnicodeScalarView()
+        var bytes: [UInt8] = []
+        func flush() {
+            if !bytes.isEmpty { out.append(contentsOf: String(decoding: bytes, as: UTF8.self).unicodeScalars); bytes = [] }
+        }
+        for u in s.unicodeScalars {
+            if range.contains(u.value) { bytes.append(UInt8(u.value - strayByteBase)) } else { flush(); out.append(u) }
+        }
+        flush()
+        return String(out)
     }
 
     /// Raderna ur en översättning (`-tr`), i inspelningens källtid. whispers segment går gärna
@@ -356,11 +404,11 @@ public enum Transcriber {
     /// originalets ord. Långa meningar delas så att de ryms på två rader.
     static func translatedCues(_ data: Data, chunks: SpeechChunks, offset: Double,
                                words: [Transcript.Word]) throws -> [CaptionTranslation.Cue] {
-        let out = try JSONDecoder().decode(Output.self, from: data)
+        let out = try decodeOutput(data)
         struct Sentence { var text: String; var from: Double; var to: Double }
         var sentences: [Sentence] = []
-        for segment in out.transcription where !Hallucination.isNoise(segment.text) {
-            let text = segment.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        for segment in out.transcription where !Hallucination.isNoise(segment.plainText) {
+            let text = segment.plainText.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !text.isEmpty, let o = segment.offsets else { continue }
             let from = Double(o.from) / 1000, to = max(Double(o.to) / 1000, Double(o.from) / 1000)
             let parts = CaptionTranslation.sentences(text)
@@ -395,12 +443,12 @@ public enum Transcriber {
 
     /// Orden ur whisper-cli:s `-ojf`, med tiderna tillbakaräknade till inspelningen.
     static func parse(_ data: Data, chunks: SpeechChunks, offset: Double) throws -> [Transcript.Word] {
-        let out = try JSONDecoder().decode(Output.self, from: data)
+        let out = try decodeOutput(data)
         // Orden i den hopfogade filens tid: början, när sista ljudande token sägs, och
         // whispers egen sluttid.
         struct Raw { var text: String; var start: Double; var last: Double; var end: Double; var newSegment: Bool }
         var raws: [Raw] = []
-        for segment in out.transcription where !Hallucination.isNoise(segment.text) {
+        for segment in out.transcription where !Hallucination.isNoise(segment.plainText) {
             var first = true
             for token in segment.tokens {
                 let text = token.text
@@ -434,7 +482,7 @@ public enum Transcriber {
             if i + 1 < raws.count { end = min(end, max(raws[i + 1].start, r.start + 0.05)) }
             let start = chunks.original(r.start, in: chunk) + offset
             let stop = chunks.original(end, in: chunk) + offset
-            words.append(Transcript.Word(start: start, end: max(stop, start + 0.02), text: r.text,
+            words.append(Transcript.Word(start: start, end: max(stop, start + 0.02), text: joiningStrayBytes(r.text),
                                          startsSegment: r.newSegment))
         }
         return words
